@@ -277,6 +277,14 @@
 (defun detformer? (x)
   (member x '(fquan nquan)))
 
+(defun contains-relativizer (x)
+  (ttt::match-expr '(^* lex-rel?) x))
+
+;; A relativized sentence is a tensed sentence with a relativizer in it.
+(defun relativized-sent? (x)
+  (and (tensed-sent? x)
+       (contains-relativizer x)))
+
 (defparameter *type-id-fns*
   (list (list #'noun? 'noun)
         (list #'adj? 'adj)
@@ -341,11 +349,4 @@
     (adv-s? e)
     (adv-f? e)
     (member e '(not not.adv-e not.adv-s))))
-
-(defun contains-relativizer (x)
-  (ttt::match-expr '(^* lex-rel?) x))
-;; A relativized sentence is a tensed sentence with a relativizer in it.
-(defun relativized-sent? (x)
-  (and (tensed-sent? x)
-       (contains-relativizer x)))
 

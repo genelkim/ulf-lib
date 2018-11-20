@@ -77,6 +77,47 @@
     :advformer?
     :detformer?
     :phrasal-sent-op? 
+    :contains-relativizer
     :relativized-sent?
+    :ulf-type?
+    :label-formula-types
+
+    ;; type symbols (in ttt-phrasal-patterns.lisp)
+    ;; TODO: write util function for printing while ignoring the symbol
+    ;; namespace so that we don't need to export all this...
+    :noun
+    :adj
+    :adv-a
+    :adv-e
+    :adv-s
+    :adv-f
+    :pp
+    :term
+    :verb
+    :pred
+    :det
+    :aux
+    :aux
+    :tensed-aux
+    :tensed-verb
+    :sent
+    :tensed-sent
+    :tense
+    :sent-punct
+    :sent-mod
+    :noun-reifier
+    :verb-reifier
+    :sent-reifier
+    :tensed-sent-reifier
+    :advformer
+    :detformer
+    :preposs-macro
+    :rel-sent
+    :p-arg
+    :equal-sign
+    :set-of-op
+    :macro-symbol
+    :unknown
+    :types
     ))
 
