@@ -5,8 +5,14 @@
 
 (defpackage :ulf-lib
   (:nicknames :ulf)
-  (:use :cl :ttt :util)
+  (:use :cl :ttt :util :cl-strings)
   (:export
+    ;; suffix.lisp
+    :has-suffix?
+    :split-by-suffix
+    :strip-suffix
+    :add-suffix
+
     ;; macro.lisp
     :uninvert-verbauxes
     :apply-sub-macro
@@ -46,6 +52,8 @@
     :lex-set-of?
     :lex-macro?
     :lex-verbaux?
+    :lex-elided?
+    :is-strict-name?
 
     ;; ttt-phrasal-patterns.lisp
     :noun?  

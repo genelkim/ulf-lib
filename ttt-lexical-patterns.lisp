@@ -75,6 +75,17 @@
 (defun lex-name-pred? (x)
   (cl-user::match-re "^\\|\[\^\\|\]\+\\.N\\|$" (format nil "~s" x)))
 
+;; TODO: merge with lex-name? in ulf-lib.
+;; Returns t if s is strictly a ULF name, e.g. |John|, |Mary|, etc.
+;; Returns false on name-like predicates (e.g. |Green River|.n).
+;; Can take a symbol or a string.
+;; TODO: separate into separate functions for symbol and string since the ULF can contain strings!
+(defun is-strict-name? (s)
+  (let* ((sstr (if (symbolp s) (util:sym2str s) s))
+         (chars (coerce sstr 'list)))
+    (and (eql #\| (nth 0 chars))
+         (eql #\| (nth (1- (length chars)) chars)))))
+
 ;; Matches a regular name.
 (defun lex-name? (x)
   (and
@@ -131,4 +142,19 @@
 
 (defun lex-verbaux? (x)
   (or (lex-verb? x) (aux? x))) 
+
+;; Returns true if the token is one that was elided in the surface string.
+;; In the current guidelines, this is a curly bracketed token.
+;; e.g. {that}, {he}.pro
+(defun lex-elided? (token)
+  (multiple-value-bind (word suffix) (split-by-suffix token)
+    (let ((wchars (util:split-into-atoms word))
+          (tchars (util:split-into-atoms token)))
+      ;; Either the whole thing is wrapped in curly brackets or everything but
+      ;; the suffix.
+      (or
+        (and (equal (intern "{") (first wchars))
+             (equal (intern "}") (car (last wchars))))
+        (and (equal (intern "{") (first tchars))
+             (equal (intern "}") (car (last tchars))))))))
 

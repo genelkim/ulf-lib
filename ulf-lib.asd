@@ -2,8 +2,9 @@
 ;; Started ~2018-11-19
 
 (asdf:defsystem :ulf-lib
-  :depends-on (:ttt :util)
+  :depends-on (:ttt :util :cl-strings)
   :components ((:file "package")
+               (:file "suffix")
                (:file "ttt-lexical-patterns")
                (:file "ttt-phrasal-patterns")
                (:file "macro")
