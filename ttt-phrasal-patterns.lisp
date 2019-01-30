@@ -230,60 +230,70 @@
   '(term? 's))
 
 (defparameter *ttt-voc*
-  '(!1 
+  '(!1
      (voc term?) (voc-O term?)
      ;; FALL BACK.
      (voc _!) (voc-O _1)))
 
-(defun noun? (x) (ttt::match-expr *ttt-noun* x))
-(defun adj? (x) (ttt::match-expr *ttt-adj* x))
-(defun adv-a? (x) (ttt::match-expr *ttt-adv-a* x))
-(defun adv-e? (x) (ttt::match-expr *ttt-adv-e* x))
-(defun adv-s? (x) (ttt::match-expr *ttt-adv-s* x))
-(defun adv-f? (x) (ttt::match-expr *ttt-adv-f* x))
-(defun adv? (x) (or (adv-a? x) (adv-e? x) (adv-s? x) (adv-f? x)))
-(defun pp? (x) (ttt::match-expr *ttt-pp* x))
-(defun term? (x) (ttt::match-expr *ttt-term* x))
-(defun verb? (x) (ttt::match-expr *ttt-verb* x))
-(defun pred? (x) (ttt::match-expr *ttt-pred* x))
-(defun det? (x) (ttt::match-expr *ttt-det* x))
-(defun aux? (x) (ttt::match-expr *ttt-aux* x))
-(defun tensed-aux? (x) (ttt::match-expr *ttt-tensed-aux* x))
-(defun tensed-verb? (x) (ttt::match-expr *ttt-tensed-verb* x))
-(defun sent? (x) (ttt::match-expr *ttt-sent* x))
-(defun tensed-sent? (x) (ttt::match-expr *ttt-tensed-sent* x))
-(defun sent-mod? (x) (ttt::match-expr *ttt-sent-mod* x))
 
-(defun preposs-macro? (x) (ttt::match-expr *ttt-preposs-macro* x))
-(defun p-arg? (x) (ttt::match-expr *ttt-p-arg* x))
-(defun voc? (x) (ttt::match-expr *ttt-voc* x))
+(defun noun? (x) (util:in-intern (x y) (ttt::match-expr *ttt-noun* y)))
+(defun adj? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adj* y)))
+(defun adv-a? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-a* y)))
+(defun adv-e? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-e* y)))
+(defun adv-s? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-s* y)))
+(defun adv-f? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-f* y)))
+(defun adv? (y) (util:in-intern (y y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
+(defun pp? (x) (util:in-intern (x y) (ttt::match-expr *ttt-pp* y)))
+(defun term? (x) (util:in-intern (x y) (ttt::match-expr *ttt-term* y)))
+(defun verb? (x) (util:in-intern (x y) (ttt::match-expr *ttt-verb* y)))
+(defun pred? (x) (util:in-intern (x y) (ttt::match-expr *ttt-pred* y)))
+(defun det? (x) (util:in-intern (x y) (ttt::match-expr *ttt-det* y)))
+(defun aux? (x) (util:in-intern (x y) (ttt::match-expr *ttt-aux* y)))
+(defun tensed-aux? (x) (util:in-intern (x y) (ttt::match-expr *ttt-tensed-aux* y)))
+(defun tensed-verb? (x) (util:in-intern (x y) (ttt::match-expr *ttt-tensed-verb* y)))
+(defun sent? (x) (util:in-intern (x y) (ttt::match-expr *ttt-sent* y)))
+(defun tensed-sent? (x) (util:in-intern (x y) (ttt::match-expr *ttt-tensed-sent* y)))
+(defun sent-mod? (x) (util:in-intern (x y) (ttt::match-expr *ttt-sent-mod* y)))
+
+(defun preposs-macro? (x) (util:inout-intern (x y) (ttt::match-expr *ttt-preposs-macro* y)))
+(defun p-arg? (x) (util:in-intern (x y) (ttt::match-expr *ttt-p-arg* y)))
+(defun voc? (x) (util:in-intern (x y) (ttt::match-expr *ttt-voc* y)))
 
 (defun sent-punct? (x)
-  (member x '(! ? .?)))
+  (util:in-intern (x y)
+             (member y '(! ? .?))))
 
 ;; Reifiers.
 (defun noun-reifier? (x)
-  (member x '(k)))
+  (util:in-intern (x y)
+             (member y '(k))))
 (defun tensed-sent-reifier? (x)
-  (member x '(that tht whether ans-to)))
+  (util:in-intern (x y)
+             (member y '(that tht whether ans-to))))
 (defun sent-reifier? (x)
-  (member x '(ke)))
+  (util:in-intern (x y)
+             (member y '(ke))))
 (defun verb-reifier? (x)
-  (member x '(ka to gd)))
+  (util:in-intern (x y)
+             (member y '(ka to gd))))
 
 ;; Operator forming type-shifters.
 (defun advformer? (x)
-  (member x '(adv-a adv-e adv-s adv-f)))
+  (util:in-intern (x y)
+             (member y '(adv-a adv-e adv-s adv-f))))
 (defun detformer? (x)
-  (member x '(fquan nquan)))
+  (util:in-intern (x y)
+             (member y '(fquan nquan))))
 
 (defun contains-relativizer (x)
-  (ttt::match-expr '(^* lex-rel?) x))
+  (util:in-intern (x y)
+             (ttt::match-expr '(^* lex-rel?) y)))
 
 ;; A relativized sentence is a tensed sentence with a relativizer in it.
 (defun relativized-sent? (x)
-  (and (tensed-sent? x)
-       (contains-relativizer x)))
+  (util:in-intern (x y)
+             (and (tensed-sent? y)
+                  (contains-relativizer y))))
 
 (defparameter *type-id-fns*
   (list (list #'noun? 'noun)
@@ -321,32 +331,36 @@
         ))
 
 ;; Hypothesizes the type of the given ULF formula.
-(defun ulf-type? (x)
-  (let ((matched (remove-if-not #'(lambda (pair) (apply (first pair) (list x)))
-                                *type-id-fns*)))
-    (if matched
-      (mapcar #'second matched)
-      '(unknown))))
-
-(defun unknown? (x)
-  (equal '(unknown) (ulf-type? x)))
+(defun ulf-type? (inx &key (callpkg nil))
+  (util:inout-intern (inx x :callpkg callpkg)
+    (let ((matched (remove-if-not #'(lambda (pair) (apply (first pair) (list x)))
+                                  *type-id-fns*)))
+      (if matched
+        (mapcar #'second matched)
+        '(unknown)))))
+(defun unknown? (inx &optional (callpkg nil))
+  (util:inout-intern (inx x)
+    (equal '(unknown) (ulf-type? x))))
 
 ;; Labels formula with the hypothesized types.
 ;; TODO: Merging this function with 'ulf-type?' to get all types in one bottom
 ;;       up fashion would speed this up a lot.
-(defun label-formula-types (f)
-  (cond
-    ((atom f) f)
-      ;(list (cons 'types (ulf-type? f)) f))
-    (t (list (cons 'types (ulf-type? f)) (mapcar #'label-formula-types f)))))
+(defun label-formula-types (rawf &key (callpkg nil))
+  (util:inout-intern (rawf f :callpkg callpkg)
+                (cond
+                  ((atom f) f)
+                  ;(list (cons 'types (ulf-type? f)) f))
+                  (t (list (cons 'types (ulf-type? f))
+                           (mapcar #'label-formula-types f))))))
 
 ;; Condition to check if an element is a filitered sentence-level operator.
 ;; Basically all sentence-level operators that are written as phrasal in the
 ;; surface form.
-(defun phrasal-sent-op? (e)
-  (or
-    (adv-e? e)
-    (adv-s? e)
-    (adv-f? e)
-    (member e '(not not.adv-e not.adv-s))))
+(defun phrasal-sent-op? (x)
+  (util:in-intern (x e)
+             (or
+               (adv-e? e)
+               (adv-s? e)
+               (adv-f? e)
+               (member e '(not not.adv-e not.adv-s)))))
 
