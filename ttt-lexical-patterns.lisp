@@ -8,7 +8,7 @@
 
 ;; Check if *x* has the *suffix* extension.
 (defun suffix-check (x suffix)
-  (cl-user::match-re (concatenate 'string "^\(\\w\|\\d\|-\|\/\|\\.\)\+\\." suffix "$")
+  (cl-user::match-re (concatenate 'string "^\(\\w\|\\d\|-\|\/\|:\|\\.\)\+\\." suffix "$")
             (format nil "~s" x)))
 
 (defun lex-noun? (x)
