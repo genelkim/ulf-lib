@@ -5,10 +5,15 @@
 (defparameter *ttt-noun*
   '(! lex-noun?
       lex-name-pred?
-      (adj? noun?)
       (plur noun?)
+      ;; Explicit predicate modifiers.
+      (mod-n? noun?)
+      (noun? mod-n?)
+      ;; Implicit predicate modifiers.
+      (adj? noun?)
       (noun? noun?)
       (lex-name? noun?)
+      (term? noun?)
       ; (mother-of.n |John|)
       (lex-noun? term?)
       (noun? p-arg?)
@@ -23,9 +28,15 @@
 
 (defparameter *ttt-adj*
   '(! lex-adjective?
+      ;; Implicit predicate modification.
       (adj? adj?)
-      (adv-a? adj?)
-      (adj? adv-a?)
+      (noun? adj?)
+      ;; Explicit predicate modification.
+      ; GK: old version where adjectives could be modified by adv-a
+      ;(adv-a? adj?)
+      ;(adj? adv-a?)
+      (mod-a? adj?)
+      (adj? mod-a?)
       (poss-by term?)
       ;; Some adjectives take infinitives.
       (adj? (to verb?))
@@ -39,6 +50,8 @@
       ;; Equal sign with term.
       (= term?)
       ))
+
+;; Adverbials.
 
 (defparameter *ttt-adv-a*
    '(! lex-adv-a?
@@ -65,6 +78,16 @@
       (adv-f pred?)
       (adv-f? lex-coord? (+ adv-f?))
       ))
+
+;; Predicate modifiers.
+(defparameter *ttt-mod-a*
+  '(! lex-mod-a?
+      (mod-a pred?)))
+
+(defparameter *ttt-mod-n*
+  '(! lex-mod-n?
+      (mod-n pred?)
+      (nnp term?)))
 
 ;; Prepositional Phrase.
 (defparameter *ttt-pp*
@@ -242,7 +265,9 @@
 (defun adv-e? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-e* y)))
 (defun adv-s? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-s* y)))
 (defun adv-f? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-f* y)))
-(defun adv? (y) (util:in-intern (y y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
+(defun adv? (x) (util:in-intern (x y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
+(defun mod-a? (x) (util:in-intern (x y) (ttt:match-expr *ttt-mod-a* y))) 
+(defun mod-n? (x) (util:in-intern (x y) (ttt:match-expr *ttt-mod-n* y))) 
 (defun pp? (x) (util:in-intern (x y) (ttt::match-expr *ttt-pp* y)))
 (defun term? (x) (util:in-intern (x y) (ttt::match-expr *ttt-term* y)))
 (defun verb? (x) (util:in-intern (x y) (ttt::match-expr *ttt-verb* y)))
