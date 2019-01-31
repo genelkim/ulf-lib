@@ -327,6 +327,8 @@
         (list #'adv-e? 'adv-e)
         (list #'adv-s? 'adv-s)
         (list #'adv-f? 'adv-f)
+        (list #'mod-a? 'mod-a)
+        (list #'mod-n? 'mod-n)
         (list #'pp? 'pp)
         (list #'term? 'term)
         (list #'verb? 'verb)

@@ -29,6 +29,8 @@
     :lex-ps?
     :lex-pq?
     :lex-prep?
+    :lex-mod-a?
+    :lex-mod-n?
     :lex-rel?
     :lex-det?
     :lex-coord?
@@ -61,8 +63,10 @@
     :adv-a?  
     :adv-e?  
     :adv-s?  
-    :adv-f?  
-    :adv?  
+    :adv-f? 
+    :adv?
+    :mod-a?
+    :mod-n?
     :pp?  
     :term?  
     :verb?  
@@ -99,6 +103,8 @@
     :adv-e
     :adv-s
     :adv-f
+    :mod-a
+    :mod-n
     :pp
     :term
     :verb

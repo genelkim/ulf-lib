@@ -47,9 +47,9 @@
       (lex-pq? x)))
 
 ;; Predicate modifiers.
-(defun lex-mod-a (x)
+(defun lex-mod-a? (x)
   (suffix-check x "MOD-A"))
-(defun lex-mod-n (x)
+(defun lex-mod-n? (x)
   (suffix-check x "MOD-N"))
 
 
