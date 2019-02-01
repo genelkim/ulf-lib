@@ -39,6 +39,6 @@
 ;; Load Util Choose between the following two lines depending on
 ;; whether you want the files compiled into FASLs or not:
 (asdf:operate 'asdf:load-op 'ulf-lib) ;; Compile and load as necessary
-;(asdf:operate 'asdf:load-source-op 'ttt) ;; Doesn't compile
+;(asdf:operate 'asdf:load-source-op 'ulf-lib) ;; Doesn't compile
 
 

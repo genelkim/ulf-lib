@@ -2,6 +2,16 @@
 
 (in-package :ulf-lib)
 
+;; Ensures that the input symbol is in ulf-lib and the output symbol is in
+;; callpkg.
+(defmacro inout-ulf-lib ((x y &key (callpkg nil)) &body body)
+  `(util:inout-intern (,x ,y :ulf-lib :callpkg ,callpkg)
+                      ,@body))
+;; Ensures that the input symbol is in ulf-lib.
+(defmacro in-ulf-lib ((x y) &body body)
+  `(util:in-intern (,x ,y :ulf-lib)
+                   ,@body))
+
 (defparameter *ttt-noun*
   '(! lex-noun?
       lex-name-pred?
@@ -259,64 +269,64 @@
      (voc _!) (voc-O _1)))
 
 
-(defun noun? (x) (util:in-intern (x y) (ttt::match-expr *ttt-noun* y)))
-(defun adj? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adj* y)))
-(defun adv-a? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-a* y)))
-(defun adv-e? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-e* y)))
-(defun adv-s? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-s* y)))
-(defun adv-f? (x) (util:in-intern (x y) (ttt::match-expr *ttt-adv-f* y)))
-(defun adv? (x) (util:in-intern (x y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
-(defun mod-a? (x) (util:in-intern (x y) (ttt:match-expr *ttt-mod-a* y))) 
-(defun mod-n? (x) (util:in-intern (x y) (ttt:match-expr *ttt-mod-n* y))) 
-(defun pp? (x) (util:in-intern (x y) (ttt::match-expr *ttt-pp* y)))
-(defun term? (x) (util:in-intern (x y) (ttt::match-expr *ttt-term* y)))
-(defun verb? (x) (util:in-intern (x y) (ttt::match-expr *ttt-verb* y)))
-(defun pred? (x) (util:in-intern (x y) (ttt::match-expr *ttt-pred* y)))
-(defun det? (x) (util:in-intern (x y) (ttt::match-expr *ttt-det* y)))
-(defun aux? (x) (util:in-intern (x y) (ttt::match-expr *ttt-aux* y)))
-(defun tensed-aux? (x) (util:in-intern (x y) (ttt::match-expr *ttt-tensed-aux* y)))
-(defun tensed-verb? (x) (util:in-intern (x y) (ttt::match-expr *ttt-tensed-verb* y)))
-(defun sent? (x) (util:in-intern (x y) (ttt::match-expr *ttt-sent* y)))
-(defun tensed-sent? (x) (util:in-intern (x y) (ttt::match-expr *ttt-tensed-sent* y)))
-(defun sent-mod? (x) (util:in-intern (x y) (ttt::match-expr *ttt-sent-mod* y)))
+(defun noun? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-noun* y)))
+(defun adj? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adj* y)))
+(defun adv-a? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-a* y)))
+(defun adv-e? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-e* y)))
+(defun adv-s? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-s* y)))
+(defun adv-f? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-f* y)))
+(defun adv? (x) (in-ulf-lib (x y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
+(defun mod-a? (x) (in-ulf-lib (x y) (ttt:match-expr *ttt-mod-a* y)))
+(defun mod-n? (x) (in-ulf-lib (x y) (ttt:match-expr *ttt-mod-n* y)))
+(defun pp? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-pp* y)))
+(defun term? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-term* y)))
+(defun verb? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-verb* y)))
+(defun pred? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-pred* y)))
+(defun det? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-det* y)))
+(defun aux? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-aux* y)))
+(defun tensed-aux? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-tensed-aux* y)))
+(defun tensed-verb? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-tensed-verb* y)))
+(defun sent? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-sent* y)))
+(defun tensed-sent? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-tensed-sent* y)))
+(defun sent-mod? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-sent-mod* y)))
 
-(defun preposs-macro? (x) (util:inout-intern (x y) (ttt::match-expr *ttt-preposs-macro* y)))
-(defun p-arg? (x) (util:in-intern (x y) (ttt::match-expr *ttt-p-arg* y)))
-(defun voc? (x) (util:in-intern (x y) (ttt::match-expr *ttt-voc* y)))
+(defun preposs-macro? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-preposs-macro* y)))
+(defun p-arg? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-p-arg* y)))
+(defun voc? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-voc* y)))
 
 (defun sent-punct? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(! ? .?))))
 
 ;; Reifiers.
 (defun noun-reifier? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(k))))
 (defun tensed-sent-reifier? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(that tht whether ans-to))))
 (defun sent-reifier? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(ke))))
 (defun verb-reifier? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(ka to gd))))
 
 ;; Operator forming type-shifters.
 (defun advformer? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(adv-a adv-e adv-s adv-f))))
 (defun detformer? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (member y '(fquan nquan))))
 
 (defun contains-relativizer (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (ttt::match-expr '(^* lex-rel?) y)))
 
 ;; A relativized sentence is a tensed sentence with a relativizer in it.
 (defun relativized-sent? (x)
-  (util:in-intern (x y)
+  (in-ulf-lib (x y)
              (and (tensed-sent? y)
                   (contains-relativizer y))))
 
@@ -359,21 +369,21 @@
 
 ;; Hypothesizes the type of the given ULF formula.
 (defun ulf-type? (inx &key (callpkg nil))
-  (util:inout-intern (inx x :callpkg callpkg)
+  (inout-ulf-lib (inx x :callpkg callpkg)
     (let ((matched (remove-if-not #'(lambda (pair) (apply (first pair) (list x)))
                                   *type-id-fns*)))
       (if matched
         (mapcar #'second matched)
         '(unknown)))))
 (defun unknown? (inx &optional (callpkg nil))
-  (util:inout-intern (inx x)
+  (inout-ulf-lib (inx x :callpkg callpkg)
     (equal '(unknown) (ulf-type? x))))
 
 ;; Labels formula with the hypothesized types.
 ;; TODO: Merging this function with 'ulf-type?' to get all types in one bottom
 ;;       up fashion would speed this up a lot.
 (defun label-formula-types (rawf &key (callpkg nil))
-  (util:inout-intern (rawf f :callpkg callpkg)
+  (inout-ulf-lib (rawf f :callpkg callpkg)
                 (cond
                   ((atom f) f)
                   ;(list (cons 'types (ulf-type? f)) f))
@@ -384,7 +394,7 @@
 ;; Basically all sentence-level operators that are written as phrasal in the
 ;; surface form.
 (defun phrasal-sent-op? (x)
-  (util:in-intern (x e)
+  (in-ulf-lib (x e)
              (or
                (adv-e? e)
                (adv-s? e)
