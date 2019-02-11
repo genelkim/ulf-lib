@@ -21,6 +21,7 @@
 
     ;; ttt-lexical-patterns.lisp
     :lex-noun?
+    :lex-rel-noun?
     :lex-function?
     :lex-pronoun?
     :lex-verb?

@@ -25,6 +25,14 @@
 (defun lex-noun? (x)
   (in-ulf-lib-suffix-check x "N"))
 
+(defun lex-rel-noun? (inx)
+  (in-ulf-lib (inx x)
+    (multiple-value-bind (word suffix) (split-by-suffix x)
+      (let ((wchars (util:split-into-atoms word)))
+        (and (lex-noun? inx)
+             (> (length wchars) 3)
+             (equal '(- O F) (last wchars 3)))))))
+
 (defun lex-function? (x)
   (in-ulf-lib-suffix-check x "F"))
 
