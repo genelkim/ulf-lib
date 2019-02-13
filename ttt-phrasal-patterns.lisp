@@ -30,6 +30,7 @@
       (lex-function? term?)
       (n+preds noun? (+ pred?))
       (noun? lex-coord? (+ noun?))
+      (phrasal-sent-op? noun?)
       (n+post noun? (+ pred? term? adv? p-arg? unknown?))
 
       ;; Fall back if arguments not correctly analyzed.
@@ -57,6 +58,7 @@
       (adj? p-arg?)
       ;; Coordination.
       (adj? lex-coord? (+ adj?))
+      (phrasal-sent-op? adj?)
       ;; Equal sign with term.
       (= term?)
       ))
@@ -103,6 +105,7 @@
 (defparameter *ttt-pp*
    '(! (lex-p? term?)
        (pp? lex-coord? (+ pp?))
+       (phrasal-sent-op? pp?)
        ;; "just outside Boston" -- (just.adv-a (outside.p |Boston|))
        (adv-a? pp?)
        (pp? adv-a?)
@@ -171,6 +174,7 @@
       (aux? verb?)
       ;(verb? adv-a? term?)
       ((? verb?) lex-coord? (+ verb?))
+      (phrasal-sent-op? verb?)
 
       ;; FALL BACK ANALYSIS.
       ;; Fall back if arguments not analyzed correctly.
@@ -189,6 +193,7 @@
       (lex-rel? _!)
       (sub lex-rel? _!)
       (sub (^* lex-rel?) _!)
+      (phrasal-sent-op? pred?)
       ))
 
 (defparameter *ttt-aux*
@@ -205,6 +210,7 @@
       (tensed-verb? (+ adv-a?))
       (tensed-verb? adv-a? term?)
       ((? tensed-verb?) lex-coord? (+ tensed-verb?))
+      (phrasal-sent-op? tensed-verb?)
       ))
 
 (defparameter *ttt-det*
@@ -257,7 +263,10 @@
 (defparameter *ttt-sent-mod*
   '(!1 (lex-coord? (!2 tensed-sent? sent?))
        ;; Prepositionally coordinated sentences.
-       (lex-ps? tensed-sent?)))
+       (lex-ps? tensed-sent?)
+       adv-e?
+       adv-s?
+       adv-f?))
 
 (defparameter *ttt-preposs-macro*
   '(term? 's))
