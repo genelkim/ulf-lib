@@ -26,54 +26,63 @@
 ;;; Examples of bad use:
 ;;;   'sub' does not have exactly 2 arguments
 ;;;   *h is not present in the second argument
-(defun apply-sub-macro (inulf &optional fail-on-bad-use)
-  (util:in-intern
-    (inulf ulf :ulf-lib)
-    (cond
-      ((atom ulf) (values t ulf))
-      ;; If sub and less than 2 arguments, fail.
-      ((and (eq (first ulf) 'sub) (< (length ulf) 3))
-       (return-from apply-sub-macro (values nil ulf)))
-      ;; If sub, recurse into the second arg, then try to apply.
-      ((eq (first ulf) 'sub)
-       (if (and fail-on-bad-use (not (equal (length ulf) 3)))
-         (return-from apply-sub-macro (values nil ulf)))
+(defun apply-sub-macro (inulf &key (fail-on-bad-use nil) (calling-package nil))
+  (let
+    ((initial-result
+       (multiple-value-list
+         (util:in-intern
+           (inulf ulf :ulf-lib)
+           (cond
+             ((atom ulf) (values t ulf))
+             ;; If sub and less than 2 arguments, fail.
+             ((and (eq (first ulf) 'sub) (< (length ulf) 3))
+              (return-from apply-sub-macro (values nil ulf)))
+             ;; If sub, recurse into the second arg, then try to apply.
+             ((eq (first ulf) 'sub)
+              (if (and fail-on-bad-use (not (equal (length ulf) 3)))
+                (return-from apply-sub-macro (values nil ulf)))
 
-       (let* ((leftrec
-                (multiple-value-list
-                  (apply-sub-macro (second ulf) fail-on-bad-use)))
-              (rightrec
-                (multiple-value-list
-                  (apply-sub-macro (third ulf) fail-on-bad-use)))
-              (lrsuc (first leftrec))
-              (lrres (second leftrec))
-              (rrsuc (first rightrec))
-              (rrres (second rightrec)))
-         (cond
-           ;; If the recursion failed, propagate results.
-           ((not lrsuc) (values lrsuc lrres))
-           ((not rrsuc) (values rrsuc rrres))
-           ;; If the recrusive result doesn't have a *h, return with failure.
-           ((and fail-on-bad-use (not (contains-hole rrres)))
-            (values nil (list (first ulf) lrres rrres)))
-           ;; Apply substitution and return result.
-           (t
-             (progn
-               (values t (subst lrres '*h rrres)))))))
-      ;; Otherwise, just recursive into all.  If there's a failure, return
-      ;; it.  Otherwise, merge together.
-      (t (let* ((recres (mapcar #'(lambda (x)
-                                    (multiple-value-list
-                                      (apply-sub-macro x fail-on-bad-use)))
-                                ulf))
-                (successes (mapcar #'first recres))
-                (fs (mapcar #'second recres)))
-           (if (reduce #'(lambda (x y) (and x y)) successes)
-             ;; If all recursion succeeded, return the results with 't'.
-             (values t fs)
-             ;; Otherwise, find the first one that failed and return it.
-             (let ((failpos (position nil successes)))
-               (values nil (nth failpos fs)))))))))
+              (let* ((leftrec
+                       (multiple-value-list
+                         (apply-sub-macro (second ulf) :fail-on-bad-use fail-on-bad-use)))
+                     (rightrec
+                       (multiple-value-list
+                         (apply-sub-macro (third ulf) :fail-on-bad-use fail-on-bad-use)))
+                     (lrsuc (first leftrec))
+                     (lrres (second leftrec))
+                     (rrsuc (first rightrec))
+                     (rrres (second rightrec)))
+                (cond
+                  ;; If the recursion failed, propagate results.
+                  ((not lrsuc) (values lrsuc lrres))
+                  ((not rrsuc) (values rrsuc rrres))
+                  ;; If the recrusive result doesn't have a *h, return with failure.
+                  ((and fail-on-bad-use (not (contains-hole rrres)))
+                   (values nil (list (first ulf) lrres rrres)))
+                  ;; Apply substitution and return result.
+                  (t
+                    (progn
+                      (values t (subst lrres '*h rrres)))))))
+             ;; Otherwise, just recursive into all.  If there's a failure, return
+             ;; it. Otherwise, merge together.
+             (t (let* ((recres (mapcar #'(lambda (x)
+                                           (multiple-value-list
+                                             (apply-sub-macro x :fail-on-bad-use fail-on-bad-use)))
+                                       ulf))
+                       (successes (mapcar #'first recres))
+                       (fs (mapcar #'second recres)))
+                  (if (reduce #'(lambda (x y) (and x y)) successes)
+                    (values t fs) ; If all recursion succeeded, return the results with 't'.
+                    ; Otherwise, find the first one that failed and return it.
+                    (let ((failpos (position nil successes)))
+                      (values nil (nth failpos fs))))))))))
+     ) ; end of let definitions.
+
+    (if calling-package
+      (values (first initial-result)
+              (util:intern-symbols-recursive (second initial-result) calling-package))
+      (values (first initial-result) (second initial-result)))))
+
 
 ;;; Takes a sentence of the form
 ;;; ((<tense> verb/aux) NP VP ADV1 .. ADVn)
