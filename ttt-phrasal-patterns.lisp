@@ -106,9 +106,9 @@
    '(! (lex-p? term?)
        (pp? lex-coord? (+ pp?))
        (phrasal-sent-op? pp?)
-       ;; "just outside Boston" -- (just.adv-a (outside.p |Boston|))
-       (adv-a? pp?)
-       (pp? adv-a?)
+       ;; "just outside Boston" -- (just.mod-a (outside.p |Boston|))
+       (mod-a? pp?)
+       (pp? mod-a?)
 
        ;; Fall back, anything starting with *.p
        (lex-p? _+)
