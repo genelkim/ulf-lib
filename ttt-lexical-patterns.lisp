@@ -18,7 +18,6 @@
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)
-  ;(in-ulf-lib (x y)
   (util:in-intern (x y *package*)
               (suffix-check y suffix)))
 
@@ -26,12 +25,13 @@
   (in-ulf-lib-suffix-check x "N"))
 
 (defun lex-rel-noun? (inx)
-  (in-ulf-lib (inx x)
-    (multiple-value-bind (word suffix) (split-by-suffix x)
-      (let ((wchars (cl-strings:chars (string word))))
-        (and (lex-noun? inx)
-             (> (length wchars) 3)
-             (equal '(#\- #\O #\F) (last wchars 3)))))))
+  (if (atom inx)
+    (in-ulf-lib (inx x)
+      (multiple-value-bind (word suffix) (split-by-suffix x)
+        (let ((wchars (cl-strings:chars (string word))))
+          (and (lex-noun? inx)
+               (> (length wchars) 3)
+               (equal '(#\- #\O #\F) (last wchars 3))))))))
 
 (defun lex-function? (x)
   (in-ulf-lib-suffix-check x "F"))

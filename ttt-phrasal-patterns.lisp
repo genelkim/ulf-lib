@@ -25,7 +25,7 @@
       (lex-name? noun?)
       (term? noun?)
       ; (mother-of.n |John|)
-      (lex-noun? term?)
+      (lex-rel-noun? term?)
       (noun? p-arg?)
       (lex-function? term?)
       (n+preds noun? (+ pred?))
@@ -159,11 +159,11 @@
 
       ;; Rather than building a whole set of types corresponding to versions
       ;; with the hole contained, I'll just check it dynamically.
-      [*]h
-      [*]s
-      [*]p
-      [*]qt
-      [*]ref))
+      [*h]
+      [*s]
+      [*p]
+      [*qt]
+      [*ref]))
 
 (defparameter *ttt-verb*
   '(! lex-verb?
@@ -277,35 +277,39 @@
      ;; FALL BACK.
      (voc _!) (voc-O _1)))
 
+;; Matches the TTT pattern (ttt) to the s-expression (expr) after hiding TTT
+;; operators in expr.
+(defun hidden-match-expr (ttt expr)
+  (ttt::match-expr ttt (util:hide-ttt-ops expr)))
 
-(defun noun? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-noun* y)))
-(defun adj? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adj* y)))
-(defun adv-a? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-a* y)))
-(defun adv-e? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-e* y)))
-(defun adv-s? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-s* y)))
-(defun adv-f? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-adv-f* y)))
+(defun noun? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-noun* y)))
+(defun adj? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adj* y)))
+(defun adv-a? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-a* y)))
+(defun adv-e? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-e* y)))
+(defun adv-s? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-s* y)))
+(defun adv-f? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-f* y)))
 (defun adv? (x) (in-ulf-lib (x y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
 (defun mod-a? (x) (in-ulf-lib (x y) (ttt:match-expr *ttt-mod-a* y)))
 (defun mod-n? (x) (in-ulf-lib (x y) (ttt:match-expr *ttt-mod-n* y)))
-(defun pp? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-pp* y)))
-(defun term? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-term* y)))
-(defun verb? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-verb* y)))
-(defun pred? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-pred* y)))
-(defun det? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-det* y)))
-(defun aux? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-aux* y)))
-(defun tensed-aux? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-tensed-aux* y)))
-(defun tensed-verb? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-tensed-verb* y)))
-(defun sent? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-sent* y)))
-(defun tensed-sent? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-tensed-sent* y)))
-(defun sent-mod? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-sent-mod* y)))
+(defun pp? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-pp* y)))
+(defun term? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-term* y)))
+(defun verb? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-verb* y)))
+(defun pred? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-pred* y)))
+(defun det? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-det* y)))
+(defun aux? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-aux* y)))
+(defun tensed-aux? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-aux* y)))
+(defun tensed-verb? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-verb* y)))
+(defun sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent* y)))
+(defun tensed-sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-sent* y)))
+(defun sent-mod? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent-mod* y)))
 
-(defun preposs-macro? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-preposs-macro* y)))
-(defun p-arg? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-p-arg* y)))
-(defun voc? (x) (in-ulf-lib (x y) (ttt::match-expr *ttt-voc* y)))
+(defun preposs-macro? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-preposs-macro* y)))
+(defun p-arg? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-p-arg* y)))
+(defun voc? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-voc* y)))
 
 (defun sent-punct? (x)
   (in-ulf-lib (x y)
-             (member y '(! ? .?))))
+             (member y '(! ? .? [!] [?] [.?]))))
 
 ;; Reifiers.
 (defun noun-reifier? (x)
@@ -331,7 +335,7 @@
 
 (defun contains-relativizer (x)
   (in-ulf-lib (x y)
-             (ttt::match-expr '(^* lex-rel?) y)))
+             (hidden-match-expr '(^* lex-rel?) y)))
 
 ;; A relativized sentence is a tensed sentence with a relativizer in it.
 (defun relativized-sent? (x)
@@ -395,7 +399,6 @@
   (inout-ulf-lib (rawf f :callpkg callpkg)
                 (cond
                   ((atom f) f)
-                  ;(list (cons 'types (ulf-type? f)) f))
                   (t (list (cons 'types (ulf-type? f))
                            (mapcar #'label-formula-types f))))))
 
