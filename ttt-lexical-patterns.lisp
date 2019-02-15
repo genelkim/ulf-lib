@@ -103,8 +103,8 @@
 ;; TODO: generalize to other extensions.
 (defun lex-name-pred? (x)
   (util:in-intern (x y *package*)
-              (cl-user::match-re "^\\|\[\^\\|\]\+\\.N\\|$"
-                                 (format nil "~s" y))))
+    (cl-user::match-re "^\\|\[\^\\|\]\+\\.N\\|$"
+                       (format nil "~s" y))))
 
 ;; TODO: merge with lex-name? in ulf-lib.
 ;; Returns t if s is strictly a ULF name, e.g. |John|, |Mary|, etc.
@@ -113,20 +113,20 @@
 ;; TODO: separate into separate functions for symbol and string since the ULF can contain strings!
 (defun is-strict-name? (x)
   (util:in-intern (x s *package*)
-              (let* ((sstr (if (symbolp s) (util:sym2str s) s))
-                     (chars (coerce sstr 'list)))
-                (and (eql #\| (nth 0 chars))
-                     (eql #\| (nth (1- (length chars)) chars))))))
+    (let* ((sstr (if (not (stringp s)) (util:sym2str s) s))
+           (chars (coerce sstr 'list)))
+      (and (eql #\| (nth 0 chars))
+           (eql #\| (nth (1- (length chars)) chars))))))
 
 ;; Matches a regular name.
 (defun lex-name? (x)
   (util:in-intern (x y *package*)
-              (and
-                (cl-user::match-re "^\\|\[\^\\|\]\+\\|$"
-                                   (format nil "~s" y))
-                (not (lex-name-pred? y))
-                ;; Special handling of quotes '\" == '|"|.
-                (not (eq '\" y)))))
+    (and
+      (cl-user::match-re "^\\|\[\^\\|\]\+\\|$"
+                         (format nil "~s" y))
+      (not (lex-name-pred? y))
+      ;; Special handling of quotes '\" == '|"|.
+      (not (eq '\" y)))))
 
 ; Adverbs
 (defun lex-adv-a? (x)
