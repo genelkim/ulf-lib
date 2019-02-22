@@ -168,7 +168,7 @@
 (defparameter *ttt-verb*
   '(! lex-verb?
       (pasv lex-verb?)
-      (verb? (+ (! term? pred? adv-a? p-arg?)))
+      (verb? (+ (! term? pred? adv-a? p-arg? phrasal-sent-op?)))
       (adv-a? verb?)
       ;(verb? (+ adv-a?))
       (aux? verb?)

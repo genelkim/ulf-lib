@@ -29,16 +29,14 @@
 
 ;; Adds the directory containing load.lisp to the "PATH" of asdf, so
 ;; we can load *util* from any directory.
-(push (make-pathname :directory (pathname-directory *load-truename*))
+(pushnew (make-pathname :directory (pathname-directory *load-truename*))
       asdf:*central-registry*)
 
-
 ;; compiler settings
-(proclaim '(optimize (speed 3) (safety 3) (space 0) (debug 3)))
+(proclaim '(optimize (speed 1) (safety 2) (space 0) (debug 3)))
 
 ;; Load Util Choose between the following two lines depending on
 ;; whether you want the files compiled into FASLs or not:
 (asdf:operate 'asdf:load-op 'ulf-lib) ;; Compile and load as necessary
 ;(asdf:operate 'asdf:load-source-op 'ulf-lib) ;; Doesn't compile
-
 

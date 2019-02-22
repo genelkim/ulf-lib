@@ -5,7 +5,8 @@
 
 (defpackage :ulf-lib
   (:nicknames :ulf)
-  (:use :cl :cl-user :ttt :util :cl-strings)
+  (:use :cl :cl-user :ttt :util :cl-strings :cl-ppcre)
+  (:shadow :split)
   (:export
     ;; suffix.lisp
     :has-suffix?
@@ -18,6 +19,10 @@
     :apply-sub-macro
     :lift-adv-a
     :uninvert-verbaux!
+
+    ;; preprocess.lisp
+    :unescape-backslashes
+    :add-prename-space
 
     ;; ttt-lexical-patterns.lisp
     :lex-noun?
