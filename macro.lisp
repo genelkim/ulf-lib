@@ -60,9 +60,7 @@
                   ((and fail-on-bad-use (not (contains-hole rrres)))
                    (values nil (list (first ulf) lrres rrres)))
                   ;; Apply substitution and return result.
-                  (t
-                    (progn
-                      (values t (subst lrres '*h rrres)))))))
+                  (t (values t (subst lrres '*h rrres))))))
              ;; Otherwise, just recursive into all.  If there's a failure, return
              ;; it. Otherwise, merge together.
              (t (let* ((recres (mapcar #'(lambda (x)
@@ -82,6 +80,44 @@
       (values (first initial-result)
               (util:intern-symbols-recursive (second initial-result) calling-package))
       (values (first initial-result) (second initial-result)))))
+
+;; Adds types to the variables *h for sub macros.
+(defun add-types-to-sub-vars (inulf &key (calling-package nil))
+  (let
+    ((initial-result
+       (util:in-intern
+         (inulf ulf :ulf-lib)
+         (labels
+           (;; Assumes there's at most one occurrence of var in curulf.
+            (add-type-to-var (curulf var typ)
+                             (subst (add-suffix var (suffix-for-type typ)) var curulf))
+            ;; Main recursive function that does all the heavy lifting.
+            (recfn (curulf)
+                   (cond
+                     ((atom curulf) curulf)
+                     ;; If sub has less than 2 arguments, just recurse.
+                     ((and (eq (first curulf) 'sub) (< (length curulf) 3))
+                      (recfn (second curulf)))
+                     ;; If sub, recurse into both arguments, then add type to variable in
+                     ;; second argument.
+                     ((eq (first curulf) 'sub)
+                      (let* ((leftrec (recfn (second curulf)))
+                             (rightrec (recfn (third curulf)))
+                             ;; TODO: For now just take the first type (we should use a
+                             ;; hierarchy of types to select the most specific one.
+                             (vartype (first (ulf-type? leftrec))))
+                        (list 'sub
+                              leftrec
+                              (add-type-to-var rightrec '*h vartype))))
+                     ;; Otherwise, just recurse.
+                     (t (mapcar #'recfn curulf)))))
+
+           ;; Main body of add-types-to-sub-vars.
+           (recfn ulf)))))
+    ;; Intern to calling package.
+    (if calling-package
+      (util:intern-symbols-recursive initial-result calling-package)
+      initial-result)))
 
 
 ;;; Takes a sentence of the form

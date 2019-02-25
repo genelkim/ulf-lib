@@ -42,3 +42,50 @@
                  (list #\.)
                  (util:split-into-atoms suffix))))
 
+;; An association list of the semantic type name and the suffix extension for
+;; lexical ULF items.
+(defparameter *type-suffix-alist*
+  '((noun . n)
+    (adj . a)
+    (adv-a . adv-a)
+    (adv-e . adv-e)
+    (adv-s . adv-s)
+    (adv-f . adv-f)
+    (mod-a . mod-a)
+    (mod-n . mod-n)
+    (pp . p)
+    (term . pro)
+    (verb . v)
+    (pred . pred)
+    (det . d)
+    (aux-v . aux-v)
+    (aux-s . aux-s)
+    (sent . sent)
+    (funct . f)))
+;; TODO: complete type suffix list.
+;; TODO: unify this system so all the lex-X? are defined from the list:
+;;    (defun lex-[type]? (x) (in-ulf-lib-suffix-check x [suffix]))
+;; Also, make a hierarchy of types so we can choose the most specific, e.g.
+;;  - pred
+;;    - verb
+;;    - noun
+;;    - adjective
+;;    - preposition
+
+
+;; Returns the suffix for the type. If none found, it just returns the type,
+;; but in the desired format.
+(defun suffix-for-type (x &key (callpkg nil) (form "symbol"))
+  (assert (member form '("string" "symbol") :test #'equal))
+  (let ((suffix (cdr (assoc (intern x :ulf-lib) *type-suffix-alist*))))
+    (if suffix
+      ;; Cases where we found a type result.
+      (cond
+        ((equal form "string") (symbol-name suffix))
+        (callpkg (intern suffix callpkg))
+        (t suffix))
+      ;; Not found.
+      (cond
+        ((equal form "string") (symbol-name x))
+        (t x)))))
+

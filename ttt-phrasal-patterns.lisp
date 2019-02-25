@@ -12,6 +12,7 @@
   `(util:in-intern (,x ,y :ulf-lib)
                    ,@body))
 
+
 (defparameter *ttt-noun*
   '(! lex-noun?
       lex-name-pred?
@@ -289,8 +290,8 @@
 (defun adv-s? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-s* y)))
 (defun adv-f? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-f* y)))
 (defun adv? (x) (in-ulf-lib (x y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
-(defun mod-a? (x) (in-ulf-lib (x y) (ttt:match-expr *ttt-mod-a* y)))
-(defun mod-n? (x) (in-ulf-lib (x y) (ttt:match-expr *ttt-mod-n* y)))
+(defun mod-a? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-mod-a* y)))
+(defun mod-n? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-mod-n* y)))
 (defun pp? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-pp* y)))
 (defun term? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-term* y)))
 (defun verb? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-verb* y)))

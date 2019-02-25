@@ -13,12 +13,14 @@
     :split-by-suffix
     :strip-suffix
     :add-suffix
+    :suffix-for-type
 
     ;; macro.lisp
     :uninvert-verbauxes
     :apply-sub-macro
     :lift-adv-a
     :uninvert-verbaux!
+    :add-types-to-sub-vars
 
     ;; preprocess.lisp
     :unescape-backslashes
@@ -63,6 +65,7 @@
     :lex-verbaux?
     :lex-elided?
     :is-strict-name?
+    :lex-hole-variable?
 
     ;; ttt-phrasal-patterns.lisp
     :noun?  

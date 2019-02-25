@@ -13,8 +13,9 @@
 
 
 ;; Check if *x* has the *suffix* extension.
+;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (cl-user::match-re (concatenate 'string "^\(\\w\|\\d\|-\|\/\|:\|\\.\)\+\\." suffix "$")
+  (cl-user::match-re (concatenate 'string "^\\[?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\)\+\\." suffix "\\]?$")
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)
@@ -193,6 +194,17 @@
         (or
           (and (equal (intern "{") (first wchars))
                (equal (intern "}") (car (last wchars))))
-          (and (equal (intern "{") (first tchars))
+          (and (equal (intern "{") (first wchars))
                (equal (intern "}") (car (last tchars)))))))))
+
+;; Returns true if the token is a hole variable:
+;;  e.g. *h, *p, *s, *ref
+;; Include those that have been augmented with other type information,
+;;  e.g. *h.n, *h.pro
+(defun lex-hole-variable? (intoken)
+  (in-ulf-lib (intoken token)
+    (multiple-value-bind (word suffix) (split-by-suffix token)
+      (let ((wchars (util:split-into-atoms word)))
+        ;; The first character is a *.
+        (equal '* (first wchars))))))
 
