@@ -81,42 +81,97 @@
               (util:intern-symbols-recursive (second initial-result) calling-package))
       (values (first initial-result) (second initial-result)))))
 
-;; Adds types to the variables *h for sub macros.
-(defun add-types-to-sub-vars (inulf &key (calling-package nil))
+
+;; Assumes there's at most one occurrence of var in curulf.
+(defun add-info-to-var (curulf var srculf)
+  ;; TODO: For now just take the first type (we should use a
+  ;; hierarchy of types to select the most specific one.
+  (let* ((typ (first (ulf-type? srculf)))
+         (typeadded (add-suffix var (suffix-for-type typ)))
+         (replacement
+           (cond
+             ((plur-noun? srculf) (list 'plur typeadded))
+             ((plur-term? srculf) (list 'plur-term typeadded))
+             (t typeadded))))
+    (subst replacement var curulf)))
+
+
+;; Add types, pluralization, etc. to the variables *h for sub macros.
+(defun add-info-to-sub-vars (inulf &key (calling-package nil))
   (let
     ((initial-result
-       (util:in-intern
-         (inulf ulf :ulf-lib)
+       (util:in-intern (inulf ulf :ulf-lib)
          (labels
-           (;; Assumes there's at most one occurrence of var in curulf.
-            (add-type-to-var (curulf var typ)
-                             (subst (add-suffix var (suffix-for-type typ)) var curulf))
-            ;; Main recursive function that does all the heavy lifting.
+           (;; Main recursive function that does all the heavy lifting.
             (recfn (curulf)
-                   (cond
-                     ((atom curulf) curulf)
-                     ;; If sub has less than 2 arguments, just recurse.
-                     ((and (eq (first curulf) 'sub) (< (length curulf) 3))
-                      (recfn (second curulf)))
-                     ;; If sub, recurse into both arguments, then add type to variable in
-                     ;; second argument.
-                     ((eq (first curulf) 'sub)
-                      (let* ((leftrec (recfn (second curulf)))
-                             (rightrec (recfn (third curulf)))
-                             ;; TODO: For now just take the first type (we should use a
-                             ;; hierarchy of types to select the most specific one.
-                             (vartype (first (ulf-type? leftrec))))
-                        (list 'sub
-                              leftrec
-                              (add-type-to-var rightrec '*h vartype))))
-                     ;; Otherwise, just recurse.
-                     (t (mapcar #'recfn curulf)))))
+              (cond
+                ((atom curulf) curulf)
+                ;; If sub has less than 2 arguments, just recurse.
+                ((and (eq (first curulf) 'sub) (< (length curulf) 3))
+                 (recfn (second curulf)))
+                ;; If sub, recurse into both arguments, then add type to variable in
+                ;; second argument.
+                ((eq (first curulf) 'sub)
+                 (let* ((leftrec (recfn (second curulf)))
+                        (rightrec (recfn (third curulf))))
+                   (list 'sub
+                         leftrec
+                         (add-info-to-var rightrec '*h leftrec))))
+                ;; Otherwise, just recurse.
+                (t (mapcar #'recfn curulf)))))
 
-           ;; Main body of add-types-to-sub-vars.
+           ;; Main body of add-info-to-sub-vars.
            (recfn ulf)))))
     ;; Intern to calling package.
     (if calling-package
       (util:intern-symbols-recursive initial-result calling-package)
+      initial-result)))
+
+
+;; This assumes that there's at most one relativizer in curulf.
+(defun add-info-to-relativizer (curulf srculf)
+  (let* ((origrel (first (util:tree-find-if curulf #'lex-rel?)))
+         (replacement
+          ;; Right now, all we care about is plurality.
+          (cond
+            ((or (plur-term? srculf) (plur-noun? srculf))
+             (list 'plur-term origrel))
+            (t origrel))))
+    (if origrel
+      (subst replacement origrel curulf)
+      curulf)))
+
+
+;; Adds pluralization, etc. to the relativizers in relative clauses.
+(defun add-info-to-relativizers (inulf &key (calling-package nil))
+  (let
+    ((initial-result
+       (util:in-intern (inulf ulf :ulf-lib)
+         (labels
+           (;; Main recursive function.
+            (recfn (curulf)
+              (cond
+                ((atom curulf) curulf)
+                ;; If n+preds, n+post, np+preds, recurse into elements then take
+                ;; apply the info of the first arg to all of the other args.
+                ((and (member (first curulf) '(n+preds n+post np+preds))
+                      (> (length curulf) 2))
+                 (let* ((recvals (mapcar #'recfn curulf))
+                        (macro (first recvals))
+                        (headexpr (second recvals))
+                        (postmods (cddr recvals)))
+                   (cons macro
+                         (cons headexpr
+                               (mapcar #'(lambda (expr)
+                                           (add-info-to-relativizer expr headexpr))
+                                       postmods)))))
+                ;; Otherwise, just recurse.
+                (t (mapcar #'recfn curulf)))))
+           ;; Main body.
+           (recfn ulf)))))
+    ;; Intern to calling package.
+    (if calling-package
+      (intern-symbols-recursive initial-result calling-package)
       initial-result)))
 
 

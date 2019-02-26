@@ -20,7 +20,8 @@
     :apply-sub-macro
     :lift-adv-a
     :uninvert-verbaux!
-    :add-types-to-sub-vars
+    :add-info-to-sub-vars
+    :add-info-to-relativizers
 
     ;; preprocess.lisp
     :unescape-backslashes
@@ -68,29 +69,29 @@
     :lex-hole-variable?
 
     ;; ttt-phrasal-patterns.lisp
-    :noun?  
-    :adj?  
-    :adv-a?  
-    :adv-e?  
-    :adv-s?  
-    :adv-f? 
+    :noun?
+    :adj?
+    :adv-a?
+    :adv-e?
+    :adv-s?
+    :adv-f?
     :adv?
     :mod-a?
     :mod-n?
-    :pp?  
-    :term?  
-    :verb?  
-    :pred?  
-    :det?  
-    :aux?  
-    :tensed-aux? 
-    :tensed-verb? 
-    :sent?  
-    :tensed-sent? 
-    :sent-mod?  
+    :pp?
+    :term?
+    :verb?
+    :pred?
+    :det?
+    :aux?
+    :tensed-aux?
+    :tensed-verb?
+    :sent?
+    :tensed-sent?
+    :sent-mod?
     :preposs-macro?
-    :p-arg?  
-    :voc?  
+    :p-arg?
+    :voc?
     :sent-punct?
     :noun-reifier?
     :tensed-sent-reifier?
@@ -98,11 +99,24 @@
     :verb-reifier?
     :advformer?
     :detformer?
-    :phrasal-sent-op? 
+    :phrasal-sent-op?
     :contains-relativizer
     :relativized-sent?
     :ulf-type?
     :label-formula-types
+
+    ;; gen-phrasal-patterns.lisp
+    :plur-term?
+    :plur-noun?
+    :plur-lex-noun?
+    :pasv-lex-verb?
+
+    ;; search.lisp
+    :search-vp-head
+    :find-vp-head
+    :replace-vp-head
+    :search-np-head
+    :search-ap-head
 
     ;; type symbols (in ttt-phrasal-patterns.lisp)
     ;; TODO: write util function for printing while ignoring the symbol

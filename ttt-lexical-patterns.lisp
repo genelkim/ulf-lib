@@ -15,7 +15,7 @@
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (cl-user::match-re (concatenate 'string "^\\[?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\)\+\\." suffix "\\]?$")
+  (cl-user::match-re (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\)\+\\}?\\." suffix "\\]?$")
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)

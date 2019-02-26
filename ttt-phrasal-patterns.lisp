@@ -158,6 +158,9 @@
       (lex-set-of? _+)
       (det? _+)
 
+      ;; Internal plurality representation.
+      (plur-term term?)
+
       ;; Rather than building a whole set of types corresponding to versions
       ;; with the hole contained, I'll just check it dynamically.
       [*h]
@@ -170,9 +173,9 @@
   '(! lex-verb?
       (pasv lex-verb?)
       (verb? (+ (! term? pred? adv-a? p-arg? phrasal-sent-op?)))
-      (adv-a? verb?)
+      (adv-a? (* phrasal-sent-op?) verb?)
       ;(verb? (+ adv-a?))
-      (aux? verb?)
+      (aux? (* phrasal-sent-op?) verb?)
       ;(verb? adv-a? term?)
       ((? verb?) lex-coord? (+ verb?))
       (phrasal-sent-op? verb?)
@@ -205,11 +208,9 @@
 
 (defparameter *ttt-tensed-verb*
   '(! (lex-tense? verb?)
-      (tensed-verb? (+ term? pred? adv-a? p-arg?))
-      (tensed-aux? verb?)
-      (adv-a? tensed-verb?)
-      (tensed-verb? (+ adv-a?))
-      (tensed-verb? adv-a? term?)
+      (tensed-verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
+      (tensed-aux? (* phrasal-sent-op?) verb?)
+      (adv-a? (* phrasal-sent-op?) tensed-verb?)
       ((? tensed-verb?) lex-coord? (+ tensed-verb?))
       (phrasal-sent-op? tensed-verb?)
       ))

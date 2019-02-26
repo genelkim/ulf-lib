@@ -7,6 +7,8 @@
                (:file "suffix")
                (:file "ttt-lexical-patterns")
                (:file "ttt-phrasal-patterns")
+               (:file "gen-phrasal-patterns")
+               (:file "search")
                (:file "macro")
                (:file "preprocess")
                ))
