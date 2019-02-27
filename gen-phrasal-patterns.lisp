@@ -20,10 +20,13 @@
                             theirs.pro)))
       ;; For terms from nouns, either the quantifier forces a plural reading, e.g. many,
       ;; or we check the head noun for a plural operator.
-      ((and (listp x) (term? x) (= (length x) 2) (noun? (second x)))
+      ((and (listp x) (term? x) (= (length x) 2)
+            (or (det? (first x)) (noun-reifier? (first x)))
+            (or (noun? (second x)) (pp? (second x))))
        ;; TODO: deal with examples like "all water is wet"
        (or (member (first x) '(these.d those.d both.d few.d many.d several.d))
-           (plur-noun? (second x))))
+           (plur-noun? (second x))
+           (plur-partitive? (second x))))
       ;; Coordinated nouns or sets of terms are plural.
       ((and (listp x) (term? x) (> (length x) 2))
        (or (lex-set-of? (first x)) (lex-coord? (second x))))
@@ -32,6 +35,13 @@
        t)
       ;; Otherwise, singular.
       (t nil))))
+
+
+(defun plur-partitive? (inx)
+  (util:in-intern (inx x :ulf-lib)
+    (and (listp x) (= (length x) 2)
+         (lex-p? (first x)) (plur-term? (second x)))))
+
 
 (defun plur-noun? (inarg)
 ;````````````````````

@@ -108,6 +108,7 @@
     ;; gen-phrasal-patterns.lisp
     :plur-term?
     :plur-noun?
+    :plur-partitive?
     :plur-lex-noun?
     :pasv-lex-verb?
 
