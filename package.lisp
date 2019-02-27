@@ -116,7 +116,11 @@
     :find-vp-head
     :replace-vp-head
     :search-np-head
+    :find-np-head
+    :replace-np-head
     :search-ap-head
+    :find-ap-head
+    :replace-ap-head
 
     ;; type symbols (in ttt-phrasal-patterns.lisp)
     ;; TODO: write util function for printing while ignoring the symbol

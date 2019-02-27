@@ -304,10 +304,23 @@
 (defun sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent* y)))
 (defun tensed-sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-sent* y)))
 (defun sent-mod? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent-mod* y)))
-
 (defun preposs-macro? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-preposs-macro* y)))
 (defun p-arg? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-p-arg* y)))
 (defun voc? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-voc* y)))
+
+;; Memoize the biggies.
+(util:memoize 'noun?)
+(util:memoize 'adj?)
+(util:memoize 'verb?)
+(util:memoize 'adv-a?)
+(util:memoize 'adv-e?)
+(util:memoize 'adv-s?)
+(util:memoize 'adv-f?)
+(util:memoize 'adv?)
+(util:memoize 'pp?)
+(util:memoize 'term?)
+(util:memoize 'pred?)
+
 
 (defun sent-punct? (x)
   (in-ulf-lib (x y)

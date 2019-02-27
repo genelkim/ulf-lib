@@ -11,19 +11,28 @@
   `(util:in-intern (,x ,y :ulf-lib)
                    ,@body))
 
+;; Ensures that the input symbol is in *package*.
+(defmacro in-cur-package ((x y) &body body)
+  `(util:in-intern (,x ,y *package*)
+                   ,@body))
+
 
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (cl-user::match-re (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\)\+\\}?\\." suffix "\\]?$")
+  (cl-user::match-re (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)
-  (util:in-intern (x y *package*)
+  (util:in-intern (x y :ulf-lib)
               (suffix-check y suffix)))
 
+(defun in-package-suffix-check (x suffix)
+  (util:in-intern (x y *package*)
+    (suffix-check y suffix)))
+
 (defun lex-noun? (x)
-  (in-ulf-lib-suffix-check x "N"))
+  (in-package-suffix-check x "N"))
 
 (defun lex-rel-noun? (inx)
   (if (atom inx)
@@ -35,20 +44,20 @@
                (equal '(#\- #\O #\F) (last wchars 3))))))))
 
 (defun lex-function? (x)
-  (in-ulf-lib-suffix-check x "F"))
+  (in-package-suffix-check x "F"))
 
 (defun lex-pronoun? (x)
-  (in-ulf-lib-suffix-check x "PRO"))
+  (in-package-suffix-check x "PRO"))
 
 (defun lex-verb? (x)
-  (in-ulf-lib-suffix-check x "V"))
+  (in-package-suffix-check x "V"))
 
 (defun lex-adjective? (x)
-  (in-ulf-lib-suffix-check x "A"))
+  (in-package-suffix-check x "A"))
 
 ;; Symbols with *.p suffix.
 (defun lex-p? (x)
-  (in-ulf-lib-suffix-check x "P"))
+  (in-package-suffix-check x "P"))
 
 (defun lex-p-arg? (x)
   (util:in-intern (x y *package*)
@@ -57,10 +66,10 @@
                                  (format nil "~s" y))))
 
 (defun lex-ps? (x)
-  (in-ulf-lib-suffix-check x "PS"))
+  (in-package-suffix-check x "PS"))
 
 (defun lex-pq? (x)
-  (in-ulf-lib-suffix-check x "PQ"))
+  (in-package-suffix-check x "PQ"))
 
 ;; Any preposition.
 (defun lex-prep? (x)
@@ -70,16 +79,16 @@
 
 ;; Predicate modifiers.
 (defun lex-mod-a? (x)
-  (in-ulf-lib-suffix-check x "MOD-A"))
+  (in-package-suffix-check x "MOD-A"))
 (defun lex-mod-n? (x)
-  (in-ulf-lib-suffix-check x "MOD-N"))
+  (in-package-suffix-check x "MOD-N"))
 
 
 (defun lex-rel? (x)
-  (in-ulf-lib-suffix-check x "REL"))
+  (in-package-suffix-check x "REL"))
 
 (defun lex-det? (x)
-  (in-ulf-lib-suffix-check x "D"))
+  (in-package-suffix-check x "D"))
 
 (defun lex-coord? (x)
   (in-ulf-lib (x y)
@@ -89,9 +98,9 @@
 
 ; Auxiliaries.
 (defun lex-aux-s? (x)
-  (in-ulf-lib-suffix-check x "AUX-S"))
+  (in-package-suffix-check x "AUX-S"))
 (defun lex-aux-v? (x)
-  (in-ulf-lib-suffix-check x "AUX-V"))
+  (in-package-suffix-check x "AUX-V"))
 (defun lex-aux? (x)
   (or
     (lex-aux-s? x)
@@ -131,13 +140,13 @@
 
 ; Adverbs
 (defun lex-adv-a? (x)
-  (in-ulf-lib-suffix-check x "ADV-A"))
+  (in-package-suffix-check x "ADV-A"))
 (defun lex-adv-s? (x)
-  (in-ulf-lib-suffix-check x "ADV-S"))
+  (in-package-suffix-check x "ADV-S"))
 (defun lex-adv-e? (x)
-  (in-ulf-lib-suffix-check x "ADV-E"))
+  (in-package-suffix-check x "ADV-E"))
 (defun lex-adv-f? (x)
-  (in-ulf-lib-suffix-check x "ADV-F"))
+  (in-package-suffix-check x "ADV-F"))
 (defun lex-adv-formula? (x)
   (or
     (lex-adv-s? x)
@@ -152,15 +161,15 @@
 
 ;; Expletives.
 (defun lex-x? (x)
-  (in-ulf-lib-suffix-check x "X"))
+  (in-package-suffix-check x "X"))
 
 ;; Yes/no evaluations.
 (defun lex-yn? (x)
-  (in-ulf-lib-suffix-check x "YN"))
+  (in-package-suffix-check x "YN"))
 
 ;; Greetings.
 (defun lex-gr? (x)
-  (in-ulf-lib-suffix-check x "GR"))
+  (in-package-suffix-check x "GR"))
 
 (defun lex-tense? (x)
   (in-ulf-lib (x y) (member y *tense*)))

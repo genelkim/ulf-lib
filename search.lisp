@@ -121,6 +121,19 @@
     (t (values nil nil np))))
 
 
+(defun find-np-head (np &key (callpkg *package*))
+;````````````````````
+; Finds the main verb in a ULF np.
+  (search-np-head np :callpkg callpkg))
+
+
+(defun replace-np-head (np sub &key (callpkg *package*))
+;```````````````````````
+; Find the main verb and returns a new np with the substitute value.
+  (multiple-value-bind (_ _ newnp) (search-np-head np :sub sub
+                                                   :callpkg callpkg)
+    newnp))
+
 (defun search-ap-head (ap &key (sub nil))
 ;````````````````````````````````````````
 ; Searches the adjective phrase for the head.
@@ -155,4 +168,16 @@
     ;; Otherwise, not found.
     (t (values nil nil ap))))
 
+
+(defun find-ap-head (ap)
+;````````````````````
+; Finds the main verb in a ULF ap.
+  (search-ap-head ap))
+
+
+(defun replace-ap-head (ap sub)
+;```````````````````````
+; Find the main verb and returns a new ap with the substitute value.
+  (multiple-value-bind (_ _ newap) (search-ap-head ap :sub sub)
+    newap))
 

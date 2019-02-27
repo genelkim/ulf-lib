@@ -37,8 +37,11 @@
 ;````````````````````
 ; True if arg is a plural noun phrase. Basically if the np head is plural.
   (util:in-intern (inarg arg :ulf-lib)
-    (let ((hn (search-np-head arg :callpkg :ulf-lib)))
-      (plur-lex-noun? hn))))
+    (or
+      (and (listp arg) (= (length arg) 2)
+           (eql 'plur (first arg)) (noun? (second arg)))
+      (let ((hn (search-np-head arg :callpkg :ulf-lib)))
+        (plur-lex-noun? hn)))))
 
 (defun plur-lex-noun? (inarg)
 ;````````````````````
