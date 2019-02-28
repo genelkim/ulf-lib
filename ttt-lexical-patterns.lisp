@@ -209,11 +209,11 @@
 ;; Returns true if the token is a hole variable:
 ;;  e.g. *h, *p, *s, *ref
 ;; Include those that have been augmented with other type information,
-;;  e.g. *h.n, *h.pro
+;;  e.g. *h.n, *h.pro, [*h.n], [*h].pro
 (defun lex-hole-variable? (intoken)
   (in-ulf-lib (intoken token)
-    (multiple-value-bind (word suffix) (split-by-suffix token)
-      (let ((wchars (util:split-into-atoms word)))
+    (multiple-value-bind (word suffix) (split-by-suffix (unhide-ttt-ops token))
+      (let ((wchars (util:split-into-atoms (unhide-ttt-ops word))))
         ;; The first character is a *.
         (equal '* (first wchars))))))
 

@@ -342,11 +342,11 @@
 
 ;; Operator forming type-shifters.
 (defun advformer? (x)
-  (in-ulf-lib (x y)
-             (member y '(adv-a adv-e adv-s adv-f))))
+  (in-ulf-lib (x y) (member y '(adv-a adv-e adv-s adv-f))))
 (defun detformer? (x)
-  (in-ulf-lib (x y)
-             (member y '(fquan nquan))))
+  (in-ulf-lib (x y) (member y '(fquan nquan))))
+(defun modformer? (x)
+  (in-ulf-lib (x y) (member y '(mod-a mod-n))))
 
 (defun contains-relativizer (x)
   (in-ulf-lib (x y)
