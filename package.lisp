@@ -5,7 +5,7 @@
 
 (defpackage :ulf-lib
   (:nicknames :ulf)
-  (:use :cl :cl-user :ttt :util :cl-strings :cl-ppcre)
+  (:use :cl :cl-user :ttt :cl-strings :cl-ppcre :util)
   (:shadow :split)
   (:export
     ;; suffix.lisp
@@ -99,6 +99,7 @@
     :verb-reifier?
     :advformer?
     :detformer?
+    :modformer?
     :phrasal-sent-op?
     :contains-relativizer
     :relativized-sent?
