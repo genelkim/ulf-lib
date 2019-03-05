@@ -2,6 +2,10 @@
 
 (in-package :ulf-lib)
 
+;; Give cl-ppcre a nickname.
+;(defpackage cl-ppcre (:nicknames re))
+(add-nickname "CL-PPCRE" "RE")
+
 (defparameter *tense* '(past pres cf))
 (defparameter *coordinator* '(and or but because))
 (defparameter *detformer* '(nquan fquan))
@@ -20,7 +24,8 @@
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (cl-user::match-re (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
+  ;(cl-user::match-re (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
+  (re:all-matches (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)
@@ -38,6 +43,7 @@
   (if (atom inx)
     (in-ulf-lib (inx x)
       (multiple-value-bind (word suffix) (split-by-suffix x)
+        (declare (ignore suffix)) ; suffix check handled in lex-noun? below.
         (let ((wchars (cl-strings:chars (string word))))
           (and (lex-noun? inx)
                (> (length wchars) 3)
@@ -61,7 +67,8 @@
 
 (defun lex-p-arg? (x)
   (util:in-intern (x y *package*)
-              (cl-user::match-re (concatenate 'string
+              ;(cl-user::match-re (concatenate 'string
+              (re:all-matches (concatenate 'string
                                               "^\(\\w\|\\d\|-\)\+.P\\-ARG$")
                                  (format nil "~s" y))))
 
@@ -113,7 +120,8 @@
 ;; TODO: generalize to other extensions.
 (defun lex-name-pred? (x)
   (util:in-intern (x y *package*)
-    (cl-user::match-re "^\\|\[\^\\|\]\+\\.N\\|$"
+    ;(cl-user::match-re "^\\|\[\^\\|\]\+\\.N\\|$"
+    (re:all-matches "^\\|\[\^\\|\]\+\\.N\\|$"
                        (format nil "~s" y))))
 
 ;; TODO: merge with lex-name? in ulf-lib.
@@ -132,7 +140,8 @@
 (defun lex-name? (x)
   (util:in-intern (x y *package*)
     (and
-      (cl-user::match-re "^\\|\[\^\\|\]\+\\|$"
+      ;(cl-user::match-re "^\\|\[\^\\|\]\+\\|$"
+      (re:all-matches "^\\|\[\^\\|\]\+\\|$"
                          (format nil "~s" y))
       (not (lex-name-pred? y))
       ;; Special handling of quotes '\" == '|"|.

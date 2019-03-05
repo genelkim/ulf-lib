@@ -4,6 +4,8 @@
 
 (in-package :ulf-lib)
 
+(add-nickname "CL-PPCRE" "RE")
+
 ;; When Lisp reads in ULFs from the SQL database, backslashes for escaping Lisp
 ;; characters are themselves sometimes escaped.  This function is meant to undo
 ;; that.
@@ -28,10 +30,11 @@
 ;; The regular expression matches anything between two pipes and groups them into
 ;; the first pipe and the rest.
 (defun add-prename-space (ulfstr)
-  (cl-ppcre:regex-replace-all
+  (re:regex-replace-all
     "(\\|)(\[\^\\|\]\+\\|)"
     ulfstr
     #'(lambda (match &rest registers)
+        (declare (ignore match))
         (format nil "~{~A~^ ~}" registers))
     :simple-calls t))
 

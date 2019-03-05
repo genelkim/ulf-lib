@@ -3,8 +3,8 @@
 (require 'asdf)
 
 ;; avoids saving compiled files in special local cache.
-(let f (and (setq f (fboundp (find-symbol "DISABLE-OUTPUT-TRANSLATIONS" 'asdf)))
-	    (funcall f)))
+(if (fboundp (find-symbol "DISABLE-OUTPUT-TRANSLATIONS" 'asdf))
+  (funcall (find-symbol "DISABLE-OUTPUT-TRANSLATIONS" 'asdf)))
 
 ;; from http://www.cliki.net/asdf
 ;;; If the fasl was stale, try to recompile and load (once). Since only SBCL
@@ -35,8 +35,13 @@
 ;; compiler settings
 (proclaim '(optimize (speed 1) (safety 2) (space 0) (debug 3)))
 
+(locally
+  (declare #+sbcl(sb-ext:muffle-conditions sb-kernel:redefinition-warning))
+  (handler-bind
+    (#+sbcl(sb-kernel:redefinition-warning #'muffle-warning))
+    ;; stuff that emits redefinition-warning's
 ;; Load Util Choose between the following two lines depending on
 ;; whether you want the files compiled into FASLs or not:
 (asdf:operate 'asdf:load-op 'ulf-lib) ;; Compile and load as necessary
 ;(asdf:operate 'asdf:load-source-op 'ulf-lib) ;; Doesn't compile
-
+))

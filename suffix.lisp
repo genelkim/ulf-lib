@@ -77,12 +77,12 @@
 ;; but in the desired format.
 (defun suffix-for-type (x &key (callpkg nil) (form "symbol"))
   (assert (member form '("string" "symbol") :test #'equal))
-  (let ((suffix (cdr (assoc (intern x :ulf-lib) *type-suffix-alist*))))
+  (let ((suffix (cdr (assoc (safe-intern x :ulf-lib) *type-suffix-alist*))))
     (if suffix
       ;; Cases where we found a type result.
       (cond
         ((equal form "string") (symbol-name suffix))
-        (callpkg (intern suffix callpkg))
+        (callpkg (safe-intern suffix callpkg))
         (t suffix))
       ;; Not found.
       (cond

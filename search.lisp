@@ -7,6 +7,7 @@
   (util:in-intern (inx x *package*)
     (or (and (symbolp x)
              (multiple-value-bind (word suffix) (ulf:split-by-suffix x)
+               (declare (ignore word))
                (eq suffix 'conjugated-vp-head)))
         (and (listp x) (= 2 (length x))
              (lex-tense? (first x)) (marked-conjugated-vp-head? (second x))))))
@@ -54,7 +55,9 @@
 (defun replace-vp-head (vp sub)
 ;```````````````````````
 ; Find the main verb and returns a new VP with the substitute value.
-  (multiple-value-bind (_ _ newvp) (search-vp-head vp :sub sub)
+  (multiple-value-bind (_1 _2 newvp) (search-vp-head vp :sub sub)
+    (declare (ignore _1))
+    (declare (ignore _2))
     newvp))
 
 (defun search-np-head (np &key (sub nil) (callpkg *package*))
@@ -130,8 +133,10 @@
 (defun replace-np-head (np sub &key (callpkg *package*))
 ;```````````````````````
 ; Find the main verb and returns a new np with the substitute value.
-  (multiple-value-bind (_ _ newnp) (search-np-head np :sub sub
-                                                   :callpkg callpkg)
+  (multiple-value-bind (_1 _2 newnp) (search-np-head np :sub sub
+                                                     :callpkg callpkg)
+    (declare (ignore _1))
+    (declare (ignore _2))
     newnp))
 
 (defun search-ap-head (ap &key (sub nil))
@@ -150,7 +155,7 @@
      (let ((mods (butlast ap))
            (inner-ap (car (last ap))))
        (multiple-value-bind (ha found new-inner-ap) (search-ap-head inner-ap :sub sub)
-         (values ha found (append modifier (list new-inner-ap))))))
+         (values ha found (append mods (list new-inner-ap))))))
     ;; Adjective post-modification/arguments.
     ((ttt:match-expr '(adj? (+ mod-a? term? p-arg? phrasal-sent-op?)) ap)
      (let ((inner-ap (car ap))
@@ -160,11 +165,11 @@
     ;; Starting with phrasal sent ops.
     ((and (listp ap) (phrasal-sent-op? (car ap)))
      (multiple-value-bind (ha found new-cdrap) (search-ap-head (cdr ap) :sub sub)
-       (values ha found (cons (car ap) new-cdrvp))))
+       (values ha found (cons (car ap) new-cdrap))))
     ;; Starts with an adjective.
     ((and (listp ap) (adj? (car ap)))
      (multiple-value-bind (ha found new-carap) (search-ap-head (car ap) :sub sub)
-       (values ha found (cons new-carvp (cdr ap)))))
+       (values ha found (cons new-carap (cdr ap)))))
     ;; Otherwise, not found.
     (t (values nil nil ap))))
 
@@ -178,6 +183,8 @@
 (defun replace-ap-head (ap sub)
 ;```````````````````````
 ; Find the main verb and returns a new ap with the substitute value.
-  (multiple-value-bind (_ _ newap) (search-ap-head ap :sub sub)
+  (multiple-value-bind (_1 _2 newap) (search-ap-head ap :sub sub)
+    (declare (ignore _1))
+    (declare (ignore _2))
     newap))
 
