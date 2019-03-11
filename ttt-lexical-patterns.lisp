@@ -204,7 +204,8 @@
 ;; e.g. {that}, {he}.pro
 (defun lex-elided? (intoken)
   (in-ulf-lib (intoken token)
-    (multiple-value-bind (word suffix) (split-by-suffix token)
+    (multiple-value-bind (word _) (split-by-suffix token)
+      (declare (ignore _))
       (let ((wchars (util:split-into-atoms word))
             (tchars (util:split-into-atoms token)))
         ;; Either the whole thing is wrapped in curly brackets or everything but
@@ -221,7 +222,8 @@
 ;;  e.g. *h.n, *h.pro, [*h.n], [*h].pro
 (defun lex-hole-variable? (intoken)
   (in-ulf-lib (intoken token)
-    (multiple-value-bind (word suffix) (split-by-suffix (unhide-ttt-ops token))
+    (multiple-value-bind (word _) (split-by-suffix (unhide-ttt-ops token))
+      (declare (ignore _))
       (let ((wchars (util:split-into-atoms (unhide-ttt-ops word))))
         ;; The first character is a *.
         (equal '* (first wchars))))))
