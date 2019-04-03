@@ -34,13 +34,16 @@
       base-ret)))
 
 ;; Takes a word symbol and a suffix and merges them together.
+;; Assumes that we retain the package of word.
 (defun add-suffix (word suffix)
   (if (not suffix) (return-from add-suffix word))
+  (let ((pkg (symbol-package word)))
   (util:fuse-into-atom
     (concatenate 'list
                  (util:split-into-atoms word)
                  (list #\.)
-                 (util:split-into-atoms suffix))))
+                 (util:split-into-atoms suffix))
+    :pkg pkg)))
 
 ;; An association list of the semantic type name and the suffix extension for
 ;; lexical ULF items.
