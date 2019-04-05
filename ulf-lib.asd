@@ -2,7 +2,7 @@
 ;; Started ~2018-11-19
 
 (asdf:defsystem :ulf-lib
-  :depends-on (:ttt :cl-strings :cl-ppcre :util)
+  :depends-on (:ttt :cl-strings :cl-ppcre :cl-util)
   :components ((:file "package")
                (:file "suffix")
                (:file "ttt-lexical-patterns")

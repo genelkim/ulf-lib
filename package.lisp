@@ -5,7 +5,7 @@
 
 (defpackage :ulf-lib
   (:nicknames :ulf)
-  (:use :cl :cl-user :ttt :cl-strings :cl-ppcre :util)
+  (:use :cl :cl-user :ttt :cl-strings :cl-ppcre :cl-util)
   (:shadow :split)
   (:export
     ;; suffix.lisp
