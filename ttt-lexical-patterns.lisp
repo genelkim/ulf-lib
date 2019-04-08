@@ -131,7 +131,7 @@
 ;; TODO: separate into separate functions for symbol and string since the ULF can contain strings!
 (defun is-strict-name? (x)
   (util:in-intern (x s *package*)
-    (let* ((sstr (if (not (stringp s)) (util:sym2str s) s))
+    (let* ((sstr (if (not (stringp s)) (util:atom2str s) s))
            (chars (coerce sstr 'list)))
       (and (eql #\| (nth 0 chars))
            (eql #\| (nth (1- (length chars)) chars))))))
