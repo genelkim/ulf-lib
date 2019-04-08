@@ -33,7 +33,7 @@
       asdf:*central-registry*)
 
 ;; compiler settings
-(proclaim '(optimize (speed 1) (safety 2) (space 0) (debug 3)))
+(proclaim '(optimize (speed 3) (safety 3) (space 0) (debug 3)))
 
 (locally
   (declare #+sbcl(sb-ext:muffle-conditions sb-kernel:redefinition-warning))
