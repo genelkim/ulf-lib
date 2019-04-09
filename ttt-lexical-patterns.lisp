@@ -9,6 +9,29 @@
 (defparameter *tense* '(past pres cf))
 (defparameter *coordinator* '(and or but because))
 (defparameter *detformer* '(nquan fquan))
+(defparameter *semtypes*
+  '(("([A-Z]|_)*\\.PRO" . "D")
+    ("\\|([A-Z]|_)*\\|" . "D") ; doesn't work properly. Does work with '\|' instead of '|' in the symbol passed to atom-semtype? I think CL doesn't allow | in symbols.
+    ("([A-Z]|_)*\\.P" . "D => (D => (S => 2))")
+    ("([A-Z]|_)*\\.PS" . "(S => 2) => ((S => 2) => (S => 2))")
+    ("([A-Z]|_)*\\.N" . "D => (S => 2)")
+    ("([A-Z]|_)*-OF\\.N" . "D => (D => (S => 2))")
+    ("([A-Z]|_)*\\.A" . "D => (S => 2)") ; doc gives two possibilities for this
+    ("([A-Z]|_)*\\.V" . "{D | (D => (S => 2))}^n => (D => (S => 2))")
+    ("([A-Z]|_)*\\.D" . "(D => (S => 2))_{n | p} => D")
+    ("([A-Z]|_)*\\.ADV-A" . "(D => (S => 2))_v => (D => (S => 2))_v")
+    ("([A-Z]|_)*\\.(ADV-E|ADV-S|ADV-F)" . "(S => 2) => (S => 2)")
+    ("PLUR" . "(D => (S => 2))_n => (D => (S => 2))_n")
+    ("K" . "(D => (S => 2))_n => D")
+    ("TO|KA" . "(D => (S => 2))_v => D")
+    ("KE" . "(S => 2)_untensed => D")
+    ("THAT" . "(S => 2)_tensed => D")
+    ("WHETHER|ANS-TO" . "(S => 2)_tensed => D")
+    ("ADV-A" . "(D => (S => 2)) => ((D => (S => 2))_v => (D => (S => 2))_v)")
+    ("ADV-E|ADV-S|ADV-F" . "(D => (S => 2)) => ((S => 2) => (S => 2))")
+    ("FQUAN|NQUAN" . "(D => (S => 2))_a => ((D => (S => 2))_n => D)")
+    ("SET-OF" . "D^n => D")
+    ("NOT" . "(S => 2) => (S => 2)")))
 
 ;; Ensures that the input symbol is in ulf-lib.
 (defmacro in-ulf-lib ((x y) &body body)
@@ -228,3 +251,6 @@
         ;; The first character is a *.
         (equal '* (first wchars))))))
 
+(defun atom-semtype? (expr)
+  (cdr (assoc (string expr) *semtypes*
+         :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
