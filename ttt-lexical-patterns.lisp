@@ -11,28 +11,30 @@
 (defparameter *detformer* '(nquan fquan))
 (defparameter *atomsymbols* "\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?")
 (defparameter *semtypes*
-  '(("{S}\\.PRO" . "D")
-    ("\\|{S}\\|" . "D")
-    ("{S}\\.P" . "D => (D => (S => 2))")
-    ("{S}\\.PS" . "(S => 2) => ((S => 2) => (S => 2))")
-    ("{S}\\.N" . "D => (S => 2)")
-    ("{S}-OF\\.N" . "D => (D => (S => 2))")
-    ("{S}\\.A" . "D => (S => 2)") ; doc gives two possibilities for this
-    ("{S}\\.V" . "{D | (D => (S => 2))}^n => (D => (S => 2))")
-    ("{S}\\.D" . "(D => (S => 2))_{n | p} => D")
-    ("{S}\\.ADV-A" . "(D => (S => 2))_v => (D => (S => 2))_v")
-    ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "(S => 2) => (S => 2)")
-    ("PLUR" . "(D => (S => 2))_n => (D => (S => 2))_n")
-    ("K" . "(D => (S => 2))_n => D")
-    ("TO|KA" . "(D => (S => 2))_v => D")
-    ("KE" . "(S => 2)_untensed => D")
-    ("THAT" . "(S => 2)_tensed => D")
-    ("WHETHER|ANS-TO" . "(S => 2)_tensed => D")
-    ("ADV-A" . "(D => (S => 2)) => ((D => (S => 2))_v => (D => (S => 2))_v)")
-    ("ADV-E|ADV-S|ADV-F" . "(D => (S => 2)) => ((S => 2) => (S => 2))")
-    ("FQUAN|NQUAN" . "(D => (S => 2))_a => ((D => (S => 2))_n => D)")
-    ("SET-OF" . "D^n => D")
-    ("NOT" . "(S => 2) => (S => 2)")))
+  (mapcar
+    (lambda (x) (cons (regex-replace-all "{S}" (car x) *atomsymbols*) (cdr x)))
+    '(("{S}\\.PRO" . "D")
+      ("\\|{S}\\|" . "D")
+      ("{S}\\.P" . "D => (D => (S => 2))")
+      ("{S}\\.PS" . "(S => 2) => ((S => 2) => (S => 2))")
+      ("{S}\\.N" . "D => (S => 2)")
+      ("{S}-OF\\.N" . "D => (D => (S => 2))")
+      ("{S}\\.A" . "D => (S => 2)") ; doc gives two possibilities for this
+      ("{S}\\.V" . "{D | (D => (S => 2))}^n => (D => (S => 2))")
+      ("{S}\\.D" . "(D => (S => 2))_{n | p} => D")
+      ("{S}\\.ADV-A" . "(D => (S => 2))_v => (D => (S => 2))_v")
+      ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "(S => 2) => (S => 2)")
+      ("PLUR" . "(D => (S => 2))_n => (D => (S => 2))_n")
+      ("K" . "(D => (S => 2))_n => D")
+      ("TO|KA" . "(D => (S => 2))_v => D")
+      ("KE" . "(S => 2)_untensed => D")
+      ("THAT" . "(S => 2)_tensed => D")
+      ("WHETHER|ANS-TO" . "(S => 2)_tensed => D")
+      ("ADV-A" . "(D => (S => 2)) => ((D => (S => 2))_v => (D => (S => 2))_v)")
+      ("ADV-E|ADV-S|ADV-F" . "(D => (S => 2)) => ((S => 2) => (S => 2))")
+      ("FQUAN|NQUAN" . "(D => (S => 2))_a => ((D => (S => 2))_n => D)")
+      ("SET-OF" . "D^n => D")
+      ("NOT" . "(S => 2) => (S => 2)"))))
 
 ;; Ensures that the input symbol is in ulf-lib.
 (defmacro in-ulf-lib ((x y) &body body)
@@ -254,6 +256,5 @@
 
 (defun atom-semtype? (expr)
   (cdr (assoc (util:sym2str expr) *semtypes*
-         :test (lambda (x y) (string-equal
-                               (scan-to-strings (regex-replace-all "{S}" y *atomsymbols*) x)
-                               x)))))
+              :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
+
