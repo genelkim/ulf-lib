@@ -255,6 +255,7 @@
         ;; The first character is a *.
         (equal '* (first wchars))))))
 
+;; Returns a string containing the semantic type of a given atomic ULF expression.
 (defun atom-semtype? (expr)
   (cdr (assoc (util:sym2str expr) *semtypes*
               :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
