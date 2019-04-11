@@ -84,6 +84,11 @@
       (lex-ps? x)
       (lex-pq? x)))
 
+;; Lexical prepositional phrase (should not normally appear, but is sometimes
+;; used for processing).
+(defun lex-pp? (x)
+  (in-package-suffix-check x "PP"))
+
 ;; Predicate modifiers.
 (defun lex-mod-a? (x)
   (in-package-suffix-check x "MOD-A"))

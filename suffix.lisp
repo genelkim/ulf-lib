@@ -56,7 +56,7 @@
     (adv-f . adv-f)
     (mod-a . mod-a)
     (mod-n . mod-n)
-    (pp . p)
+    (pp . pp)
     (term . pro)
     (verb . v)
     (pred . pred)

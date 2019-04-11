@@ -39,6 +39,7 @@
     :lex-ps?
     :lex-pq?
     :lex-prep?
+    :lex-pp?
     :lex-mod-a?
     :lex-mod-n?
     :lex-rel?

@@ -104,7 +104,8 @@
 
 ;; Prepositional Phrase.
 (defparameter *ttt-pp*
-   '(! (lex-p? term?)
+   '(! lex-pp?
+       (lex-p? term?)
        (pp? lex-coord? (+ pp?))
        (phrasal-sent-op? pp?)
        ;; "just outside Boston" -- (just.mod-a (outside.p |Boston|))
