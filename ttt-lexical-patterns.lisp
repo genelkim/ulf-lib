@@ -50,7 +50,6 @@
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  ;(cl-user::match-re (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
   (re:all-matches (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
             (format nil "~s" x)))
 
@@ -93,7 +92,6 @@
 
 (defun lex-p-arg? (x)
   (util:in-intern (x y *package*)
-              ;(cl-user::match-re (concatenate 'string
               (re:all-matches (concatenate 'string
                                               "^\(\\w\|\\d\|-\)\+.P\\-ARG$")
                                  (format nil "~s" y))))
@@ -151,7 +149,6 @@
 ;; TODO: generalize to other extensions.
 (defun lex-name-pred? (x)
   (util:in-intern (x y *package*)
-    ;(cl-user::match-re "^\\|\[\^\\|\]\+\\.N\\|$"
     (re:all-matches "^\\|\[\^\\|\]\+\\.N\\|$"
                        (format nil "~s" y))))
 
@@ -171,7 +168,6 @@
 (defun lex-name? (x)
   (util:in-intern (x y *package*)
     (and
-      ;(cl-user::match-re "^\\|\[\^\\|\]\+\\|$"
       (re:all-matches "^\\|\[\^\\|\]\+\\|$"
                          (format nil "~s" y))
       (not (lex-name-pred? y))
