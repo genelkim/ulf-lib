@@ -157,7 +157,7 @@
       (tensed-sent-reifier? _+)
       ;; Fall back on determiners and set-of generating terms..
       (lex-set-of? _+)
-      (det? _+)
+      (! (det? _+) ~ (* det?) lex-coord? (+ det?))
 
       ;; Internal plurality representation.
       (plur-term term?)
@@ -218,7 +218,8 @@
 
 (defparameter *ttt-det*
   '(! lex-det?
-      (lex-detformer? adj?)))
+      (lex-detformer? adj?)
+      ((* det?) lex-coord? (+ det?))))
 
 (defparameter *ttt-sent*
   '(! (term? verb?)        ; subject verb
