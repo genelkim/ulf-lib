@@ -178,7 +178,8 @@
 (defun lex-adv-a? (x)
   (in-package-suffix-check x "ADV-A"))
 (defun lex-adv-s? (x)
-  (in-package-suffix-check x "ADV-S"))
+  (or (in-package-suffix-check x "ADV-S")
+      (in-ulf-lib (x y) (eql y 'not))))
 (defun lex-adv-e? (x)
   (in-package-suffix-check x "ADV-E"))
 (defun lex-adv-f? (x)
@@ -206,6 +207,10 @@
 ;; Greetings.
 (defun lex-gr? (x)
   (in-package-suffix-check x "GR"))
+
+;; Lexical sentence (for implicit sentences, e.g. {ref}.sent).
+(defun lex-sent? (x)
+  (in-package-suffix-check x "SENT"))
 
 (defun lex-tense? (x)
   (in-ulf-lib (x y) (member y *tense*)))

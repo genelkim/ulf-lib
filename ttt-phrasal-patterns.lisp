@@ -230,6 +230,10 @@
       (term? = term?)      ; equality
       (term? adj?)         ; not correct on the surface, but correct logically
       (term? noun?)        ; not correct on the surface, but correct logically
+      lex-sent?
+      ((? sent-mod?) sent? (+ sent? sent-mod?))    ; sentences bracketed together (for semi-colons for example)
+      (sent-mod? sent?)
+      lex-x?
       ))
 
 (defparameter *ttt-tensed-sent*
@@ -261,6 +265,8 @@
       ;; Greetings.
       lex-gr?
       (gr _!)
+      ;; Implicit sentence marked by single extension.
+      lex-sent?
       ))
 
 (defparameter *ttt-sent-mod*

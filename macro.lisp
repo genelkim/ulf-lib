@@ -6,13 +6,14 @@
 (in-package :ulf-lib)
 
 ;;; Returns t if 'ulf' contains *h, nil otherwise.
-(defun contains-hole (inulf)
+(defun contains-hole (inulf &key (inholevar '*h))
   (util:in-intern (inulf ulf :ulf-lib)
+    (util:in-intern (inholevar holevar :ulf-lib)
                      (cond
-                       ((and (atom ulf) (eq '*h ulf)) t)
+                       ((and (atom ulf) (eq holevar ulf)) t)
                        ((atom ulf) nil)
-                       (t (or (contains-hole (car ulf))
-                              (contains-hole (cdr ulf)))))))
+                       (t (or (contains-hole (car ulf) :inholevar holevar)
+                              (contains-hole (cdr ulf) :inholevar holevar)))))))
 
 ;;; Applies all the sub macros in the given ULF.
 ;;; Returns a pair of values (success, results)
@@ -228,4 +229,70 @@
     (util:unhide-ttt-ops
       (ttt:apply-rules *ttt-lift-adv-a*
                        ttthidden))))
+
+
+(defun apply-qt-attr-macro (inulf &key (calling-package nil))
+  (labels
+    ((rec-helper (ulf)
+       ;(princln "In rec-helper")
+       ;(princln ulf)
+       (cond
+         ((atom ulf) (values t ulf nil))
+         ;; If possible to apply (\" (.. (qt-attr (.. *qt ..)) ..) \"),
+         ;; recurse and try to apply.
+         ((and (<= 3 (length ulf))
+               (eq (first ulf) '|"|)
+               (eq (car (last ulf)) '|"|))
+          (multiple-value-bind (suc res qt-attr) (rec-helper
+                                                   (if (= 3 (length ulf))
+                                                     (second ulf)
+                                                     (subseq ulf 1 (1- (length ulf)))))
+            ;(princln "suc")
+            ;(princln suc)
+            ;(princln "res")
+            ;(princln res)
+            ;(princln "qt-attr")
+            ;(princln qt-attr)
+            (cond
+              ;; Apply transformation.
+              (qt-attr (values t
+                               (subst (list '|"| res '|"|)
+                                      '*qt
+                                      qt-attr)
+                               nil))
+              ;; Otherwise just return
+              (t (values suc (list '|"| res '|"|) qt-attr)))))
+         ;; If starting with 'qt-attr, recurse, but then return recursive result
+         ;; in the last slot and return nil for the main clause.
+         ((and (= 2 (length ulf))
+               (eq (first ulf) 'qt-attr)
+               (contains-hole (second ulf) :inholevar '*qt))
+          (multiple-value-bind (suc res qt-attr) (rec-helper (second ulf))
+            (values suc nil res)))
+         ;; TODO: handle malformed cases (e.g. (\" ... \") is more than length 3
+         ;;                                    (qt-attr ..) is more than length 2)
+         ;; Otherwise just recursive into everything, filter nil in recursive result.
+         (t
+           (let* ((recres (mapcar #'(lambda (x) (multiple-value-list (rec-helper x)))
+                                  ulf))
+                  (sucs (mapcar #'first recres))
+                  (ress (remove-if #'null (mapcar #'second recres)))
+                  (qt-attrs (mapcar #'third recres)))
+             (values (every #'identity sucs) ress (some #'identity qt-attrs)))))))
+       ;; TODO: return untransformed version on failure...
+    (let
+      ((initial-result (multiple-value-list (util:in-intern
+                                              (inulf ulf :ulf-lib)
+                                              (rec-helper ulf)))))
+      (cond
+        ;; Failure in qt-attr or qt-attr not , so just return input.
+        ((or (not (first initial-result))
+             (third initial-result))
+         inulf)
+        ;; Intern to given package.
+        (calling-package  (values (first initial-result)
+                                  (util:intern-symbols-recursive (second initial-result)
+                                                                 calling-package)))
+        ;; Keep ulf-lib pacakge.
+        (t (values (first initial-result) (second initial-result)))))))
 

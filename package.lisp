@@ -22,6 +22,7 @@
     :uninvert-verbaux!
     :add-info-to-sub-vars
     :add-info-to-relativizers
+    :apply-qt-attr-macro
 
     ;; preprocess.lisp
     :unescape-backslashes
@@ -58,6 +59,7 @@
     :lex-adv-formula?
     :lex-x?
     :lex-yn?
+    :lex-sent?
     :lex-tense?
     :lex-detformer?
     :litstring?
