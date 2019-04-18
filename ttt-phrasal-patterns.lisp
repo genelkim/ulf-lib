@@ -420,10 +420,12 @@
 ;;       up fashion would speed this up a lot.
 (defun label-formula-types (rawf &key (callpkg nil))
   (inout-ulf-lib (rawf f :callpkg callpkg)
-                (cond
-                  ((atom f) f)
-                  (t (list (cons 'types (ulf-type? f))
-                           (mapcar #'label-formula-types f))))))
+    (cond
+      (;; Atom or quoted expression (which techinically is a cons).
+       (or (atom f) 
+           (and (consp f) (eq 'quote (car f)))) f)
+      (t (list (cons 'types (ulf-type? f))
+               (mapcar #'label-formula-types f))))))
 
 ;; Condition to check if an element is a filitered sentence-level operator.
 ;; Basically all sentence-level operators that are written as phrasal in the
