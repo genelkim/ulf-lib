@@ -50,12 +50,12 @@
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (re:all-matches (concatenate 'string "^\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\]?$")
+  (re:all-matches (concatenate 'string "^\\[?\\|? ?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\|?\\]?$")
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)
   (util:in-intern (x y :ulf-lib)
-              (suffix-check y suffix)))
+    (suffix-check y suffix)))
 
 (defun in-package-suffix-check (x suffix)
   (util:in-intern (x y *package*)
@@ -147,10 +147,34 @@
 
 ;; Matches a name predicate.
 ;; TODO: generalize to other extensions.
+(defun name-suffix-check (x suffix)
+  (and (re:all-matches "^\\[?\\|\[\^\\|\]\+\\|\\]?$"
+                       (format nil "~s" x))
+       (suffix-check x suffix)))
+
+(defun in-ulf-lib-named-suffix-check (x suffix)
+  (util:in-intern (x y :ulf-lib)
+    (name-suffix-check y suffix)))
+
+(defun lex-name-noun? (x)
+  (in-ulf-lib-named-suffix-check x "N"))
+
+(defun lex-name-det? (x)
+  (in-ulf-lib-named-suffix-check x "D"))
+
+(defun lex-name-adj? (x)
+  (in-ulf-lib-named-suffix-check x "A"))
+
+(defun lex-name-prep? (x)
+  (in-ulf-lib-named-suffix-check x "P"))
+
+;; TODO: complete this....
 (defun lex-name-pred? (x)
-  (util:in-intern (x y *package*)
-    (re:all-matches "^\\|\[\^\\|\]\+\\.N\\|$"
-                       (format nil "~s" y))))
+  (or (lex-name-noun? x)
+      (lex-name-det? x)
+      (lex-name-adj? x)
+      (lex-name-prep? x)))
+
 
 ;; TODO: merge with lex-name? in ulf-lib.
 ;; Returns t if s is strictly a ULF name, e.g. |John|, |Mary|, etc.

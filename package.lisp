@@ -18,6 +18,7 @@
     ;; macro.lisp
     :uninvert-verbauxes
     :apply-sub-macro
+    :apply-rep-macro
     :lift-adv-a
     :uninvert-verbaux!
     :add-info-to-sub-vars
@@ -50,6 +51,10 @@
     :lex-aux-v?
     :lex-aux?
     :lex-number?
+    :lex-name-noun?
+    :lex-name-det?
+    :lex-name-adj?
+    :lex-name-prep?
     :lex-name-pred?
     :lex-name?
     :lex-adv-a?

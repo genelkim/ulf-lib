@@ -15,6 +15,91 @@
                        (t (or (contains-hole (car ulf) :inholevar holevar)
                               (contains-hole (cdr ulf) :inholevar holevar)))))))
 
+
+;;; General function for variable insertion macros. Given a macro name, variable
+;;; symbol, a context selector function, and insertion selector function, returns
+;;; a function that applies this macro to a given ulf.
+;;; For example:
+;;;  macro-name: 'sub
+;;;  var-sym: '*h
+;;;  context-selector-fn: #'third
+;;;  insertion-selector-fn: #'second
+;;;  bad-use-fn: (lambda (x) (not (and (listp x) (eq 'sub (first x)) (equal (length x) 3))))
+;;; Returns a function that applies all 'sub macros.
+(defun var-insertion-macro (macro-name var-sym
+                                       context-selector-fn
+                                       insertion-selector-fn
+                                       bad-use-fn)
+  (declare (ftype (function ((or list atom)) *) bad-use-fn))
+  (labels
+    (;; Helper function that does all the heavy lifting.
+     (macro-expand-fn (ulf fail-on-bad-use)
+       (cond
+         ((atom ulf) (values t ulf))
+         ;; If macro-name and not the right use arguments, fail.
+         ;((and (eq (first ulf) macro-name) (< (length ulf) 3))
+         ; (return-from macro-expand-fn (values nil ulf)))
+         ;; If macro-name, recurse into all the args and try to apply..
+         ((and (eq (first ulf) macro-name)
+               fail-on-bad-use
+               (funcall bad-use-fn ulf))
+            (values nil ulf))
+         ;; Macro name otherwise is will be applied.
+         ((eq (first ulf) macro-name)
+          ;; Recurse into rest and apply the macro using the
+          ;; context-selector-fn and insertion-selector-fn.
+          (let* ((recres
+                   (mapcar #'(lambda (x) (multiple-value-list
+                                           (macro-expand-fn x
+                                                            fail-on-bad-use
+                                                            )))
+                           ulf))
+                 (sucs (mapcar #'first recres))
+                 (ress (mapcar #'second recres)))
+
+            (cond
+              ;; If the recursion failed, propagate results.
+              ((not (every #'identity sucs))
+               (values nil ress))
+              ;; If the recrusive result doesn't have a hole, return with failure.
+              ((and fail-on-bad-use
+                    (not (some #'(lambda (x)
+                                   (contains-hole x :inholevar var-sym))
+                               ress)))
+               (values nil ress))
+              ;; Apply substitution and return result.
+              (t (values t (subst (funcall insertion-selector-fn ress)
+                                  var-sym
+                                  (funcall context-selector-fn ress)))))))
+         ;; Otherwise, just recursive into all.  If there's a failure, return
+         ;; it. Otherwise, merge together.
+         (t (let* ((recres (mapcar #'(lambda (x)
+                                       (multiple-value-list
+                                         (macro-expand-fn x
+                                                          fail-on-bad-use
+                                                          )))
+                                   ulf))
+                   (sucs (mapcar #'first recres))
+                   (ress (mapcar #'second recres)))
+              (if (every #'identity sucs)
+                (values t ress) ; If all recursion succeeded, return the results with 't'.
+                ; Otherwise, find the first one that failed and return it.
+                (let ((failpos (position nil sucs)))
+                  (values nil (nth failpos ress))))))))
+     ) ; end labels defns
+    ;; Return the macro expand fn.
+    #'(lambda (inulf fail-on-bad-use calling-package)
+       (let ((initial-result
+               (multiple-value-list
+                 (util:in-intern
+                   (inulf ulf :ulf-lib)
+                   (macro-expand-fn ulf fail-on-bad-use)))))
+         (if calling-package
+           (values (first initial-result)
+                   (util:intern-symbols-recursive (second initial-result) calling-package))
+           (values (first initial-result) (second initial-result)))))))
+
+
 ;;; Applies all the sub macros in the given ULF.
 ;;; Returns a pair of values (success, results)
 ;;; If fail-on-bad-use is t, this function returns
@@ -28,59 +113,19 @@
 ;;;   'sub' does not have exactly 2 arguments
 ;;;   *h is not present in the second argument
 (defun apply-sub-macro (inulf &key (fail-on-bad-use nil) (calling-package nil))
-  (let
-    ((initial-result
-       (multiple-value-list
-         (util:in-intern
-           (inulf ulf :ulf-lib)
-           (cond
-             ((atom ulf) (values t ulf))
-             ;; If sub and less than 2 arguments, fail.
-             ((and (eq (first ulf) 'sub) (< (length ulf) 3))
-              (return-from apply-sub-macro (values nil ulf)))
-             ;; If sub, recurse into the second arg, then try to apply.
-             ((eq (first ulf) 'sub)
-              (if (and fail-on-bad-use (not (equal (length ulf) 3)))
-                (return-from apply-sub-macro (values nil ulf)))
+  (let ((sub-fn
+          (var-insertion-macro
+            'ulf-lib::sub 'ulf-lib::*h #'third #'second
+            #'(lambda (x) (not (and (listp x) (eq 'ulf-lib::sub (first x)) (equal (length x) 3)))))))
+    (funcall sub-fn inulf fail-on-bad-use calling-package)))
 
-              (let* ((leftrec
-                       (multiple-value-list
-                         (apply-sub-macro (second ulf) :fail-on-bad-use fail-on-bad-use)))
-                     (rightrec
-                       (multiple-value-list
-                         (apply-sub-macro (third ulf) :fail-on-bad-use fail-on-bad-use)))
-                     (lrsuc (first leftrec))
-                     (lrres (second leftrec))
-                     (rrsuc (first rightrec))
-                     (rrres (second rightrec)))
-                (cond
-                  ;; If the recursion failed, propagate results.
-                  ((not lrsuc) (values lrsuc lrres))
-                  ((not rrsuc) (values rrsuc rrres))
-                  ;; If the recrusive result doesn't have a *h, return with failure.
-                  ((and fail-on-bad-use (not (contains-hole rrres)))
-                   (values nil (list (first ulf) lrres rrres)))
-                  ;; Apply substitution and return result.
-                  (t (values t (subst lrres '*h rrres))))))
-             ;; Otherwise, just recursive into all.  If there's a failure, return
-             ;; it. Otherwise, merge together.
-             (t (let* ((recres (mapcar #'(lambda (x)
-                                           (multiple-value-list
-                                             (apply-sub-macro x :fail-on-bad-use fail-on-bad-use)))
-                                       ulf))
-                       (successes (mapcar #'first recres))
-                       (fs (mapcar #'second recres)))
-                  (if (reduce #'(lambda (x y) (and x y)) successes)
-                    (values t fs) ; If all recursion succeeded, return the results with 't'.
-                    ; Otherwise, find the first one that failed and return it.
-                    (let ((failpos (position nil successes)))
-                      (values nil (nth failpos fs))))))))))
-     ) ; end of let definitions.
-
-    (if calling-package
-      (values (first initial-result)
-              (util:intern-symbols-recursive (second initial-result) calling-package))
-      (values (first initial-result) (second initial-result)))))
+;;; Same as apply-sub-macro, but for the rep macro.
+(defun apply-rep-macro (inulf &key (fail-on-bad-use nil) (calling-package nil))
+  (let ((rep-fn
+          (var-insertion-macro
+            'ulf-lib::rep 'ulf-lib::*p #'second #'third
+            #'(lambda (x) (not (and (listp x) (eq 'ulf-lib::rep (first x)) (equal (length x) 3)))))))
+    (funcall rep-fn inulf fail-on-bad-use calling-package)))
 
 
 ;; Assumes there's at most one occurrence of var in curulf.
@@ -267,7 +312,7 @@
          ((and (= 2 (length ulf))
                (eq (first ulf) 'qt-attr)
                (contains-hole (second ulf) :inholevar '*qt))
-          (multiple-value-bind (suc res qt-attr) (rec-helper (second ulf))
+          (multiple-value-bind (suc res) (rec-helper (second ulf))
             (values suc nil res)))
          ;; TODO: handle malformed cases (e.g. (\" ... \") is more than length 3
          ;;                                    (qt-attr ..) is more than length 2)
@@ -288,7 +333,7 @@
         ;; Failure in qt-attr or qt-attr not , so just return input.
         ((or (not (first initial-result))
              (third initial-result))
-         inulf)
+         (values nil inulf))
         ;; Intern to given package.
         (calling-package  (values (first initial-result)
                                   (util:intern-symbols-recursive (second initial-result)
