@@ -9,14 +9,15 @@
 
 ;; Splits the symbol at the last "." and returns the two values.
 (defun split-by-suffix (sym)
-  (let* ((atoms (util:split-into-atoms sym))
+  (let* ((pkg (symbol-package sym))
+         (atoms (util:split-into-atoms sym))
          ;(dotpos (position '|.| atoms :from-end t)))
          ;; Intern instead of literal so that it gets interned into the
          ;; namespace of the caller.
          (dotpos (position (intern ".") atoms :from-end t)))
     (if dotpos
-      (values (util:fuse-into-atom (util:slice atoms 0 dotpos))
-              (util:fuse-into-atom (util:slice atoms (+ dotpos 1) (length atoms))))
+      (values (util:fuse-into-atom (util:slice atoms 0 dotpos) :pkg pkg)
+              (util:fuse-into-atom (util:slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
       (values sym nil))))
 
 ;; Strips the suffix, marked with "." from a string.
@@ -35,15 +36,14 @@
 
 ;; Takes a word symbol and a suffix and merges them together.
 ;; Assumes that we retain the package of word.
-(defun add-suffix (word suffix)
+(defun add-suffix (word suffix &key (pkg (symbol-package word)))
   (if (not suffix) (return-from add-suffix word))
-  (let ((pkg (symbol-package word)))
   (util:fuse-into-atom
     (concatenate 'list
                  (util:split-into-atoms word)
                  (list #\.)
                  (util:split-into-atoms suffix))
-    :pkg pkg)))
+    :pkg pkg))
 
 ;; An association list of the semantic type name and the suffix extension for
 ;; lexical ULF items.

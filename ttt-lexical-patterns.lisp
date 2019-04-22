@@ -289,3 +289,29 @@
   (cdr (assoc (util:sym2str expr) *semtypes*
               :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
 
+;; TODO: move this into a separate util.lisp file where we'll put other utility
+;; processing functions.
+;; Makes an elided ulf token explicit (e.g. {he}.pro -> he.pro)
+(defun make-explicit! (intoken)
+  (let ((pkg (symbol-package intoken)))
+    (in-ulf-lib (intoken token)
+      (multiple-value-bind (word suffix) (split-by-suffix token)
+        (let ((wchars (util:split-into-atoms word))
+              (tchars (util:split-into-atoms token)))
+          ;; Either the whole thing is wrapped in curly brackets or everything but
+          ;; the suffix.
+          (cond
+            ;; Everything before suffix is in curly brackets.
+            ((and (equal (intern "{") (first wchars))
+                  (equal (intern "}") (car (last wchars))))
+             (add-suffix (fuse-into-atom (subseq wchars 1 (1- (length wchars)))
+                                         :pkg pkg)
+                                         suffix))
+            ;; The whole this is in curly brackets.
+            ((and (equal (intern "{") (first wchars))
+                  (equal (intern "}") (car (last tchars))))
+             (add-suffix (fuse-into-atom (subseq wchars 1) :pkg pkg)
+                         (fuse-into-atom (subseq tchars 0 (1- (length tchars))))))
+            ;; Not elided just return.
+            (t intoken)))))))
+

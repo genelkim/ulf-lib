@@ -5,8 +5,8 @@
 
 (defpackage :ulf-lib
   (:nicknames :ulf)
-  (:use :cl :cl-user :ttt :cl-strings :cl-ppcre :cl-util)
-  (:shadow :split)
+  (:use :cl :cl-user :ttt :cl-strings :cl-util :cl-ppcre)
+  (:shadow :split :insert)
   (:export
     ;; suffix.lisp
     :has-suffix?
@@ -75,6 +75,7 @@
     :lex-elided?
     :is-strict-name?
     :lex-hole-variable?
+    :make-explicit!
 
     ;; ttt-phrasal-patterns.lisp
     :noun?

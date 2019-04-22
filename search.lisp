@@ -14,7 +14,6 @@
 
 (defun search-vp-head (vp &key (sub nil))
 ;``````````````````````
-; TODO: move this to ulf-lib
 ; Searches vp (a ULF VP) for the head, which is either the main verb or
 ; auxiliary/perf/prog acting over the VP. If sub is not nil, sub substitutes
 ; for the vp head.
