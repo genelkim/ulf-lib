@@ -5,6 +5,7 @@
   :depends-on (:ttt :cl-strings :cl-ppcre :cl-util)
   :components ((:file "package")
                (:file "suffix")
+               (:file "semtype")
                (:file "ttt-lexical-patterns")
                (:file "ttt-phrasal-patterns")
                (:file "gen-phrasal-patterns")
