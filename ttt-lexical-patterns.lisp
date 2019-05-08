@@ -24,7 +24,7 @@
       ("{S}\\.N" . "(D=>(S=>2))")
       ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))")
       ("{S}\\.A" . "(D=>(S=>2))") ; doc gives two possibilities for this
-      ("{S}\\.V" . ("(D^n=>(D=>(S=>2)))" "((D=>(S=>2))^n=>(D=>(S=>2)))")) ; Assoc list with list becomes a single list :/
+      ("{S}\\.V" . ("(D^n=>(D=>(S=>2)))" "((D=>(S=>2))^n=>(D=>(S=>2)))"))
       ("{S}\\.D" . ("((D=>(S=>2))_n=>D)" "((D=>(S=>2))_p=>D)"))
       ("{S}\\.ADV-A" . "((D=>(S=>2))_v=>(D=>(S=>2))_v)")
       ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)=>(S=>2))")

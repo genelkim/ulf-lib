@@ -19,10 +19,10 @@
      :initarg :subscript
      :initform nil
      :accessor subscript)
-   (tense?
-     :initarg :tense?
+   (tense
+     :initarg :tense
      :initform nil
-     :accessor tense?)))
+     :accessor tense)))
 
 ;; Check if a given semantic type is an atomic type.
 ;; Atomic semantic types have a symbol domain and a nil range.
@@ -34,7 +34,7 @@
   (if (semtype-atom? s)
     (progn
       (format t "~a" (domain s))
-      (when (> (ex s) 1) (format t "^~a" (ex s))))
+      (unless (equal (ex s) 1) (format t "^~a" (ex s))))
     (progn
       (format t "(")
       (print-semtype (domain s))
@@ -42,22 +42,23 @@
       (print-semtype (range s))
       (format t ")")
       (when (subscript s) (format t  "_~a" (subscript s)))
-      (when (tense? s) (format t "_~a" (tense? s)))
+      (when (tense s) (format t "_~a" (tense s)))
       (unless (equal (ex s) 1) (format t "^~a" (ex s))))))
 
 ;; Split a string of form ({domain}=>{range}) into {domain} and {range}
 (defun split-semtype-str (s)
-  (setf level 0)
-  (setf i 1)
-  (loop
-    (when (equal (char s i) #\()
-      (setf level (+ level 1)))
-    (when (equal (char s i) #\))
-      (setf level (- level 1)))
-    (when (and (equal (char s i) #\=) (= level 0))
-      (return i))
-    (setf i (+ i 1)))
-  (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1))))
+  (let ((level 0) (i 1))
+;  (setf level 0)
+;  (setf i 1)
+    (loop
+      (when (equal (char s i) #\()
+        (setf level (+ level 1)))
+      (when (equal (char s i) #\))
+        (setf level (- level 1)))
+      (when (and (equal (char s i) #\=) (= level 0))
+        (return i))
+      (setf i (+ i 1)))
+    (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1)))))
 
 ;; Convert a string into a semantic type.
 ;; Strings must be of the form ({domain}=>{range}) or just a single character.
@@ -73,7 +74,7 @@
                      :range (str2semtype (cadr (split-semtype-str (svref match 0))))
                      :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
                      :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-                     :tense? (if (svref match 3) (read-from-string (svref match 3)) nil)))
+                     :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
 
     ; ATOMIC
     (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "([A-Z]|[0-9])(\\^([a-z]|[2-9]))?" s))))
