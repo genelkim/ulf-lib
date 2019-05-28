@@ -24,6 +24,9 @@
       ("{S}\\.N" . "(D=>(S=>2))")
       ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))")
       ("{S}\\.A" . "(D=>(S=>2))") ; doc gives two possibilities for this
+      ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
+      ; Be careful while moving this around so that "be.v" is mapped correctly.
+      ("BE\\.V" . "(N=>(D=>2))")
       ("{S}\\.V" . ("(D^n=>(D=>(S=>2)))" "((D=>(S=>2))^n=>(D=>(S=>2)))"))
       ("{S}\\.D" . ("((D=>(S=>2))_n=>D)" "((D=>(S=>2))_p=>D)"))
       ("{S}\\.ADV-A" . "((D=>(S=>2))_v=>(D=>(S=>2))_v)")
@@ -38,7 +41,9 @@
       ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)=>(S=>2)))")
       ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
       ("SET-OF" . "(D^n=>D)")
-      ("NOT" . "((S=>2)=>(S=>2))"))))
+      ("NOT" . "((S=>2)=>(S=>2))")
+      ("=" . "(D=>(D=>(S=>2)))")
+      ("AND.CC" . "((S=>2)^n=>(S=>2))"))))
 
 ;; Ensures that the input symbol is in ulf-lib.
 (defmacro in-ulf-lib ((x y) &body body)
