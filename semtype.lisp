@@ -24,14 +24,19 @@
      :initform nil
      :accessor tense)))
 
+(defclass atomic-type (semtype)
+  ())
+
 ;; Check if a given semantic type is an atomic type.
-;; Atomic semantic types have a symbol domain and a nil range.
-(defun semtype-atom? (s)
-  (and (or (symbolp (domain s)) (integerp (domain s))) (not (range s))))
+(defun atomic-type-p (s)
+  (equal (type-of s) 'atomic-type))
+
+(defun semtype-equal? (x y)
+  T) ;; TODO
 
 ;; Print a given semantic type
 (defun print-semtype (s)
-  (if (semtype-atom? s)
+  (if (atomic-type-p s)
     (progn
       (format t "~a" (domain s))
       (unless (equal (ex s) 1) (format t "^~a" (ex s))))
@@ -78,7 +83,7 @@
 
     ; ATOMIC
     (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "([A-Z]|[0-9])(\\^([a-z]|[2-9]))?" s))))
-        (make-instance 'semtype
-                       :domain (read-from-string (svref match 0))
-                       :ex (if (svref match 2) (read-from-string (svref match 2)) 1)))))
+      (make-instance 'atomic-type
+                     :domain (read-from-string (svref match 0))
+                     :ex (if (svref match 2) (read-from-string (svref match 2)) 1)))))
 
