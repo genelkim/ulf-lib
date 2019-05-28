@@ -24,6 +24,7 @@
      :initform nil
      :accessor tense)))
 
+;; Subclass for atomic types
 (defclass atomic-type (semtype)
   ())
 
@@ -31,8 +32,15 @@
 (defun atomic-type-p (s)
   (equal (type-of s) 'atomic-type))
 
+;; Check if two semantic types are equal
 (defun semtype-equal? (x y)
-  T) ;; TODO
+  (when (and (equal (ex x) (ex y))
+             (equal (subscript x) (subscript y))
+             (equal (tense x) (tense y))
+             (equal (atomic-type-p x) (atomic-type-p y)))
+    (if (atomic-type-p x)
+      (equal (domain x) (domain y))
+      (and (semtype-equal? (domain x) (domain y)) (semtype-equal? (range x) (range y))))))
 
 ;; Print a given semantic type
 (defun print-semtype (s)
