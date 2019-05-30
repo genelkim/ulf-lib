@@ -12,5 +12,6 @@
                (:file "search")
                (:file "macro")
                (:file "preprocess")
+               (:file "composition")
                ))
 

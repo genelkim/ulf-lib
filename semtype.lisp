@@ -2,6 +2,10 @@
 
 (in-package :ulf-lib)
 
+; Possible idea: represent 'n' in exp as -10, with -9 = n+1, -11 = n-1, and so on
+; Might be easier for functions in composition.lisp but worse for readability
+; Although the print function would make it prettier, which might make it OK.
+
 ;; Class representing a ULF semantic type
 (defclass semtype ()
   ((domain
@@ -33,8 +37,9 @@
   (equal (type-of s) 'atomic-type))
 
 ;; Check if two semantic types are equal
-(defun semtype-equal? (x y)
-  (when (and (equal (ex x) (ex y))
+;; If :ignore-exp is not NIL then the exponents of the two semtypes aren't checked
+(defun semtype-equal? (x y &key ignore-exp)
+  (when (and (if ignore-exp T (equal (ex x) (ex y)))
              (equal (subscript x) (subscript y))
              (equal (tense x) (tense y))
              (equal (atomic-type-p x) (atomic-type-p y)))
@@ -42,7 +47,23 @@
       (equal (domain x) (domain y))
       (and (semtype-equal? (domain x) (domain y)) (semtype-equal? (range x) (range y))))))
 
+;; Make a new semtype identical to the given type
+(defun copy-semtype (x)
+  (if (atomic-type-p x)
+    (make-instance 'atomic-type
+                   :domain (domain x)
+                   :ex (ex x)
+                   :subscript (subscript x)
+                   :tense (tense x))
+    (make-instance 'semtype
+                   :domain (copy-semtype (domain x))
+                   :range (copy-semtype (range x))
+                   :ex (ex x)
+                   :subscript (subscript x)
+                   :tense (tense x))))
+
 ;; Print a given semantic type
+;; TODO: pretty print exponents that aren't symbols or numbers
 (defun print-semtype (s)
   (if (atomic-type-p s)
     (progn
@@ -61,8 +82,6 @@
 ;; Split a string of form ({domain}=>{range}) into {domain} and {range}
 (defun split-semtype-str (s)
   (let ((level 0) (i 1))
-;  (setf level 0)
-;  (setf i 1)
     (loop
       (when (equal (char s i) #\()
         (setf level (+ level 1)))
@@ -76,6 +95,7 @@
 ;; Convert a string into a semantic type.
 ;; Strings must be of the form ({domain}=>{range}) or just a single character.
 ;; {domain} and {range} must also be valid strings of the same form.
+;; Only supports single digits or single letters as exponents
 (defun str2semtype (s)
   (if (equal (char s 0) #\()
     ; NON ATOMIC ({domain}=>{range})_{[ut|navp]}^n
@@ -94,4 +114,3 @@
       (make-instance 'atomic-type
                      :domain (read-from-string (svref match 0))
                      :ex (if (svref match 2) (read-from-string (svref match 2)) 1)))))
-
