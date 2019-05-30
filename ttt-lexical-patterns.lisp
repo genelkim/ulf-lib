@@ -11,6 +11,7 @@
 (defparameter *detformer* '(nquan fquan))
 (defparameter *atomsymbols* "\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?")
 
+; TODO: add all syntactic subscripts (_n, _p, _v)
 (defparameter *semtypes*
   (mapcar
     (lambda (x) (cons (regex-replace-all "{S}" (car x) *atomsymbols*)
@@ -19,15 +20,15 @@
                         (str2semtype (cdr x)))))
     '(("{S}\\.PRO" . "D")
       ("\\|{S}\\|" . "D")
-      ("{S}\\.P" . "(D=>(D=>(S=>2)))")
+      ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
       ("{S}\\.PS" . "((S=>2)=>((S=>2)=>(S=>2)))")
-      ("{S}\\.N" . "(D=>(S=>2))")
+      ("{S}\\.N" . "(D=>(S=>2))_n")
       ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))")
       ("{S}\\.A" . "(D=>(S=>2))") ; doc gives two possibilities for this
       ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
       ; Be careful while moving this around so that "be.v" is mapped correctly.
       ("BE\\.V" . "(N=>(D=>2))")
-      ("{S}\\.V" . ("(D^n=>(D=>(S=>2)))" "((D=>(S=>2))^n=>(D=>(S=>2)))"))
+      ("{S}\\.V" . ("(D^n=>(D=>(S=>2)))_v" "((D=>(S=>2))^n=>(D=>(S=>2)))_v"))
       ("{S}\\.D" . ("((D=>(S=>2))_n=>D)" "((D=>(S=>2))_p=>D)"))
       ("{S}\\.ADV-A" . "((D=>(S=>2))_v=>(D=>(S=>2))_v)")
       ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)=>(S=>2))")
