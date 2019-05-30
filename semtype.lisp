@@ -62,13 +62,19 @@
                    :subscript (subscript x)
                    :tense (tense x))))
 
+;; Turn an exponent of a semtype into a string
+;; An exponent is always of the form (+/- A B) or just a number/symbol
+(defun exp2str (x)
+  (if (listp x)
+    (format nil "(~a~a~a)" (exp2str (second x)) (car x) (exp2str (third x)))
+    (format nil "~a" x)))
+
 ;; Print a given semantic type
-;; TODO: pretty print exponents that aren't symbols or numbers
 (defun print-semtype (s)
   (if (atomic-type-p s)
     (progn
       (format t "~a" (domain s))
-      (unless (equal (ex s) 1) (format t "^~a" (ex s))))
+      (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))
     (progn
       (format t "(")
       (print-semtype (domain s))
@@ -77,7 +83,7 @@
       (format t ")")
       (when (subscript s) (format t  "_~a" (subscript s)))
       (when (tense s) (format t "_~a" (tense s)))
-      (unless (equal (ex s) 1) (format t "^~a" (ex s))))))
+      (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))))
 
 ;; Split a string of form ({domain}=>{range}) into {domain} and {range}
 (defun split-semtype-str (s)
