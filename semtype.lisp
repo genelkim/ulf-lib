@@ -2,10 +2,6 @@
 
 (in-package :ulf-lib)
 
-; Possible idea: represent 'n' in exp as -10, with -9 = n+1, -11 = n-1, and so on
-; Might be easier for functions in composition.lisp but worse for readability
-; Although the print function would make it prettier, which might make it OK.
-
 ;; Class representing a ULF semantic type
 (defclass semtype ()
   ((domain
@@ -71,19 +67,20 @@
 
 ;; Print a given semantic type
 (defun print-semtype (s)
-  (if (atomic-type-p s)
-    (progn
-      (format t "~a" (domain s))
-      (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))
-    (progn
-      (format t "(")
-      (print-semtype (domain s))
-      (format t "=>")
-      (print-semtype (range s))
-      (format t ")")
-      (when (subscript s) (format t  "_~a" (subscript s)))
-      (when (tense s) (format t "_~a" (tense s)))
-      (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))))
+  (when (or (equal (type-of s) 'semtype) (equal (type-of s) 'atomic-type))
+    (if (atomic-type-p s)
+      (progn
+        (format t "~a" (domain s))
+        (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))
+      (progn
+        (format t "(")
+        (print-semtype (domain s))
+        (format t "=>")
+        (print-semtype (range s))
+        (format t ")")
+        (when (subscript s) (format t  "_~a" (subscript s)))
+        (when (tense s) (format t "_~a" (tense s)))
+        (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s))))))))
 
 ;; Split a string of form ({domain}=>{range}) into {domain} and {range}
 (defun split-semtype-str (s)
