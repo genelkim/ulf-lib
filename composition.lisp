@@ -44,5 +44,31 @@
   (let ((comp (apply-operator! x y)))
     (if comp
       (values comp (list x y))
-      (values (apply-operator! y x) (list y x)) )))
+      (values (apply-operator! y x) (list y x)))))
+
+;; Compose two atomic ULFs if possible and return the composed type. Also return
+;; the order in which the ULFs were composed. If there is more than one way in
+;; which the ULFs can be composed (for example when there are alternative types
+;; for a ULF) a list with all possibilities is returned along with a list of the
+;; corresponding orders in which the ULFs were composed.
+(defun compose-atomic-ulfs! (a b)
+  (let ((x (atom-semtype? a)) (y (atom-semtype? b)))
+    (if (not (and x y))
+      (values (or x y) (list a b)) ; if either x and y are NIL, return the other one
+      (progn ; if both x and y are not NIL
+        (unless (listp x) (setf x (list x)))
+        (unless (listp y) (setf y (list y)))
+        (let ((temp
+          (apply #'mapcar
+            (cons #'list
+              (remove-if-not (lambda (l) (car l))
+                (loop for t1 in x
+                  nconc (loop for t2 in y
+                          collect (list (compose-types! t1 t2)
+                                    (substitute-if b (lambda (s) (not (symbolp s)))
+                                      (substitute-if a (lambda (s) (semtype-equal? s t1))
+                                        (nth-value 1 (compose-types! t1 t2))))))))))))
+          (if (cdr (car temp))
+            (values (car temp) (cadr temp))
+            (values (car (car temp)) (car (cadr temp)))))))))
 
