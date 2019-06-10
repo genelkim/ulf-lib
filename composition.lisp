@@ -1,21 +1,20 @@
 ;; ULF composition functions
+;; THIS FILE DOESN'T WORK AS OF NOW. The previous commit somewhat works. This is
+;; because of the changes I made to the class structure. I will rewrite this
+;; file very soon.
 
 (in-package :ulf-lib)
-
-; NOTE TO SELF: Use (eval) to while doing variable assignments
-
-; NOTE TO SELF: Make sure to ignore ULFs x s.t. (atom-semtype? x) = NIL
-; TODO: figure out what to do with lambdas. (lambda x F): D => F (I think)
 
 ;; Apply an operator (semtype) to a semtype. Return NIL if not possible.
 ;; Exponent of arg must be a number (for now; although I don't know if we'll
 ;; ever end up in a situation where it isn't)
 ;; TODO: figure out a way to resolve things like (to go.v) where values need to
 ;; be assigned to variables in exponents.
+;; TODO: figure out what to do with syntactic subscripts
 (defun apply-operator! (op arg)
-  (when (and (not (atomic-type-p op))
-             (semtype-equal? (domain op) arg :ignore-exp T)
-             (or (not (numberp (ex (domain op)))) (>= (ex (domain op)) (ex arg))))
+  (if (and (not (atomic-type-p op))
+           (semtype-equal? (domain op) arg :ignore-exp T)
+           (or (not (numberp (ex (domain op)))) (>= (ex (domain op)) (ex arg))))
     (if (not (numberp (ex (domain op))))
       ; exponent of domain of op is NAN
       (let ((new-domain (copy-semtype (domain op))))
@@ -36,7 +35,11 @@
                          :domain new-domain
                          :range (copy-semtype (range op))
                          :subscript (subscript op)
-                         :tense (tense op)))))))
+                         :tense (tense op)))))
+    
+    ;; the argument doesn't exactly match the domain of the operator
+    ;; A composition can still be possible by assigning unbound exponent variables
+    NIL))
 
 ;; Compose two types if possible and return the composed type. Also return the
 ;; order in which the types were composed.
@@ -51,6 +54,8 @@
 ;; which the ULFs can be composed (for example when there are alternative types
 ;; for a ULF) a list with all possibilities is returned along with a list of the
 ;; corresponding orders in which the ULFs were composed.
+;;
+;; Doesn't work properly. Throws errors instead of NIL. TODO
 (defun compose-atomic-ulfs! (a b)
   (let ((x (atom-semtype? a)) (y (atom-semtype? b)))
     (if (not (and x y))
