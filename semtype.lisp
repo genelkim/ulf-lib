@@ -66,9 +66,14 @@
 ;; optional they must contain the same options (order doesn't matter).
 ;; If :ignore-exp is not NIL then exponents of the two types aren't checked
 ;; If :ignore-exp is 'r then ignore exponents recursively
-;; Limitation: Currently {A^n|B} and A^n do not match. However, {A|B}^n and A^n
-;; do match. This should be fixed, but isn't a big issue when dealing with
-;; regular ULFs.
+;; Tenses and subscripts are checked if both types have a specified
+;; tense/subscript.
+;;
+;; Limitations: Top level exponents inside optionals are ignored. Exponents
+;; on the optional are considered. Subscripts/tenses on the optional are
+;; ignored.
+;; Note: This function is more of a "compatibility checker" than a function to
+;; check actual equality. I'll probably rename this to something better later.
 (defun semtype-equal? (x y &key ignore-exp)
   (when (if ignore-exp T (equal (ex x) (ex y)))
     (if (or (optional-type-p x) (optional-type-p y))
@@ -92,7 +97,7 @@
       
       ;; No optionals
       (when (and (equal (type-of x) (type-of y))
-                 (equal (subscript x) (subscript y))
+                 (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
                  (equal (tense x) (tense y)))
         (if (atomic-type-p x)
           (equal (domain x) (domain y))
@@ -173,6 +178,18 @@
       (setf i (+ i 1)))
     (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1)))))
 
+(defun split-opt-str (s)
+  (let ((level 0) (i 1))
+    (loop
+      (when (equal (char s i) #\{)
+        (setf level (+ level 1)))
+      (when (equal (char s i) #\})
+        (setf level (- level 1)))
+      (when (and (equal (char s i) #\|) (= level 0))
+        (return i))
+      (setf i (+ i 1)))
+    (list (subseq s 1 i) (subseq s (+ i 1) (- (length s) 1)))))
+
 ;; Convert a string into a semantic type.
 ;; Strings must be of the form ([domain]=>[range]) or a single character, where
 ;; [domain] and [range] are valid strings of the same form.
@@ -199,13 +216,14 @@
       (if (equal (char s 0) #\{)
         ; OPTIONAL {A|B}
         (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
-                                    "^\\{([^\\{\\}\\|]*)\\|([^\\{\\}\\|]*)\\}(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
+                                    "^(\\{.*\\})(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                     s))))
             (make-instance 'optional-type
-                         :types (list (str2semtype (svref match 0)) (str2semtype (svref match 1)))
-                         :ex (if (svref match 7) (read-from-string (svref match 7)) 1)
-                         :subscript (if (svref match 5) (read-from-string (svref match 5)) nil)
-                         :tense (if (svref match 4) (read-from-string (svref match 4)) nil)))
+                         :types (list (str2semtype (car (split-opt-str (svref match 0))))
+                                      (str2semtype (cadr (split-opt-str (svref match 0)))))
+                         :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
+                         :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
+                         :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
   
           ; ATOMIC
           (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "^([A-Z]|[0-9])(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$" s))))
