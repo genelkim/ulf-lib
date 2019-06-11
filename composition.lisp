@@ -42,3 +42,11 @@
         ; Not an exact match, but could still be possible using variable assignments
         NIL)))) ; TODO
 
+;; Compose two types if possible and return the composed type. Also return the
+;; order in which the types were composed.
+(defun compose-types! (x y)
+  (let ((comp (apply-operator! x y)))
+    (if comp
+      (values comp (list x y))
+      (values (apply-operator! y x) (list y x)))))
+
