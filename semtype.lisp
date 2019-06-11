@@ -70,9 +70,7 @@
 ;; do match. This should be fixed, but isn't a big issue when dealing with
 ;; regular ULFs.
 (defun semtype-equal? (x y &key ignore-exp)
-  (when (and (if ignore-exp T (equal (ex x) (ex y)))
-             (equal (subscript x) (subscript y))
-             (equal (tense x) (tense y)))
+  (when (if ignore-exp T (equal (ex x) (ex y)))
     (if (or (optional-type-p x) (optional-type-p y))
       ;; At least one optional
       (if (and (optional-type-p x) (optional-type-p y))
@@ -93,7 +91,9 @@
               (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
       
       ;; No optionals
-      (when (equal (type-of x) (type-of y))
+      (when (and (equal (type-of x) (type-of y))
+                 (equal (subscript x) (subscript y))
+                 (equal (tense x) (tense y)))
         (if (atomic-type-p x)
           (equal (domain x) (domain y))
           (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
@@ -118,7 +118,7 @@
                    :range (copy-semtype (range x))
                    :ex (ex x)
                    :subscript (subscript x)
-                   :tense (tense x))))
+                   :tense (tense x)))))
 
 ;; Turn an exponent of a semtype into a string
 ;; An exponent is always of the form (+/- A B) or just a number/symbol
@@ -144,6 +144,8 @@
     (if (atomic-type-p s)
       (progn
         (format t "~a" (domain s))
+        (when (subscript s) (format t  "_~a" (subscript s)))
+        (when (tense s) (format t "_~a" (tense s)))
         (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))
       (if (optional-type-p s)
         (print-optional-type s)
@@ -184,7 +186,7 @@
     (if (equal (char s 0) #\()
       ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n
       (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
-                                  "(\\(.*\\))(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
+                                  "^(\\(.*\\))(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                   s))))
         (make-instance 'semtype
                        :domain (str2semtype (car (split-semtype-str (svref match 0))))
@@ -197,7 +199,7 @@
       (if (equal (char s 0) #\{)
         ; OPTIONAL {A|B}
         (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
-                                    "\\{([^\\{\\}\\|]*)\\|([^\\{\\}\\|]*)\\}(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
+                                    "^\\{([^\\{\\}\\|]*)\\|([^\\{\\}\\|]*)\\}(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                     s))))
             (make-instance 'optional-type
                          :types (list (str2semtype (svref match 0)) (str2semtype (svref match 1)))
@@ -206,8 +208,10 @@
                          :tense (if (svref match 4) (read-from-string (svref match 4)) nil)))
   
           ; ATOMIC
-          (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "([A-Z]|[0-9])(\\^([A-Z]|[2-9]))?$" s))))
+          (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "^([A-Z]|[0-9])(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$" s))))
             (make-instance 'atomic-type
                            :domain (read-from-string (svref match 0))
-                           :ex (if (svref match 2) (read-from-string (svref match 2)) 1)))))))
+                           :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
+                           :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
+                           :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))))))
 
