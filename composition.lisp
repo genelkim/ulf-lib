@@ -48,5 +48,15 @@
   (let ((comp (apply-operator! x y)))
     (if comp
       (values comp (list x y))
-      (values (apply-operator! y x) (list y x)))))
+      (progn
+        (setf comp (apply-operator! y x))
+        (when comp (values comp (list y x)))))))
+
+(defun compose-atomic-ulfs! (a b)
+  (let ((comp (apply-operator! (atom-semtype? a) (atom-semtype? b))))
+    (if comp
+      (values comp (list a b))
+      (progn
+        (setf comp (apply-operator! (atom-semtype? b) (atom-semtype? a)))
+        (when comp (values comp (list b a)))))))
 
