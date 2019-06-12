@@ -3,6 +3,8 @@
 
 (in-package :ulf-lib)
 
+;; TODO: Deal with lambdas
+
 ;; Decrement a given exponent field. If e is a number, simply decrement. If not,
 ;; return the list '(- e 1)
 (defun decr-exp (e)
@@ -45,18 +47,33 @@
 ;; Compose two types if possible and return the composed type. Also return the
 ;; order in which the types were composed.
 (defun compose-types! (x y)
-  (let ((comp (apply-operator! x y)))
-    (if comp
-      (values comp (list x y))
-      (progn
-        (setf comp (apply-operator! y x))
-        (when comp (values comp (list y x)))))))
+  (if (or (not x) (not y))
+    (or x y)
+    (let ((comp (apply-operator! x y)))
+      (if comp
+        (values comp (list x y))
+        (progn
+          (setf comp (apply-operator! y x))
+          (when comp (values comp (list y x))))))))
 
+;; Given two atomic ULFs, return the type formed after composing (if possible)
 (defun compose-atomic-ulfs! (a b)
-  (let ((comp (apply-operator! (atom-semtype? a) (atom-semtype? b))))
-    (if comp
-      (values comp (list a b))
-      (progn
-        (setf comp (apply-operator! (atom-semtype? b) (atom-semtype? a)))
-        (when comp (values comp (list b a)))))))
+  (if (or (not (atom-semtype? a)) (not (atom-semtype? b)))
+    (or (atom-semtype? a) (atom-semtype? b))
+    (let ((comp (apply-operator! (atom-semtype? a) (atom-semtype? b))))
+      (if comp
+        (values comp (list a b))
+        (progn
+          (setf comp (apply-operator! (atom-semtype? b) (atom-semtype? a)))
+          (when comp (values comp (list b a))))))))
+
+;; Given a ULF, evaluate and return the type if possible. Currently assumes
+;; right associativity if there are more than 2 items scoped together. This is
+;; not ideal, and needs to be changed.
+(defun ulf-type? (ulf)
+  (if (symbolp ulf)
+    (atom-semtype? ulf)
+    (if (= (length ulf) 1)
+      (ulf-type? (car ulf))
+      (compose-types! (ulf-type? (car ulf)) (ulf-type? (cdr ulf))))))
 
