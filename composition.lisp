@@ -68,12 +68,13 @@
           (when comp (values comp (list b a))))))))
 
 ;; Given a ULF, evaluate and return the type if possible. Currently assumes
-;; right associativity if there are more than 2 items scoped together. This is
+;; left associativity if there are more than 2 items scoped together. This is
 ;; not ideal, and needs to be changed.
 (defun ulf-type? (ulf)
   (if (symbolp ulf)
     (atom-semtype? ulf)
     (if (= (length ulf) 1)
       (ulf-type? (car ulf))
-      (compose-types! (ulf-type? (car ulf)) (ulf-type? (cdr ulf))))))
+      (compose-types! (ulf-type? (reverse (cdr (reverse ulf)))) (ulf-type? (car (last ulf)))))))
+;      (compose-types! (ulf-type? (car ulf)) (ulf-type? (cdr ulf))))))
 
