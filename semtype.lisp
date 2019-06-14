@@ -47,20 +47,6 @@
 (defun optional-type-p (s)
   (equal (type-of s) 'optional-type))
 
-;; OLD. Will remove after testing the new one a bit more
-;; Check if two semantic types are equal.
-;; If :ignore-exp is not NIL then the exponents of the two semtypes aren't checked
-;; If :ignore-exp is 'r then ignore exponents recursively
-;(defun semtype-equal? (x y &key ignore-exp)
-;  (when (and (if ignore-exp T (equal (ex x) (ex y)))
-;             (equal (subscript x) (subscript y))
-;             (equal (tense x) (tense y))
-;             (equal (atomic-type-p x) (atomic-type-p y)))
-;    (if (atomic-type-p x)
-;      (equal (domain x) (domain y))
-;      (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
-;           (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r))))))
-
 ;; Check if two semantic types are equal. If one of the types is an optional
 ;; type then return true of either of the two options match. If both types are
 ;; optional they must contain the same options (order doesn't matter).

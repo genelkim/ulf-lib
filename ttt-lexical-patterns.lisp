@@ -11,7 +11,6 @@
 (defparameter *detformer* '(nquan fquan))
 (defparameter *atomsymbols* "\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?")
 
-; TODO: add all syntactic subscripts (_n, _p, _v)
 (defparameter *semtypes*
   (mapcar
     (lambda (x) (cons (regex-replace-all "{S}" (car x) *atomsymbols*)
