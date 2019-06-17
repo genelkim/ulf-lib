@@ -14,9 +14,10 @@
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
+;; BROKEN
 (defun apply-operator! (op arg)
   (if (optional-type-p op)
-    ; Operator is an optional
+    ; Operator is an optional TODO: multiply exponents
     (let ((a (apply-operator! (car (types op)) arg))
           (b (apply-operator! (cadr (types op)) arg)))
       (if (and a b)
@@ -34,20 +35,15 @@
             (setf (ex temp) (decr-exp (ex op)))
             temp)))
   
-      ; Operator is not atomic
-      (if (semtype-equal? (domain op) arg :ignore-exp T)
+      ; Operator is not atomic TODO
+      (when (semtype-equal? (domain op) arg :ignore-exp T)
         ; Exact match between arg and domain (ignoring the exponent)
         (if (equal (ex (domain op)) 1)
           (copy-semtype (range op))
           (let ((temp (copy-semtype op)))
             (progn
               (setf (ex (domain temp)) (decr-exp (ex (domain temp))))
-              temp)))
-        ; Not an exact match, but could still be possible using variable assignments
-        ; Possible idea to handle cases where leftmost atom can be made to
-        ; disappear with a 0 exponent: if that is possible, wrap it in an
-        ; optional without the leftmost atom
-        NIL)))) ; TODO
+              temp)))))))
 
 ;; Compose two types if possible and return the composed type. Also return the
 ;; order in which the types were composed.

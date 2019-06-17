@@ -47,6 +47,49 @@
 (defun optional-type-p (s)
   (equal (type-of s) 'optional-type))
 
+;; Create a new ULF type as an instance of the appropriate class.
+;; If :options is specified, an optional type is created.
+;; If ran is NIL an atomic type is created.
+;; Rigorous sanity checking is NOT done, so unexpected inputs might cause
+;; unexpected outputs.
+(defun new-semtype (dom ran exponent sub ten &key options)
+  (if (not (numberp exponent))
+    (if (listp exponent)
+      (if (= (length exponent) 1)
+        (new-semtype dom ran (car exponent) sub ten :options options)
+        (new-semtype NIL NIL 1 NIL NIL
+                     :options (list (new-semtype dom ran (car exponent) sub ten :options options)
+                                    (new-semtype dom ran (cdr exponent) sub ten :options options))))
+      (new-semtype dom ran '(0 1 2 3 4 5) sub ten :options options))
+
+    (unless (= exponent 0)
+      (if options
+        (make-instance 'optional-type
+                       :types options
+                       :ex exponent
+                       :subscript sub
+                       :tense ten)
+        (if ran
+          (if (and (optional-type-p dom) (= (ex dom) 1))
+            (make-instance 'optional-type
+                           :types (list (new-semtype (car (types dom)) ran 1 NIL NIL)
+                                        (new-semtype (cadr (types dom)) ran 1 NIL NIL)))
+  
+            (if dom
+              (make-instance 'semtype
+                             :domain dom
+                             :range ran
+                             :ex exponent
+                             :subscript sub
+                             :tense ten)
+              ran))
+  
+            (make-instance 'atomic-type
+                           :domain dom
+                           :ex exponent
+                           :subscript sub
+                           :tense ten))))))
+
 ;; Check if two semantic types are equal. If one of the types is an optional
 ;; type then return true of either of the two options match. If both types are
 ;; optional they must contain the same options (order doesn't matter).
@@ -54,41 +97,43 @@
 ;; If :ignore-exp is 'r then ignore exponents recursively
 ;; Tenses and subscripts are checked if both types have a specified
 ;; tense/subscript.
+;; Tenses and subscripts on optionals are ignored.
 ;;
-;; Limitations: Top level exponents inside optionals are ignored. Exponents
-;; on the optional are considered. Subscripts/tenses on the optional are
-;; ignored.
 ;; Note: This function is more of a "compatibility checker" than a function to
 ;; check actual equality. I'll probably rename this to something better later.
 (defun semtype-equal? (x y &key ignore-exp)
-  (when (if ignore-exp T (equal (ex x) (ex y)))
-    (if (or (optional-type-p x) (optional-type-p y))
-      ;; At least one optional
-      (if (and (optional-type-p x) (optional-type-p y))
-        ;; Both optional
+  (if (or (optional-type-p x) (optional-type-p y))
+    ;; At least one optional
+    (if (and (optional-type-p x) (optional-type-p y))
+      ;; Both optional
+      (when (if ignore-exp T (equal (ex x) (ex y)))
         (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
           (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
                    (semtype-equal? B D :ignore-exp (when (equal ignore-exp 'r) 'r)))
               (and (semtype-equal? A D :ignore-exp (when (equal ignore-exp 'r) 'r))
-                   (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r)))))
-  
-        ;; Only one optional
-        (if (optional-type-p x)
-          ;; x optional; y not optional
-          (or (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T))
-              (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-          ;; y optional; x not optional
-          (or (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T))
-              (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
-      
-      ;; No optionals
-      (when (and (equal (type-of x) (type-of y))
-                 (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-                 (equal (tense x) (tense y)))
-        (if (atomic-type-p x)
-          (equal (domain x) (domain y))
-          (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
-               (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r))))))))
+                   (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r))))))
+
+      (if (optional-type-p x)
+        ;; x optional; y not optional
+        (or (and (or (= (ex y) (* (ex (car (types x))) (ex x))) ignore-exp)
+                 (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+            (and (or (= (ex y) (* (ex (cadr (types x))) (ex x))) ignore-exp)
+                 (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T))))
+        ;; y optional; x not optional
+        (or (and (or (= (ex x) (* (ex (car (types y))) (ex y))) ignore-exp)
+                 (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+            (and (or (= (ex x) (* (ex (cadr (types y))) (ex y))) ignore-exp)
+                 (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T))))))
+    
+    ;; No optionals
+    (when (and (if ignore-exp T (equal (ex x) (ex y)))
+               (equal (type-of x) (type-of y))
+               (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+               (equal (tense x) (tense y)))
+      (if (atomic-type-p x)
+        (equal (domain x) (domain y))
+        (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
+             (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r)))))))
 
 ;; Make a new semtype identical to the given type
 (defun copy-semtype (x)
@@ -191,12 +236,17 @@
       (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
                                   "^(\\(.*\\))(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                   s))))
-        (make-instance 'semtype
-                       :domain (str2semtype (car (split-semtype-str (svref match 0))))
-                       :range (str2semtype (cadr (split-semtype-str (svref match 0))))
-                       :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
-                       :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-                       :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
+;        (make-instance 'semtype
+;                       :domain (str2semtype (car (split-semtype-str (svref match 0))))
+;                       :range (str2semtype (cadr (split-semtype-str (svref match 0))))
+;                       :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
+;                       :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
+;                       :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
+        (new-semtype (str2semtype (car (split-semtype-str (svref match 0))))
+                     (str2semtype (cadr (split-semtype-str (svref match 0))))
+                     (if (svref match 6) (read-from-string (svref match 6)) 1)
+                     (if (svref match 4) (read-from-string (svref match 4)) nil)
+                     (if (svref match 3) (read-from-string (svref match 3)) nil)))
   
       ; ATOMIC or OPTIONAL
       (if (equal (char s 0) #\{)
@@ -204,18 +254,28 @@
         (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
                                     "^(\\{.*\\})(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                     s))))
-            (make-instance 'optional-type
-                         :types (list (str2semtype (car (split-opt-str (svref match 0))))
-                                      (str2semtype (cadr (split-opt-str (svref match 0)))))
-                         :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
-                         :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-                         :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
+;            (make-instance 'optional-type
+;                         :types (list (str2semtype (car (split-opt-str (svref match 0))))
+;                                      (str2semtype (cadr (split-opt-str (svref match 0)))))
+;                         :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
+;                         :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
+;                         :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
+            (new-semtype NIL NIL
+                         (if (svref match 6) (read-from-string (svref match 6)) 1)
+                         (if (svref match 4) (read-from-string (svref match 4)) nil)
+                         (if (svref match 3) (read-from-string (svref match 3)) nil)
+                         :options (list (str2semtype (car (split-opt-str (svref match 0))))
+                                        (str2semtype (cadr (split-opt-str (svref match 0)))))))
   
           ; ATOMIC
           (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "^([A-Z]|[0-9])(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$" s))))
-            (make-instance 'atomic-type
-                           :domain (read-from-string (svref match 0))
-                           :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
-                           :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-                           :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))))))
+;            (make-instance 'atomic-type
+;                           :domain (read-from-string (svref match 0))
+;                           :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
+;                           :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
+;                           :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))))))
+            (new-semtype (read-from-string (svref match 0)) NIL
+                         (if (svref match 6) (read-from-string (svref match 6)) 1)
+                         (if (svref match 4) (read-from-string (svref match 4)) nil)
+                         (if (svref match 3) (read-from-string (svref match 3)) nil)))))))
 
