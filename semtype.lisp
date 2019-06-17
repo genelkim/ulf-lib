@@ -52,43 +52,67 @@
 ;; If ran is NIL an atomic type is created.
 ;; Rigorous sanity checking is NOT done, so unexpected inputs might cause
 ;; unexpected outputs.
+;;
+;; Types with a variable for an exponent are expanded out into a chain of
+;; optionals where the variable value lies between 0 and 6. For example, A^n would
+;; become {A^0|{A^1|{A^2|...}}}.
+;;
+;; TODO: Fix treatment of subscripts
 (defun new-semtype (dom ran exponent sub ten &key options)
   (if (not (numberp exponent))
+    ; The exponent is not a number
     (if (listp exponent)
+      ; If the exponent is a list, we are currently recursing to form a chain of
+      ; optionals
       (if (= (length exponent) 1)
         (new-semtype dom ran (car exponent) sub ten :options options)
         (new-semtype NIL NIL 1 NIL NIL
                      :options (list (new-semtype dom ran (car exponent) sub ten :options options)
                                     (new-semtype dom ran (cdr exponent) sub ten :options options))))
-      (new-semtype dom ran '(0 1 2 3 4 5) sub ten :options options))
+      ; If the exponent is not a number or a list, treat it as a variable and
+      ; start recursion to form a chain of optionals
+      (new-semtype dom ran '(0 1 2 3 4 5 6) sub ten :options options))
 
+    ; Unless the exponent is 0 (in which case the type is NIL), create the type
     (unless (= exponent 0)
       (if options
+        ; Create optional type
         (make-instance 'optional-type
                        :types options
                        :ex exponent
                        :subscript sub
                        :tense ten)
+
+        ; If the type isn't an optional, check if range is non-NIL
         (if ran
+          ; Range is not NIL
           (if (and (optional-type-p dom) (= (ex dom) 1))
+            ; The domain is optional. Push the range in. For example, {A|B}=>C
+            ; would become {(A=>C)|(B=>C)}. This is convenient for composition
+            ; functions.
+            ; TODO: Figure out how to push subscripts/tenses in
             (make-instance 'optional-type
                            :types (list (new-semtype (car (types dom)) ran 1 NIL NIL)
                                         (new-semtype (cadr (types dom)) ran 1 NIL NIL)))
-  
+
+            ; The domain is not optional
             (if dom
+              ; Create new semtype
               (make-instance 'semtype
                              :domain dom
                              :range ran
                              :ex exponent
                              :subscript sub
                              :tense ten)
+              ; If the domain is NIL, return the range
               ran))
   
-            (make-instance 'atomic-type
-                           :domain dom
-                           :ex exponent
-                           :subscript sub
-                           :tense ten))))))
+          ; Range is NIL; the type is atomic.
+          (make-instance 'atomic-type
+                         :domain dom
+                         :ex exponent
+                         :subscript sub
+                         :tense ten))))))
 
 ;; Check if two semantic types are equal. If one of the types is an optional
 ;; type then return true of either of the two options match. If both types are
@@ -195,8 +219,8 @@
           (when (tense s) (format t "_~a" (tense s)))
           (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))))))
 
-;; Split a string of form ([domain]=>[range]) into [domain] and [range]. Helper
-;; for str2semtype.
+;; Split a string of the form ([domain]=>[range]) into [domain] and [range].
+;; Helper for str2semtype.
 (defun split-semtype-str (s)
   (let ((level 0) (i 1))
     (loop
@@ -209,6 +233,7 @@
       (setf i (+ i 1)))
     (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1)))))
 
+;; Split a string of the form {A|B} into A and B. Helper for str2semtype.
 (defun split-opt-str (s)
   (let ((level 0) (i 1))
     (loop
@@ -236,12 +261,6 @@
       (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
                                   "^(\\(.*\\))(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                   s))))
-;        (make-instance 'semtype
-;                       :domain (str2semtype (car (split-semtype-str (svref match 0))))
-;                       :range (str2semtype (cadr (split-semtype-str (svref match 0))))
-;                       :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
-;                       :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-;                       :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
         (new-semtype (str2semtype (car (split-semtype-str (svref match 0))))
                      (str2semtype (cadr (split-semtype-str (svref match 0))))
                      (if (svref match 6) (read-from-string (svref match 6)) 1)
@@ -254,12 +273,6 @@
         (let ((match (nth-value 1 (cl-ppcre:scan-to-strings
                                     "^(\\{.*\\})(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$"
                                     s))))
-;            (make-instance 'optional-type
-;                         :types (list (str2semtype (car (split-opt-str (svref match 0))))
-;                                      (str2semtype (cadr (split-opt-str (svref match 0)))))
-;                         :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
-;                         :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-;                         :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))
             (new-semtype NIL NIL
                          (if (svref match 6) (read-from-string (svref match 6)) 1)
                          (if (svref match 4) (read-from-string (svref match 4)) nil)
@@ -269,11 +282,6 @@
   
           ; ATOMIC
           (let ((match (nth-value 1 (cl-ppcre:scan-to-strings "^([A-Z]|[0-9])(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?$" s))))
-;            (make-instance 'atomic-type
-;                           :domain (read-from-string (svref match 0))
-;                           :ex (if (svref match 6) (read-from-string (svref match 6)) 1)
-;                           :subscript (if (svref match 4) (read-from-string (svref match 4)) nil)
-;                           :tense (if (svref match 3) (read-from-string (svref match 3)) nil)))))))
             (new-semtype (read-from-string (svref match 0)) NIL
                          (if (svref match 6) (read-from-string (svref match 6)) 1)
                          (if (svref match 4) (read-from-string (svref match 4)) nil)
