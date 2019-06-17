@@ -11,6 +11,7 @@
 (defparameter *detformer* '(nquan fquan))
 (defparameter *atomsymbols* "\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?")
 
+; Note: composition with subscripts is a little wonky right now
 (defparameter *semtypes*
   (mapcar
     (lambda (x) (cons (regex-replace-all "{S}" (car x) *atomsymbols*)
@@ -22,13 +23,12 @@
       ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
       ("{S}\\.PS" . "((S=>2)=>((S=>2)=>(S=>2)))")
       ("{S}\\.N" . "(D=>(S=>2))_n")
-      ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))")
-      ("{S}\\.A" . "(D=>(S=>2))") ; doc gives two possibilities for this
+      ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n")
+      ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}")
       ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
       ; Be careful while moving this around so that "be.v" is mapped correctly.
       ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v")
-;      ("{S}\\.V" . "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))|(D=>(S=>2))}")
-      ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))")
+      ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v")
       ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)")
       ("{S}\\.ADV-A" . "((D=>(S=>2))_v=>(D=>(S=>2))_v)")
       ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)=>(S=>2))")

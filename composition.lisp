@@ -1,48 +1,31 @@
 ;; ULF composition functions
-;; UNDER CONSTRUCTION
 
 (in-package :ulf-lib)
 
-; Big limitation: Cases where two types can be matched by assigning values to
-; exponent variables cannot be handled. An example is combining (2=>2) with
-; (D^(- N 1)=>2), where N needs to be set to 1.
-
-;; Decrement a given exponent field. If e is a number, simply decrement. If not,
-;; return the list '(- e 1)
-(defun decr-exp (e)
-  (if (numberp e) (- e 1) (list '- e 1)))
-
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
-;; BROKEN
 (defun apply-operator! (op arg)
   (if (optional-type-p op)
-    ; Operator is an optional TODO: multiply exponents
+    ; Operator is an optional type
     (let ((a (apply-operator! (car (types op)) arg))
           (b (apply-operator! (cadr (types op)) arg)))
       (if (and a b)
-        (make-instance 'optional-type
-                       :types (list a b))
+        (new-semtype NIL NIL 1 NIL NIL :options (list a b))
         (or a b)))
 
     ; Operator is not optional
     (if (atomic-type-p op)
-      ; Atomic operator. Must have exponent != 1. That is, the operator must be of
-      ; the form A^n <=> A=>(A=>(A=>...))
-      (when (and (semtype-equal? op arg :ignore-exp T) (not (equal (ex op) 1)))
-        (let ((temp (copy-semtype op)))
-          (progn
-            (setf (ex temp) (decr-exp (ex op)))
-            temp)))
-  
-      ; Operator is not atomic TODO
+      ; Atomic operator of the form A^n with n > 1
+      (when (and (semtype-equal? op arg :ignore-exp T) (> (ex op) 1))
+        (new-semtype (domain op) NIL (- (ex op) 1) (subscript op) (tense op)))
+
+      ; Operator is not atomic
       (when (semtype-equal? (domain op) arg :ignore-exp T)
-        ; Exact match between arg and domain (ignoring the exponent)
-        (if (equal (ex (domain op)) 1)
+        (if (= (ex (domain op)) 1)
           (copy-semtype (range op))
           (let ((temp (copy-semtype op)))
             (progn
-              (setf (ex (domain temp)) (decr-exp (ex (domain temp))))
+              (setf (ex (domain temp)) (- (ex (domain temp)) 1))
               temp)))))))
 
 ;; Compose two types if possible and return the composed type. Also return the
@@ -83,9 +66,10 @@
     (if (equal (car ulf) 'lambda)
       ; ULF is of the form (lambda var (expr))
       (when (= (length ulf) 3)
-        (make-instance 'semtype
-                       :domain (str2semtype "D")
-                       :range (ulf-type? (third ulf) :lambda-vars (cons (cadr ulf) lambda-vars))))
+;        (make-instance 'semtype
+;                       :domain (str2semtype "D")
+;                       :range (ulf-type? (third ulf) :lambda-vars (cons (cadr ulf) lambda-vars))))
+        (new-semtype (str2semtype "D") (ulf-type? (third ulf) :lambda-vars (cons (cadr ulf) lambda-vars)) 1 NIL NIL))
       ; ULF is neither a lambda nor an atom
       (if (= (length ulf) 1)
         (ulf-type? (car ulf) :lambda-vars lambda-vars)
