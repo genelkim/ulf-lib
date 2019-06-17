@@ -71,7 +71,7 @@
                                     (new-semtype dom ran (cdr exponent) sub ten :options options))))
       ; If the exponent is not a number or a list, treat it as a variable and
       ; start recursion to form a chain of optionals
-      (new-semtype dom ran '(0 1 2 3 4 5 6) sub ten :options options))
+      (new-semtype dom ran '(0 1 2 3 4 5) sub ten :options options))
 
     ; Unless the exponent is 0 (in which case the type is NIL), create the type
     (unless (= exponent 0)
@@ -180,13 +180,6 @@
                    :subscript (subscript x)
                    :tense (tense x)))))
 
-;; Turn an exponent of a semtype into a string
-;; An exponent is always of the form (+/- A B) or just a number/symbol
-(defun exp2str (x)
-  (if (listp x)
-    (format nil "(~a~a~a)" (exp2str (second x)) (car x) (exp2str (third x)))
-    (format nil "~a" x)))
-
 ;; Print an optional-type. The type is printed as {A|B} where A and B are the
 ;; options.
 (defun print-optional-type (s)
@@ -196,7 +189,7 @@
     (format t "|")
     (print-semtype (cadr (types s)))
     (format t "}")
-    (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s))))))
+    (unless (equal (ex s) 1) (format t "^~a" (ex s)))))
 
 ;; Print a given semantic type
 (defun print-semtype (s)
@@ -206,7 +199,7 @@
         (format t "~a" (domain s))
         (when (subscript s) (format t  "_~a" (subscript s)))
         (when (tense s) (format t "_~a" (tense s)))
-        (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))
+        (unless (equal (ex s) 1) (format t "^~a" (ex s))))
       (if (optional-type-p s)
         (print-optional-type s)
         (progn
@@ -217,7 +210,7 @@
           (format t ")")
           (when (subscript s) (format t  "_~a" (subscript s)))
           (when (tense s) (format t "_~a" (tense s)))
-          (unless (equal (ex s) 1) (format t "^~a" (exp2str (ex s)))))))))
+          (unless (equal (ex s) 1) (format t "^~a" (ex s))))))))
 
 ;; Split a string of the form ([domain]=>[range]) into [domain] and [range].
 ;; Helper for str2semtype.
