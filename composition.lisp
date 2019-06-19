@@ -82,3 +82,8 @@
 (defun ulf-type-string? (ulf)
   (semtype2str (ulf-type? ulf)))
 
+;; Given two types are strings, compose them if possible and return the
+;; resulting type as a string.
+(defun compose-type-string! (type1 type2)
+  (semtype2str (compose-types! (str2semtype type1) (str2semtype type2))))
+
