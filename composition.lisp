@@ -54,6 +54,7 @@
 ;; Given a ULF, evaluate and return the type if possible. Currently assumes
 ;; left associativity if there are more than 2 items scoped together. This is
 ;; not ideal, and needs to be changed.
+;; Key argument 'lambda-vars' is used for internal recursion.
 ;; Note: Unknown ulf atoms are ignored.
 (defun ulf-type? (ulf &key lambda-vars)
   (if (symbolp ulf)
@@ -75,4 +76,9 @@
         (ulf-type? (car ulf) :lambda-vars lambda-vars)
         (compose-types! (ulf-type? (reverse (cdr (reverse ulf))) :lambda-vars lambda-vars)
                         (ulf-type? (car (last ulf)) :lambda-vars lambda-vars))))))
+
+;; Given a ULF, evaluate the type if possible and return a string representation
+;; of the type.
+(defun ulf-type-string? (ulf)
+  (semtype2str (ulf-type? ulf)))
 
