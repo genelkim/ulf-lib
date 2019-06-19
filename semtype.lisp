@@ -180,38 +180,6 @@
                    :subscript (subscript x)
                    :tense (tense x)))))
 
-;; Print an optional-type. The type is printed as {A|B} where A and B are the
-;; options.
-(defun print-optional-type (s)
-  (progn
-    (format t "{")
-    (print-semtype (car (types s)))
-    (format t "|")
-    (print-semtype (cadr (types s)))
-    (format t "}")
-    (unless (equal (ex s) 1) (format t "^~a" (ex s)))))
-
-;; Print a given semantic type
-(defun print-semtype (s)
-  (when (or (semtype-p s) (atomic-type-p s) (optional-type-p s))
-    (if (atomic-type-p s)
-      (progn
-        (format t "~a" (domain s))
-        (when (subscript s) (format t  "_~a" (subscript s)))
-        (when (tense s) (format t "_~a" (tense s)))
-        (unless (equal (ex s) 1) (format t "^~a" (ex s))))
-      (if (optional-type-p s)
-        (print-optional-type s)
-        (progn
-          (format t "(")
-          (print-semtype (domain s))
-          (format t "=>")
-          (print-semtype (range s))
-          (format t ")")
-          (when (subscript s) (format t  "_~a" (subscript s)))
-          (when (tense s) (format t "_~a" (tense s)))
-          (unless (equal (ex s) 1) (format t "^~a" (ex s))))))))
-
 ;; Split a string of the form ([domain]=>[range]) into [domain] and [range].
 ;; Helper for str2semtype.
 (defun split-semtype-str (s)
@@ -238,6 +206,32 @@
         (return i))
       (setf i (+ i 1)))
     (list (subseq s 1 i) (subseq s (+ i 1) (- (length s) 1)))))
+
+;; Convert a semtype to a string. The string it returns can be read back into a
+;; type using str2semtype.
+(defun semtype2str (s)
+  (when (or (semtype-p s) (atomic-type-p s) (optional-type-p s))
+    (if (atomic-type-p s)
+      ; Atomic type
+      (format nil "~a~a~a~a"
+              (domain s)
+              (if (subscript s) (format nil "_~a" (subscript s)) "")
+              (if (tense s) (format nil "_~a" (tense s)) "")
+              (if (= (ex s) 1) "" (format nil "^~a" (ex s))))
+      ; Non-atomic type
+      (if (optional-type-p s)
+        ; Optional type
+        (format nil "{~a|~a}~a"
+                (semtype2str (car (types s)))
+                (semtype2str (cadr (types s)))
+                (if (= (ex s) 1) "" (format nil "^~a" (ex s))))
+        ; Not optional or atomic
+        (format nil "(~a=>~a)~a~a~a"
+                (semtype2str (domain s))
+                (semtype2str (range s))
+                (if (subscript s) (format nil "_~a" (subscript s)) "")
+                (if (tense s) (format nil "_~a" (tense s)) "")
+                (if (= (ex s) 1) "" (format nil "^~a" (ex s))))))))
 
 ;; Convert a string into a semantic type.
 ;; Strings must be of the form ([domain]=>[range]) or a single character, where
