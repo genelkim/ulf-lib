@@ -11,7 +11,7 @@
 (defparameter *detformer* '(nquan fquan))
 (defparameter *atomsymbols* "\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?")
 
-; Note: composition with subscripts is a little wonky right now
+; Note: composition with subscripts/tenses is a little wonky right now
 (defparameter *semtypes*
   (mapcar
     (lambda (x) (cons (regex-replace-all "{S}" (car x) *atomsymbols*)

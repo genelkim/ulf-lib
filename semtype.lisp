@@ -56,63 +56,68 @@
 ;; Types with a variable for an exponent are expanded out into a chain of
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
-;;
-;; TODO: Fix treatment of subscripts
 (defun new-semtype (dom ran exponent sub ten &key options)
-  (if (not (numberp exponent))
-    ; The exponent is not a number
-    (if (listp exponent)
-      ; If the exponent is a list, we are currently recursing to form a chain of
-      ; optionals
-      (if (= (length exponent) 1)
-        (new-semtype dom ran (car exponent) sub ten :options options)
-        (new-semtype NIL NIL 1 NIL NIL
-                     :options (list (new-semtype dom ran (car exponent) sub ten :options options)
-                                    (new-semtype dom ran (cdr exponent) sub ten :options options))))
-      ; If the exponent is not a number or a list, treat it as a variable and
-      ; start recursion to form a chain of optionals
-      (new-semtype dom ran '(0 1 2 3 4 5) sub ten :options options))
-
-    ; Unless the exponent is 0 (in which case the type is NIL), create the type
-    (unless (= exponent 0)
-      (if options
-        ; Create optional type
-        (make-instance 'optional-type
-                       :types options
-                       :ex exponent
-                       :subscript sub
-                       :tense ten)
-
-        ; If the type isn't an optional, check if range is non-NIL
-        (if ran
-          ; Range is not NIL
-          (if (and (optional-type-p dom) (= (ex dom) 1))
-            ; The domain is optional. Push the range in. For example, {A|B}=>C
-            ; would become {(A=>C)|(B=>C)}. This is convenient for composition
-            ; functions.
-            ; TODO: Figure out how to push subscripts/tenses in
-            (make-instance 'optional-type
-                           :types (list (new-semtype (car (types dom)) ran 1 NIL NIL)
-                                        (new-semtype (cadr (types dom)) ran 1 NIL NIL)))
-
-            ; The domain is not optional
-            (if dom
-              ; Create new semtype
-              (make-instance 'semtype
-                             :domain dom
-                             :range ran
-                             :ex exponent
-                             :subscript sub
-                             :tense ten)
-              ; If the domain is NIL, return the range
-              ran))
+  (progn
+    (setf dom (copy-semtype dom))
+    (setf ran (copy-semtype ran))
+    (setf options (mapcar #'copy-semtype options))
+    (if (not (numberp exponent))
+      ; The exponent is not a number
+      (if (listp exponent)
+        ; If the exponent is a list, we are currently recursing to form a chain of
+        ; optionals
+        (if (= (length exponent) 1)
+          (new-semtype dom ran (car exponent) sub ten :options options)
+          (new-semtype NIL NIL 1 NIL NIL
+                       :options (list (new-semtype dom ran (car exponent) sub ten :options options)
+                                      (new-semtype dom ran (cdr exponent) sub ten :options options))))
+        ; If the exponent is not a number or a list, treat it as a variable and
+        ; start recursion to form a chain of optionals
+        (new-semtype dom ran '(0 1 2 3 4 5) sub ten :options options))
   
-          ; Range is NIL; the type is atomic.
-          (make-instance 'atomic-type
-                         :domain dom
+      ; Unless the exponent is 0 (in which case the type is NIL), create the type
+      (unless (= exponent 0)
+        (if options
+          ; Create optional type
+          (make-instance 'optional-type
+                         :types options
                          :ex exponent
                          :subscript sub
-                         :tense ten))))))
+                         :tense ten)
+  
+          ; If the type isn't an optional, check if range is non-NIL
+          (if ran
+            ; Range is not NIL
+            (if (and (optional-type-p dom) (= (ex dom) 1))
+              ; The domain is optional. Push the range in. For example, {A|B}=>C
+              ; would become {(A=>C)|(B=>C)}. This is convenient for composition
+              ; functions.
+              (make-instance 'optional-type
+                             :types (list (new-semtype (car (types dom)) ran 1 sub ten)
+                                          (new-semtype (cadr (types dom)) ran 1 sub ten)))
+  
+              ; The domain is not optional
+              (if dom
+                ; Create new semtype
+                (make-instance 'semtype
+                               :domain dom
+                               :range ran
+                               :ex exponent
+                               :subscript sub
+                               :tense ten)
+                ; If the domain is NIL, return the range
+                (progn
+                  (setf (ex ran) exponent)
+                  (setf (subscript ran) sub)
+                  (setf (tense ran) ten)
+                  ran)))
+    
+            ; Range is NIL; the type is atomic.
+            (make-instance 'atomic-type
+                           :domain dom
+                           :ex exponent
+                           :subscript sub
+                           :tense ten)))))))
 
 ;; Check if two semantic types are equal. If one of the types is an optional
 ;; type then return true of either of the two options match. If both types are
@@ -161,24 +166,26 @@
 
 ;; Make a new semtype identical to the given type
 (defun copy-semtype (x)
-  (if (atomic-type-p x)
-    (make-instance 'atomic-type
-                   :domain (domain x)
-                   :ex (ex x)
-                   :subscript (subscript x)
-                   :tense (tense x))
-    (if (optional-type-p x)
-      (make-instance 'optional-type
-                     :types (list (copy-semtype (car (types x))) (copy-semtype (cadr (types x))))
+  (if (or (semtype-p x) (atomic-type-p x) (optional-type-p x))
+    (if (atomic-type-p x)
+      (make-instance 'atomic-type
+                     :domain (domain x)
                      :ex (ex x)
                      :subscript (subscript x)
                      :tense (tense x))
-      (make-instance 'semtype
-                   :domain (copy-semtype (domain x))
-                   :range (copy-semtype (range x))
-                   :ex (ex x)
-                   :subscript (subscript x)
-                   :tense (tense x)))))
+      (if (optional-type-p x)
+        (make-instance 'optional-type
+                       :types (list (copy-semtype (car (types x))) (copy-semtype (cadr (types x))))
+                       :ex (ex x)
+                       :subscript (subscript x)
+                       :tense (tense x))
+        (make-instance 'semtype
+                     :domain (copy-semtype (domain x))
+                     :range (copy-semtype (range x))
+                     :ex (ex x)
+                     :subscript (subscript x)
+                     :tense (tense x))))
+    x))
 
 ;; Convert a semtype to a string. The string it returns can be read back into a
 ;; type using str2semtype.
