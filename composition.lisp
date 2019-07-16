@@ -79,11 +79,13 @@
 
 ;; Given a ULF, evaluate the type if possible and return a string representation
 ;; of the type.
-(defun ulf-type-string? (ulf)
-  (semtype2str (ulf-type? ulf)))
+(defun ulf-type-string? (ulf-string)
+  (semtype2str (ulf-type? (read-from-string ulf-string))))
 
 ;; Given two types are strings, compose them if possible and return the
 ;; resulting type as a string.
 (defun compose-type-string! (type1 type2)
   (semtype2str (compose-types! (str2semtype type1) (str2semtype type2))))
 
+(defun random-print (str)
+  (format nil "~S" str))
