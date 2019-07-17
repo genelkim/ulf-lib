@@ -79,8 +79,8 @@
 
 ;; Given a ULF, evaluate the type if possible and return a string representation
 ;; of the type.
-(defun ulf-type-string? (ulf-string)
-  (semtype2str (ulf-type? (read-from-string ulf-string))))
+(defun ulf-type-string? (ulf)
+  (semtype2str (ulf-type? ulf)))
 
 ;; Given two types are strings, compose them if possible and return the
 ;; resulting type as a string.
