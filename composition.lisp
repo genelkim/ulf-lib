@@ -82,6 +82,9 @@
 (defun ulf-type-string? (ulf)
   (semtype2str (ulf-type? ulf)))
 
+(defun str-ulf-type-string? (string-ulf)
+  (ulf-type-string? (read-from-string string-ulf)))
+
 ;; Given two types are strings, compose them if possible and return the
 ;; resulting type as a string.
 (defun compose-type-string! (type1 type2)
