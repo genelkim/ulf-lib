@@ -173,7 +173,7 @@
 (defparameter *ttt-verb*
   '(! lex-verb?
       (pasv lex-verb?)
-      (verb? (+ (! term? pred? adv-a? p-arg? phrasal-sent-op?)))
+      (verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
       (adv-a? (* phrasal-sent-op?) verb?)
       ;(verb? (+ adv-a?))
       (aux? (* phrasal-sent-op?) verb?)
@@ -359,6 +359,7 @@
 (defun contains-relativizer (x)
   (in-ulf-lib (x y)
              (hidden-match-expr '(^* lex-rel?) y)))
+(defun contains-relativizer? (x) (contains-relativizer x)) ;  TODO merge with above.
 
 ;; A relativized sentence is a tensed sentence with a relativizer in it.
 (defun relativized-sent? (x)

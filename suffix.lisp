@@ -9,13 +9,17 @@
 
 ;; Splits the symbol at the last "." and returns the two values.
 (defun split-by-suffix (sym)
+  (if (not (symbolp sym)) (return-from split-by-suffix sym))
   (let* ((pkg (symbol-package sym))
          (atoms (util:split-into-atoms sym))
          ;(dotpos (position '|.| atoms :from-end t)))
          ;; Intern instead of literal so that it gets interned into the
          ;; namespace of the caller.
          (dotpos (position (intern ".") atoms :from-end t)))
-    (if dotpos
+    (if (and dotpos 
+             ;; Suffixes can't have whitespace in them
+             (notany #'(lambda (x) (member x cl-util::*trim-whitespace-chars*))
+                     (subseq atoms dotpos)))
       (values (util:fuse-into-atom (util:slice atoms 0 dotpos) :pkg pkg)
               (util:fuse-into-atom (util:slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
       (values sym nil))))
@@ -29,10 +33,15 @@
          (base-ret (cl-strings:join
                      (subseq split 0 (max 1 (1- (length split))))
                      :separator ".")))
-    ;; If it's a name, but there is a split, add back the pipe at the end.
-    (if (and (is-strict-name? (read-from-string s)) (> (length split) 1))
-      (concatenate 'string base-ret "|")
-      base-ret)))
+    (cond
+      ;; If there's a space in the suffix, then don't strip.
+      ((some #'(lambda (x) (member x cl-util::*trim-whitespace-chars*))
+             (car (last (coerce split 'list))))
+       s)
+      ;; If it's a name, but there is a split, add back the pipe at the end.
+      ((and (is-strict-name? (read-from-string s)) (> (length split) 1))
+       (concatenate 'string base-ret "|"))
+      (t base-ret))))
 
 ;; Takes a word symbol and a suffix and merges them together.
 ;; Assumes that we retain the package of word.
