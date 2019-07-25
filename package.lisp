@@ -114,6 +114,9 @@
     :relativized-sent?
     :ulf-type?
     :label-formula-types
+    :ulf-type-string?
+    :str-ulf-type-string?
+    :compose-type-string!
 
     ;; gen-phrasal-patterns.lisp
     :plur-term?
