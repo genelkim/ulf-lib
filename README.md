@@ -2,11 +2,11 @@
 Library for interfacing with and manipulating unscoped episodic logical forms (ULF).  
 
 ## Dependencies
-- Allegro Common Lisp Regex Library (comes with allegro common lisp distribution)
+- SBCL
 - Quicklisp
 - TTT (get a copy at https://github.com/genelkim/ttt)
 - https://github.com/genelkim/cl-util
-- cl-strings (loaded automatically via quicklisp)
+- All other dependencies are available through Quicklisp
 
 ## Installation
 1. Install quicklisp by following instructions at https://www.quicklisp.org/beta/
