@@ -4,7 +4,7 @@ Library for interfacing with and manipulating unscoped episodic logical forms (U
 ## Dependencies
 - Allegro Common Lisp Regex Library (comes with allegro common lisp distribution)
 - Quicklisp
-- TTT (get a copy at http://cs.rochester.edu/u/gkim21/data/ttt.tar.gz)
+- TTT (get a copy at https://github.com/genelkim/ttt)
 - https://github.com/genelkim/cl-util
 - cl-strings (loaded automatically via quicklisp)
 
