@@ -10,16 +10,23 @@
 (defparameter *coordinator* '(and or but because))
 (defparameter *detformer* '(nquan fquan))
 (defparameter *atomsymbols* "\\[?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?")
+(defparameter *innername-symbols* "\[\^\\|\]\+")
 
 ; Note: composition with subscripts/tenses is a little wonky right now
 (defparameter *semtypes*
   (mapcar
-    (lambda (x) (cons (regex-replace-all "{S}" (car x) *atomsymbols*)
+    (lambda (x) (cons (regex-replace-all
+                        "{N}"
+                        (regex-replace-all
+                          "{S}"
+                          (car x)
+                          *atomsymbols*)
+                        *innername-symbols*)
                       (if (listp (cdr x))
                         (mapcar #'str2semtype (cdr x))
                         (str2semtype (cdr x)))))
     '(("{S}\\.PRO" . "D")
-      ("\\|{S}\\|" . "D")
+      ("\\|{N}\\|" . "D")
       ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
       ("{S}\\.PS" . "((S=>2)=>((S=>2)=>(S=>2)))")
       ("{S}\\.N" . "(D=>(S=>2))_n")
