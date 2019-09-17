@@ -57,7 +57,7 @@
 ;; Key argument 'lambda-vars' is used for internal recursion.
 ;; Note: Unknown ulf atoms are ignored.
 (defun ulf-type? (ulf &key lambda-vars)
-  (if (symbolp ulf)
+  (if (atom ulf)
     ; atomic ULF
     (if (atom-semtype? ulf)
       (atom-semtype? ulf)

@@ -25,8 +25,9 @@
                       (if (listp (cdr x))
                         (mapcar #'str2semtype (cdr x))
                         (str2semtype (cdr x)))))
-    '(("{S}\\.PRO" . "D")
-      ("\\|{N}\\|" . "D")
+    '(("{S}\\.PRO" . "D")  ; pronouns
+      ("\\|{N}\\|" . "D")  ; names
+      ("\[\\d\|\\.\]\+" . "D")  ; numbers
       ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
       ("{S}\\.PS" . "((S=>2)=>((S=>2)=>(S=>2)))")
       ("{S}\\.N" . "(D=>(S=>2))_n")
@@ -303,7 +304,7 @@
 
 ;; Returns a string containing the semantic type of a given atomic ULF expression.
 (defun atom-semtype? (expr)
-  (cdr (assoc (util:sym2str expr) *semtypes*
+  (cdr (assoc (util:atom2str expr) *semtypes*
               :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
 
 ;; TODO: move this into a separate util.lisp file where we'll put other utility
