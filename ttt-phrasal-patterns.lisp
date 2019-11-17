@@ -429,13 +429,21 @@
                (mapcar #'label-formula-types f))))))
 
 ;; Condition to check if an element is a filitered sentence-level operator.
-;; Basically all sentence-level operators that are written as phrasal in the
-;; surface form.
+;; Basically all sentence-level operators that are written within the phrase in
+;; the surface form.
 (defun phrasal-sent-op? (x)
   (in-ulf-lib (x e)
              (or
                (adv-e? e)
                (adv-s? e)
                (adv-f? e)
-               (member e '(not not.adv-e not.adv-s)))))
+               (member e '(not not.adv-e not.adv-s))
+               (and (listp x) (= (length x) 2)
+                    (lex-ps? (first x))
+                    (tensed-sent? (second x)))
+               ;; Weaker verion of (*.ps x) matching. Don't require it to be a
+               ;; tensed sentence even though that's what's required in the
+               ;; type.
+               (and (listp x) (> (length x) 1)
+                    (lex-ps? (first x))))))
 
