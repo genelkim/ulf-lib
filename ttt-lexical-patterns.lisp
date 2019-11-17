@@ -87,7 +87,7 @@
     (in-ulf-lib (inx x)
       (multiple-value-bind (word suffix) (split-by-suffix x)
         (declare (ignore suffix)) ; suffix check handled in lex-noun? below.
-        (let ((wchars (cl-strings:chars (string word))))
+        (let ((wchars (cl-strings:chars (atom2str word))))
           (and (lex-noun? inx)
                (> (length wchars) 3)
                (equal '(#\- #\O #\F) (last wchars 3))))))))
