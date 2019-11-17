@@ -62,6 +62,7 @@
     :lex-adv-e?
     :lex-adv-f?
     :lex-adv-formula?
+    :lex-adv?
     :lex-x?
     :lex-yn?
     :lex-sent?
