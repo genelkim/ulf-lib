@@ -30,7 +30,7 @@
       (noun? p-arg?)
       (lex-function? term?)
       (n+preds noun? (+ pred?))
-      (noun? lex-coord? (+ noun?))
+      ((+ noun?) lex-coord? noun?)
       (phrasal-sent-op? noun?)
       (n+post noun? (+ pred? term? adv? p-arg? unknown?))
 
@@ -58,7 +58,7 @@
       ;; Some adjectives take arguments with prepositions.
       (adj? p-arg?)
       ;; Coordination.
-      (adj? lex-coord? (+ adj?))
+      ((+ adj?) lex-coord? (+ adj?))
       (phrasal-sent-op? adj?)
       ;; Equal sign with term.
       (= term?)
@@ -72,24 +72,24 @@
       ;; Below is not quite correct since some *.pq map to (adv-e ...), but for
       ;; the sake of this syntax checker it doesn't matter.
       lex-pq?
-      (adv-a? lex-coord? (+ adv-a?))
+      ((+ adv-a?) lex-coord? (+ adv-a?))
       ))
 
 (defparameter *ttt-adv-e*
    '(! lex-adv-e?
       (adv-e pred?)
-      (adv-e? lex-coord? (+ adv-e?))
+      ((+ adv-e?) lex-coord? (+ adv-e?))
       ))
 
 (defparameter *ttt-adv-s*
    '(! lex-adv-s?
       (adv-s pred?)
-      (adv-s? lex-coord? (+ adv-s?))))
+      ((+ adv-s?) lex-coord? (+ adv-s?))))
 
 (defparameter *ttt-adv-f*
    '(! lex-adv-f?
       (adv-f pred?)
-      (adv-f? lex-coord? (+ adv-f?))
+      ((+ adv-f?) lex-coord? (+ adv-f?))
       ))
 
 ;; Predicate modifiers.
@@ -106,7 +106,7 @@
 (defparameter *ttt-pp*
    '(! lex-pp?
        (lex-p? term?)
-       (pp? lex-coord? (+ pp?))
+       ((+ pp?) lex-coord? (+ pp?))
        (phrasal-sent-op? pp?)
        ;; "just outside Boston" -- (just.mod-a (outside.p |Boston|))
        (mod-a? pp?)
@@ -130,7 +130,7 @@
       lex-rel?
       (det? noun?)
       (lex-set-of? (+ term?))
-      (term? lex-coord? (+ term?))
+      ((+ term?) lex-coord? (+ term?))
       ;; Reified
       (noun-reifier? noun?)
       (verb-reifier? verb?)
@@ -178,7 +178,7 @@
       ;(verb? (+ adv-a?))
       (aux? (* phrasal-sent-op?) verb?)
       ;(verb? adv-a? term?)
-      ((? verb?) lex-coord? (+ verb?))
+      ((* verb?) lex-coord? (+ verb?))
       (phrasal-sent-op? verb?)
 
       ;; FALL BACK ANALYSIS.
@@ -212,7 +212,7 @@
       (tensed-verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
       (tensed-aux? (* phrasal-sent-op?) verb?)
       (adv-a? (* phrasal-sent-op?) tensed-verb?)
-      ((? tensed-verb?) lex-coord? (+ tensed-verb?))
+      ((* tensed-verb?) lex-coord? (+ tensed-verb?))
       (phrasal-sent-op? tensed-verb?)
       ))
 
@@ -223,7 +223,7 @@
 
 (defparameter *ttt-sent*
   '(! (term? verb?)        ; subject verb
-      (sent? lex-coord? (+ sent?)) ; multiple sentences
+      ((+ sent?) lex-coord? (+ sent?)) ; multiple sentences
       (sent-mod? sent?)    ; sentence modifier, sentence
       (sent? sent-mod?)    ; sentence, sentence modifier
       (adv-a? term? verb?) ; action adverb, subject, verb
