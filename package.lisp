@@ -113,7 +113,7 @@
     :phrasal-sent-op?
     :contains-relativizer
     :relativized-sent?
-    :ulf-type?
+    :phrasal-ulf-type?
     :label-formula-types
     :ulf-type-string?
     :str-ulf-type-string?

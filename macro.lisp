@@ -132,7 +132,7 @@
 (defun add-info-to-var (curulf var srculf)
   ;; TODO: For now just take the first type (we should use a
   ;; hierarchy of types to select the most specific one.
-  (let* ((typ (first (ulf-type? srculf)))
+  (let* ((typ (first (phrasal-ulf-type? srculf)))
          (typeadded (add-suffix var (suffix-for-type typ)))
          (replacement
            (cond

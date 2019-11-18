@@ -405,7 +405,7 @@
         ))
 
 ;; Hypothesizes the type of the given ULF formula.
-(defun ulf-type? (inx &key (callpkg nil))
+(defun phrasal-ulf-type? (inx &key (callpkg nil))
   (inout-ulf-lib (inx x :callpkg callpkg)
     (let ((matched (remove-if-not #'(lambda (pair) (apply (first pair) (list x)))
                                   *type-id-fns*)))
@@ -414,10 +414,10 @@
         '(unknown)))))
 (defun unknown? (inx &optional (callpkg nil))
   (inout-ulf-lib (inx x :callpkg callpkg)
-    (equal '(unknown) (ulf-type? x))))
+    (equal '(unknown) (phrasal-ulf-type? x))))
 
 ;; Labels formula with the hypothesized types.
-;; TODO: Merging this function with 'ulf-type?' to get all types in one bottom
+;; TODO: Merging this function with 'phrasal-ulf-type?' to get all types in one bottom
 ;;       up fashion would speed this up a lot.
 (defun label-formula-types (rawf &key (callpkg nil))
   (inout-ulf-lib (rawf f :callpkg callpkg)
@@ -425,7 +425,7 @@
       (;; Atom or quoted expression (which techinically is a cons).
        (or (atom f) 
            (and (consp f) (eq 'quote (car f)))) f)
-      (t (list (cons 'types (ulf-type? f))
+      (t (list (cons 'types (phrasal-ulf-type? f))
                (mapcar #'label-formula-types f))))))
 
 ;; Condition to check if an element is a filitered sentence-level operator.
