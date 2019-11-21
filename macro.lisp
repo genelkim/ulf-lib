@@ -252,16 +252,27 @@
     ;; composition of the inverted and uninverted versions and choose the one
     ;; that is coherent.
     (/ (((lex-tense? lex-verb?) term? _+) [?])
-       ((uninvert-verbaux! ((lex-tense? lex-verb?) term? _+)) [?]))))
+       ((uninvert-verbaux! ((lex-tense? lex-verb?) term? _+)) [?]))
+    ;; Special case for be.v, since it only takes predicates.
+    (/ ((lex-tense? be.v) term? _+)
+       (uninvert-verbaux! ((lex-tense? be.v) term? _+)))))
 
 ;; Function to uninvert verbauxes from a given ULFs.
-(defun uninvert-verbauxes (ulf)
-  (let ((ttthidden (hide-ttt-ops ulf)))
-    (util:unhide-ttt-ops
-      (ttt:apply-rules *ttt-uninvert-verbaux*
-                       ttthidden
-                       :max-n 500
-                       :trace nil))))
+;; calling-package is an option for the package of the symbols of the returned
+;;   value. By default it will be :ulf-lib.
+(defun uninvert-verbauxes (inulf &key (calling-package nil))
+  (let
+    ((initial-result
+       (util:in-intern (inulf ulf :ulf-lib)
+         (let ((ttthidden (hide-ttt-ops ulf)))
+           (util:unhide-ttt-ops
+             (ttt:apply-rules *ttt-uninvert-verbaux*
+                              ttthidden
+                              :max-n 500
+                              :trace nil))))))
+    (if calling-package
+      (util:intern-symbols-recursive initial-result calling-package)
+      initial-result)))
 
 ;; Lift adv-a that are mixed in with verb arguments.
 (defparameter *ttt-lift-adv-a*
