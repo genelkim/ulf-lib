@@ -28,6 +28,8 @@
     ;; preprocess.lisp
     :unescape-backslashes
     :add-prename-space
+    :make-string-paren-match
+    :all-string-preprocess
 
     ;; ttt-lexical-patterns.lisp
     :lex-noun?
