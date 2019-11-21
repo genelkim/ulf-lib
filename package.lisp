@@ -30,6 +30,7 @@
     :add-prename-space
     :make-string-paren-match
     :all-string-preprocess
+    :ulf-from-string
 
     ;; ttt-lexical-patterns.lisp
     :lex-noun?

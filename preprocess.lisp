@@ -105,3 +105,27 @@
              #'unescape-backslashes)
     str))
 
+;; Reads a ulf from a string.
+;; if multi-label is nil, multi-sentence strings are just put together as if
+;; they were separated by a semi-colon. Otherwise, the given label is places as
+;; an operator.
+(defun ulf-from-string (str &key (multi-label nil))
+  (let ((start 0)
+        (ulf-segments nil))
+    (loop while (< start (length str))
+          do 
+          (handler-case
+            (multiple-value-bind (obj idx) (read-from-string str t nil :start start)
+               (setf start idx)
+               (push obj ulf-segments))
+            ;; If we hit a read error, abort the loop.
+            (sb-int:simple-reader-error (hre) 
+              (format t "Hit a sb-int:simple-reader-error on string: ~s~%At start: ~s~%" 
+                      str start)
+              (setf start (length str)))))
+    (cond 
+      ((= 1 (length ulf-segments)) (car ulf-segments))
+      ((null multi-label) (reverse ulf-segments))
+      (t (cons multi-label (reverse ulf-segments))))))
+  
+
