@@ -29,7 +29,9 @@
            (plur-partitive? (second x))))
       ;; Coordinated nouns or sets of terms are plural.
       ((and (listp x) (term? x) (> (length x) 2))
-       (or (lex-set-of? (first x)) (lex-coord? (second x))))
+       (or (lex-set-of? (first x)) (lex-coord? (second x))
+           ;; coordinator in the second to last position.
+           (lex-coord? (nth (- (length x) 2) x))))
       ;; Term marked with 'plur-term (an internal computational marker).
       ((and (listp x) (= (length x) 2) (eql (first x) 'plur-term) (term? (second x)))
        t)
