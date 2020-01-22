@@ -72,6 +72,23 @@
     ((null semtype) nil)
     (t (setf (type-params semtype) (append (type-params semtype) type-params)))))
 
+(defun set-semtype-type-params (semtype type-params)
+  "Like add-semtype-type-params, but overwrites, rather than appending to existing
+  type params."
+  (cond
+    ((optional-type-p semtype)
+     (mapcar #'(lambda (st) (set-semtype-type-params st type-params)) (types semtype)))
+    ((null semtype) nil)
+    (t (setf (type-params semtype) type-params))))
+
+(defun get-semtype-type-params (semtype)
+  "Gets the type-params from a semtype. Recurses into optional-type, but only in
+  one branch since all final branches should have the same type-params."
+  (cond
+    ((null semtype) nil)
+    ((listp semtype) (get-semtype-type-params (first semtype)))
+    ((optional-type-p semtype) (get-semtype-type-params (types semtype)))
+    (t (type-params semtype))))
 
 ;; Create a new ULF type as an instance of the appropriate class.
 ;; If :options is specified, an optional type is created.
@@ -309,9 +326,11 @@
              (push (coerce (reverse cur-chars) 'string) params)
              (setf cur-chars nil))
             ; Open bracket, add depth.
-            ((eql c #\[) (1+ bracket-depth))
+            ((eql c #\[) (1+ bracket-depth)
+                         (push c cur-chars))
             ; Close bracket, subtract depth.
-            ((eql c #\]) (1- bracket-depth))
+            ((eql c #\]) (1- bracket-depth)
+                         (push c cur-chars))
             ; Otherwise, just add to current characters.
             (t (push c cur-chars))))
     (when (not (null cur-chars))
@@ -334,7 +353,7 @@
         (non-atom-regex "^(\\(.*\\))(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$")
         ; {A|B}[[type1],[type2],..\]
         (optional-regex "^(\\{.*\\})(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$")
-        (atomic-regex "^([A-Z]|[0-9])(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$"))
+        (atomic-regex "^([A-Z]|[0-9]|\-)+(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$"))
     (setf s (string-upcase s))
     (if (equal (char s 0) #\()
       ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
@@ -383,8 +402,13 @@
       ((equal (char str 0) #\{) (str2semtype str :recurse-fn #'extended-str2semtype))
       ;; Tense.
       ((equal str "TENSE") (new-semtype 'tense nil 1 nil nil))
+      ;; Quotes.
+      ((equal str "\"") (new-semtype '\" nil 1 nil nil))
       ;; Any of the macros.
       ((lex-macro? sym) (new-semtype sym nil 1 nil nil))
+      ;; Any of the extended macros.
+      ((member str '("QT-ATTR1" "QT-ATTR2" "SUB1" "REP1") :test #'equal)
+       (new-semtype sym nil 1 nil nil))
       ;; Macro hole variables (*p, *h, *ref, *s, etc.)
       ((lex-macro-hole? sym) (new-semtype sym nil 1 nil nil))
       ;; Non-special atomic type.
