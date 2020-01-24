@@ -214,29 +214,33 @@
              (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r)))))))
 
 ;; Make a new semtype identical to the given type
-(defun copy-semtype (x)
+;; Key word options allow overwriting specific fields if appropriate.
+(defun copy-semtype (x &key c-dom c-ran c-ex c-subscript c-tense c-types c-type-params)
   (if (or (semtype-p x) (atomic-type-p x) (optional-type-p x))
     (if (atomic-type-p x)
       (make-instance 'atomic-type
-                     :domain (domain x)
-                     :ex (ex x)
-                     :subscript (subscript x)
-                     :tense (tense x)
-                     :type-params (type-params x))
+                     :domain (if c-dom c-dom (domain x))
+                     :ex (if c-ex c-ex (ex x))
+                     :subscript (if c-subscript c-subscript (subscript x))
+                     :tense (if c-tense c-tense (tense x))
+                     :type-params (if c-type-params c-type-params (type-params x)))
       (if (optional-type-p x)
         (make-instance 'optional-type
-                       :types (list (copy-semtype (car (types x))) (copy-semtype (cadr (types x))))
-                       :ex (ex x)
-                       :subscript (subscript x)
-                       :tense (tense x)
-                       :type-params (type-params x))
+                       :types (if c-types
+                                c-types
+                                (list (copy-semtype (car (types x)))
+                                      (copy-semtype (cadr (types x)))))
+                       :ex (if c-ex c-ex (ex x))
+                       :subscript (if c-subscript c-subscript (subscript x))
+                       :tense (if c-tense c-tense (tense x))
+                       :type-params (if c-type-params c-type-params (type-params x)))
         (make-instance 'semtype
-                     :domain (copy-semtype (domain x))
-                     :range (copy-semtype (range x))
-                     :ex (ex x)
-                     :subscript (subscript x)
-                     :tense (tense x)
-                     :type-params (type-params x))))
+                     :domain (if c-dom c-dom (copy-semtype (domain x)))
+                     :range (if c-ran c-ran (copy-semtype (range x)))
+                     :ex (if c-ex c-ex (ex x))
+                     :subscript (if c-subscript c-subscript (subscript x))
+                     :tense (if c-tense c-tense (tense x))
+                     :type-params (if c-type-params c-type-params (type-params x)))))
     x))
 
 ;; Convert a semtype to a string. The string it returns can be read back into a
@@ -353,7 +357,7 @@
         (non-atom-regex "^(\\(.*\\))(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$")
         ; {A|B}[[type1],[type2],..\]
         (optional-regex "^(\\{.*\\})(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$")
-        (atomic-regex "^([A-Z]|[0-9]|\-)+(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$"))
+        (atomic-regex "^([A-Z0-9\-\*]+)(_(([UT])|([NAVP])))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$"))
     (setf s (string-upcase s))
     (if (equal (char s 0) #\()
       ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
@@ -378,6 +382,8 @@
                          :type-params (mapcar recurse-fn (split-type-param-str (svref match 8)))))
           ; ATOMIC
           (let ((match (nth-value 1 (cl-ppcre:scan-to-strings atomic-regex s))))
+            ;(format t "s: ~s~%" s)
+            ;(format t "match1: ~s~%" (read-from-string (svref match 0)))
             (new-semtype (read-from-string (svref match 0)) NIL
                          (if (svref match 6) (read-from-string (svref match 6)) 1)
                          (if (svref match 4) (read-from-string (svref match 4)) nil)
@@ -413,4 +419,124 @@
       ((lex-macro-hole? sym) (new-semtype sym nil 1 nil nil))
       ;; Non-special atomic type.
       (t (str2semtype s :recurse-fn #'extended-str2semtype)))))
+
+; TODO(gene): change this to semtype-equal? to semtype-sufficient? and this to semtype-equal?
+; TODO(gene): test this
+(defun strict-semtype-equal (s1 s2)
+  "Determines whether two semtypes are equivalent. For optional types, order
+  doesn't matter and allows flattening of options."
+  (labels
+    (; Runs a list of accessor-test pair for computing equality on specific
+     ; components of two elements.
+     (acc-test (accessor-test)
+       (let ((accfn (first accessor-test))
+             (testfn (second accessor-test)))
+         (funcall testfn (funcall accfn t1) (funcall accfn t2))))
+     ; Runs equality on two lists of semtypes, ignoring order.
+     (set-no-option-equal (set1 set2)
+       (and (= (length set1) (length set2))
+            (every #'(lambda (set1-elem)
+                       (member set1-elem set2 :test #'no-option-equal))
+                   set1)))
+     ; Determines equality for two semtypes that don't contain any options.
+     (no-option-equal (t1 t2)
+       (cond
+         ((or (optional-type-p t1) (optional-type-p t2))
+          (error "No optional types allowed in no-option-equal"))
+         ((or (and (atomic-type-p t1) (not (atomic-type-p t2)))
+              (and (not (atomic-type-p t1)) (atomic-type-p t2)))
+          (error "Types don't match for t1 and t2 in no-option-equal"))
+         ; Atomic (only has domain)
+         ((atomic-type-p t1)
+          (every #'acc-test
+                 (list (list #'domain #'no-option-equal)
+                       (list #'ex #'equal) 
+                       (list #'subscript #'equal) 
+                       (list #'tense #'equal) 
+                       (list #'type-params #'set-no-option-equal))))
+         ; Non-atomic (has domain and range)
+         (t
+          (every #'acc-test
+                 (list (list #'domain #'no-option-equal)
+                       (list #'range #'no-option-equal)
+                       (list #'ex #'equal) 
+                       (list #'subscript #'equal) 
+                       (list #'tense #'equal) 
+                       (list #'type-params #'set-no-option-equal))))))
+     ) ; end of label definitions.
+    ; labels body
+    ; If we get to an atomic label, just check the labels.
+    (when (and (atom s1) (atom s2)) 
+      (return-from strict-semtype-equal (equal s1 s2)))
+    (when (or (atom s1) (atom s2))
+      (return-from strict-semtype-equal nil))
+    (let ((flat-s1 (types (flatten-options s1)))
+          (flat-s2 (types (flatten-options s2))))
+      ; Check that the lengths are the same and that for every option in s1,
+      ; the same option exists in s2.
+      (set-no-option-equal flat-s1 flat-s2))))
+
+
+(defun flatten-type-params (s)
+  "Flattens the type-params of the given semtype. This function is co-recursive
+  with flatten-options which flattens the main options."
+  (let* 
+     (; Expand out each type-param into its list of possibilities.
+      (type-param-choice-lst 
+        (mapcar (compose #'types #'flatten-options) 
+                (type-params s)))
+      ; Build an option list with every combination of type-param choices
+      (type-param-choices (cartesian-product type-param-choice-lst))
+      (new-options (mapcar #'(lambda (tp-choice)
+                               (copy-semtype s :c-type-params tp-choice))
+                           type-param-choices)))
+     (cond
+       ((= 1 (length new-options)) (first new-options))
+       ; Build the optional semtype with these options and return.
+       (t (new-semtype nil nil 1 nil nil :options new-options)))))
+
+(defun flatten-options (s)
+  "Flattens a semtype so that all options are represented with a single
+  top-level option type. In a sense, this is un-factorizing the semtype.
+  This will always return an optional type even if there is only one option."
+  ; First, flatten the type-params if necessary.
+  (setf s (if (type-params s) 
+            (flatten-type-params s)
+            s))
+  (cond
+    ;; Optional type, recurse on all and flatten into a single optional type.
+    ((optional-type-p s)
+     (let ((new-options (apply #'append (mapcar (compose #'types #'flatten-options) 
+                                                (types s)))))
+       (new-semtype nil nil 1 nil nil :options new-options)))
+    ;; Atomic type, return a copy of it wrapped in an optional type.
+    ((atomic-type-p s)
+     (new-semtype nil nil 1 nil nil :options (list (copy-semtype s))))
+    ;; Non-atomic, non-optional type, recurse into the domain and range and generate an optional
+    ;; type of all combinations of the recursed types.
+    (t (let ((flat-dom (flatten-options (domain s)))
+             (flat-ran (flatten-options (range s)))
+             new-options)
+         (assert (optional-type-p flat-dom))
+         (assert (optional-type-p flat-ran))
+         (setf new-options
+               (loop for cur-dom in (types flat-dom)
+                     append (loop for cur-ran in (types flat-ran)
+                                  collect (copy-semtype s :c-dom cur-dom
+                                                          :c-ran cur-ran))))
+         (format t "new-options: ~s~%" new-options)
+         (new-semtype nil nil 1 nil nil :options new-options)))))
+
+(defun binarize-flat-options (s)
+  "Takes a flat option type and makes it a right-leaning binary tree of options."
+  (labels
+    ((helper (options)
+       (cond
+         ((< (length options) 3)
+          (new-semtype nil nil 1 nil nil :options options))
+         (t (new-semtype nil nil 1 nil nil
+                         :options (list (first options)
+                                        (binarize-flat-options (rest options))))))))
+    ; Top-level call.
+    (helper (types s))))
 

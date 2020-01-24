@@ -8,16 +8,22 @@
 (setq *print-summary* t)
 (setq *summarize-results* t)
 
+(defun semtype-str-equal (str1 str2)
+  "Takes to string representations of semtypes and checks if they are equal,
+  expanding out options into the same format."
+  (strict-semtype-equal
+    (extended-str2semtype str1)
+    (extended-str2semtype str2)))
+
 (defun string-from-compose-types (ulf1 ulf2 &key (extended? nil))
   "Takes two atomic ULF expressions, composes the types and returns the string
   representation of the type."
   (let ((type1 (ulf-type-string? ulf1))
         (type2 (ulf-type-string? ulf2))
-        ;(compose-fn (if extended? #'extended-compose-types! #'compose-types!))
-        (compose-string-fn (if extended? #'extended-compose-type-string! #'compose-type-string!)))
-    (funcall compose-string-fn type1 type2 
-             ;:compose-fn compose-fn
-             )))
+        (compose-string-fn (if extended? 
+                             #'extended-compose-type-string!
+                             #'compose-type-string!)))
+    (funcall compose-string-fn type1 type2 )))
 
 (define-test basic-compose
   "Basic examples for ULF composition"
@@ -42,15 +48,20 @@
   ; sub/rep
   (assert-equal "SUB1[D]" (string-from-compose-types 'sub 'he.pro :extended? t))
   (assert-equal nil (string-from-compose-types 'rep 'man.n :extended? t))
-  (assert-equal "D[*P[{(D=>(S=>2))_N|(D=>(S=>2))_P}]]" (string-from-compose-types 'the.d '*p :extended? t))
-  (assert-equal "REP1[D[*P[{(D=>(S=>2))_N|(D=>(S=>2))_P}]]]" (string-from-compose-types 'rep '(the.d *p) :extended? t))
+  (assert-equality 
+    #'semtype-str-equal
+    "D[*P[{(D=>(S=>2))_N|(D=>(S=>2))_P}]]"
+    (string-from-compose-types 'the.d '*p :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "REP1[D[*P[{(D=>(S=>2))_N|(D=>(S=>2))_P}]]]"
+    (string-from-compose-types 'rep '(the.d *p) :extended? t))
   ; qt-attr
   (assert-equal nil (string-from-compose-types 'qt-attr 'her.pro :extended? t))
-  (assert-equal "{(S=>2)|{(D=>(S=>2))_V[*QT]|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V[*QT]}}}}}"
+  (assert-equal "{(S=>2)[*QT]|{(D=>(S=>2))_V[*QT]|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V[*QT]}}}}}"
                 (string-from-compose-types 'say.v '*qt :extended? t))
-  (assert-equal "QT-ATTR[{(S=>2)|{(D=>(S=>2))_V[*QT]|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V[*QT]}}}}}]"
+  (assert-equal "QT-ATTR1[{(S=>2)[*QT]|{(D=>(S=>2))_V[*QT]|{{(D=>(D=>(S=>2)))_V[*QT]|((D=>(S=>2))=>(D=>(S=>2)))_V[*QT]}|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V[*QT]}}}}}]"
                 (string-from-compose-types 'qt-attr '(say.v *qt) :extended? t)))
-
 
 (define-test tense-compose
   "A more exhaustive set of tests for tense composition."
@@ -84,6 +95,6 @@
   (assert-equal "QT-ATTR2[(D=>(S=>2))[*QT]]"
                 (string-from-compose-types '\" '((qt-attr (= *qt)) it.pro) :extended? t))
   (assert-equal "(D=>(S=>2))"
-                (string-from-compose-types (list '|"| '((qt-attr (= *qt)) it.pro)) '|"|)
-                                           :extended? t))
+                (string-from-compose-types (list '|"| '((qt-attr (= *qt)) it.pro)) '|"|
+                                           :extended? t)))
 

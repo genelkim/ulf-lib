@@ -53,7 +53,14 @@
           (let ((a (funcall recurse-fn (car (types op)) arg))
                 (b (funcall recurse-fn (cadr (types op)) arg)))
             (if (and a b)
-              (new-semtype  nil nil 1 nil nil :options (list a b))
+              (new-semtype nil nil 1 nil nil :options (list a b))
+              (or a b))))
+         ((optional-type-p arg)
+          ; Argument is an optional type
+          (let ((a (funcall recurse-fn op (first (types arg))))
+                (b (funcall recurse-fn op (second (types arg)))))
+            (if (and a b)
+              (new-semtype nil nil 1 nil nil :options (list a b))
               (or a b))))
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p op)
@@ -76,8 +83,10 @@
           (let ((result (copy-semtype op)))
             (setf (ex (domain result)) (- (ex (domain result)) 1))
             result)))))
-    ; Update type params before returning.
-    (add-semtype-type-params result new-params)
+    ; Update type params before returning, if not optional. All type params are
+    ; assumed to be in non-optional types.
+    (when (not (optional-type-p op))
+      (add-semtype-type-params result new-params))
     result))
 
 ;; Compose two types if possible and return the composed type. Also return the
@@ -167,7 +176,7 @@
     ;;; TENSE
     ;;; TENSE + TYPE_V => TYPE_TV
     ((and (atomic-type-p op) (eql (domain op)'tense))
-     (if (semtype-equal? arg *general-verb-semtype* :ignore-exp t)
+     (when (semtype-equal? arg *general-verb-semtype* :ignore-exp t)
        (let ((tensed-semtype (copy-semtype arg)))
          (add-semtype-tense tensed-semtype t)
          tensed-semtype)))
@@ -181,7 +190,7 @@
      ;;equality,butwhetheranargumentissufficientfortheslottype.For
      ;;example(D=>(S=>2))_nisnotequalto(D=>(S=>2)),butitisa
      ;;sufficientargument.
-     (if (semtype-equal? arg *unary-noun-semtype* :ignore-exp t)
+     (when (semtype-equal? arg *unary-noun-semtype* :ignore-exp t)
        (let* ((n+-semtype (new-semtype 'n+ nil 1 nil nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil nil :type-params (list n+-semtype))))
          ;;Optionalsemtypeofeithercontinuingtoactas+preds,orastheinternalnoun.
@@ -192,14 +201,14 @@
     ;;; Stops when it (+preds) is used as the T (a variant of the unary noun).
     ; np+preds + D >> {+preds[n+[D]]|D}
     ((and (atomic-type-p op) (eql (domain op) 'np+preds))
-     (if (semtype-equal? arg *term-semtype* :ignore-exp t)
+     (when (semtype-equal? arg *term-semtype* :ignore-exp t)
        (let* ((np+-semtype (new-semtype 'np+ nil 1 nil nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil nil :type-params (list np+-semtype))))
          ;; Optional semtype of either continuing to act as +preds, or as the internal noun.
          (new-semtype  nil nil 1 nil nil :options (list +preds-semtype arg)))))
     ; +preds[n+[T]] + N >> {+preds[n+[T]]|T}(N+PREDS&NP+PREDS)
     ((and (atomic-type-p op) (eql (domain op)'+preds))
-     (if (semtype-equal? arg *unary-pred-semtype* :ignore-exp t)
+     (when (semtype-equal? arg *unary-pred-semtype* :ignore-exp t)
        (let* ((op-params (type-params op))
               (n+-params (remove-if-not #'(lambda (x) (eql (domain x) 'n+)) op-params))
               (np+-params (remove-if-not #'(lambda (x) (eql (domain x) 'np+)) op-params))
@@ -236,7 +245,7 @@
     ; qt-attr1[T1[*qt]] + T2 >> T2[qt-attr1[T1[*qt]]]
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr1))
      (let ((result (copy-semtype arg)))
-       (add-semtype-type-params result op)
+       (add-semtype-type-params result (list op))
        result))
     ; \" + T2[qt-attr1[T1[*qt]]] >> qt-attr2[T1[*qt]]
     ((and (atomic-type-p op) (eql (domain op) '\")
@@ -252,12 +261,101 @@
      (assert (= 1 (length (type-params op))) (op arg)
              "Didn't expect to have multiple type params for qt-attr2.~%op: ~s~%arg: ~s~%"
              (semtype2str op) (semtype2str arg))
-     (let ((result (copy-semtype (first (type-params op))))
-           (qt-removed-type-params
-             (remove-if #'(lambda (param) (eql (domain param) '*qt))
-                        (get-semtype-type-params op))))
-       (set-type-params result qt-removed-type-params)
+     (let* ((result (copy-semtype (first (type-params op))))
+            (qt-removed-type-params
+              (remove-if #'(lambda (param) (eql (domain param) '*qt))
+                         (get-semtype-type-params result))))
+       (set-semtype-type-params result qt-removed-type-params)
        result))
+    ;;; SUB
+    ;;; 1a. sub + T >> sub1[T]
+    ;;; 1b. T + *h >> Range(T)[*h[Dom(T)]]
+    ;;; 2. sub1[T1] + T2[*h[T3]] >> T2, iff T1 can be the arg of T3.
+    ; sub + T >> sub1[T]
+    ((and (atomic-type-p op) (eql (domain op) 'sub))
+     (new-semtype 'sub1 nil 1 nil nil :type-params (list (copy-semtype arg))))
+    ; Hole variables.
+    ; T + *h << Range(T)[*h[Dom(T)]]
+    ; T + *p >> Range(T)[*h[Dom(T)]]
+    ((and (not (atomic-type-p op)) (not (optional-type-p op))
+          (atomic-type-p arg) (member (domain arg) '(*h *p)))
+     (let ((op-dom (copy-semtype (domain op)))
+           (op-ran (copy-semtype (range op)))
+           (arg-copy (copy-semtype arg)))
+       (add-semtype-type-params arg-copy (list op-dom))
+       (add-semtype-type-params op-ran (list arg-copy))
+       op-ran))
+    ; Hole variables for optional types, requiring either the same domain or
+    ; the same range for all options.
+    ;((and (not (atomic-type-p op)) (atomic-type-p arg) (member (domain arg) '(*h *p)))
+    ; (let ((flat-opts (flatten-options op))
+    ;       (doms (mapcar #'domain (types flat-ops)))
+    ;       (rans (mapcar #'range (types flat-ops)))
+    ;       (unique-doms (remove-duplicates doms :test #'strict-semtype-equal))
+    ;       (unique-rans (remove-duplicates rans :test #'strict-semtype-equal)))
+    ;   (cond
+    ;     ((= 1 (length unique-doms))
+    ;      (let ((op-dom (copy-semtype (first doms)))
+    ;            (op-range (copy-semtype 
+
+    ;        ;;; TODO(gene): Hmmm... no, this won't handle all compositions correctly. How about we really should just factorize if that's what we want to do...
+    ;      ...)
+    ;     ((= 1 (length unique-rans))
+    ;      ...)
+    ;     (t nil))))
+    ; sub1[T1] + T2[*h[T3]] >> T2, iff T1 can be the arg of T3.
+    ((and (atomic-type-p op) (eql (domain op) 'sub1))
+     (let ((*h-params (remove-if-not #'(lambda (x) (eql (domain x) '*h))
+                                     (type-params arg)))
+           (other-params (remove-if #'(lambda (x) (eql (domain x) '*h))
+                                    (type-params arg))))
+       ; Check that T1 and T3 exists and that they match.
+       (when (and (not (null (type-params op)))
+                  (not (null *h-params))
+                  (not (null (type-params (first *h-params))))
+                  (semtype-equal? (first (type-params op))
+                                  (first (type-params (first *h-params)))
+                                  :ignore-exp t))
+         (assert (= 1 (length (type-params op))))
+         (assert (= 1 (length *h-params)))
+         (assert (= 1 (length (type-params (first *h-params)))))
+         (let ((arg-copy (copy-semtype arg)))
+           (set-semtype-type-params arg-copy 
+                                    (mapcar #'copy-semtype other-params))
+           arg-copy))))
+    ;;; REP
+    ;;; 1a. T + *p >> Range(T)[*h[Dom(T)]] (handled above in the SUB section)
+    ;;; 1b. rep + T1[*p[T2]] >> rep1[T1[*p[T2]]]
+    ;;; 2. rep1[T1[*p[T2]]] + T3 >> T1, iff T3 can be the arg of T2.
+    ; rep + T1[*p[T2]] >> rep1[T1[*p[T2]]]
+    ((and (atomic-type-p op)
+          (eql (domain op) 'rep) 
+          (not (optional-type-p arg)))
+     (when (null (type-params arg))
+       (return-from extended-apply-operator! nil))
+     (let ((*p-params (remove-if-not #'(lambda (x) (eql (domain x) '*p))
+                                     (type-params arg))))
+       (when (and (not (null *p-params))
+                  (not (null (type-params (first *p-params)))))
+         (assert (= 1 (length *p-params)))
+         (new-semtype 'rep1 nil 1 nil nil
+                      :type-params (list (copy-semtype arg))))))
+    ; rep1[T1[*p[T2]]] + T3 >> T1, iff T3 can be the arg of T2.
+    ((and (atomic-type-p op) (eql (domain op) 'rep1))
+     (let* ((t1-fn #'(lambda (tp)
+                       (some #'(lambda (tptp) (eql (domain tptp) '*p))
+                             (type-params tp))))
+            (t2-fn #'(lambda (t1tp) (eql (domain t1tp) '*p)))
+            (t1 (first (remove-if-not t1-fn (type-params op))))
+            (t2 (first (type-params (first (remove-if-not t2-fn 
+                                                          (type-params t1)))))))
+       (when (semtype-equal? arg t2 :ignore-exp t)
+         (let ((retval (copy-semtype t1))
+               (new-type-params (append (remove-if t1-fn (type-params op))
+                                        (remove-if t2-fn (type-params t1))
+                                        (type-params arg))))
+           (set-semtype-type-params retval new-type-params)
+           retval))))
 
     ;; Fall back to EL compositional functionality.
     (t (apply-operator! op arg :recurse-fn #'extended-apply-operator!))))
