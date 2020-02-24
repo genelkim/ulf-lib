@@ -361,17 +361,17 @@
     (t (apply-operator! op arg :recurse-fn #'extended-apply-operator!))))
 
 (defun extended-compose-types! (type1 type2)
-  "Composetwotypesifpossibleandreturnthecomposedtype.Alsoreturnthe
-  orderinwhichthetypeswerecomposed.ThestrictELtypecompositionsare
-  extendedtoincludeULFmacrosandstructuralrelaxations.
+  "Compose two types if possible and return the composed type. Also return the
+  order in which the types were composed. The strict EL type compositions are
+  extended to include ULF macros and structural relaxations.
   "
   (compose-types! type1 type2 :op-apply-fn #'extended-apply-operator!))
 
 
 (defun extended-compose-type-string!(type1 type2)
-  "Giventwotypesasstrings,composethemifpossibleandreturnthe
-  resultingtypeasastring.ThestrictELtypecompositionsareextendedto
-  includeULFmacrosandstructuralrelaxations.
+  "Given two types as strings, compose them if possible and return the
+  resulting type as a string. The strict EL type compositions are extended to
+  include ULF macros and structural relaxations.
   "
   (semtype2str (extended-compose-types! (extended-str2semtype type1)
                                         (extended-str2semtype type2))))
