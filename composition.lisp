@@ -186,14 +186,14 @@
     ;;; Stops when it (+preds) is used as the T (a variant of the unary noun).
     ; n+preds + N_n >> {+preds[n+[N_n]]|N_n}
     ((and (atomic-type-p op) (eql (domain op) 'n+preds))
-     ;;TODO(gene): probably need semtype-sufficent? which doesn't chcek exact
-     ;;equality,butwhetheranargumentissufficientfortheslottype.For
-     ;;example(D=>(S=>2))_nisnotequalto(D=>(S=>2)),butitisa
-     ;;sufficientargument.
+     ;;TODO(gene): probably need semtype-sufficent? which doesn't check exact
+     ;; equality, but whether an argument is sufficient for the slot type. For
+     ;; example (D=>(S=>2))_n is not equal to (D=>(S=>2)), but it is a
+     ;; sufficient argument.
      (when (semtype-equal? arg *unary-noun-semtype* :ignore-exp t)
        (let* ((n+-semtype (new-semtype 'n+ nil 1 nil nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil nil :type-params (list n+-semtype))))
-         ;;Optionalsemtypeofeithercontinuingtoactas+preds,orastheinternalnoun.
+         ;;Optional semtype of either continuing to act as +preds, or as the internal noun.
          (new-semtype nil nil 1 nil nil :options (list +preds-semtype arg)))))
     ;;; NP+PREDS
     ;;; 1. np+preds + D >> {+preds[n+[D]]|D}
