@@ -175,7 +175,7 @@
      nil)
     ;;; TENSE
     ;;; TENSE + TYPE_V => TYPE_TV
-    ((and (atomic-type-p op) (eql (domain op)'tense))
+    ((and (atomic-type-p op) (eql (domain op) 'tense))
      (when (semtype-equal? arg *general-verb-semtype* :ignore-exp t)
        (let ((tensed-semtype (copy-semtype arg)))
          (add-semtype-tense tensed-semtype t)
@@ -186,7 +186,7 @@
     ;;; Stops when it (+preds) is used as the T (a variant of the unary noun).
     ; n+preds + N_n >> {+preds[n+[N_n]]|N_n}
     ((and (atomic-type-p op) (eql (domain op) 'n+preds))
-     ;;TODO(gene): probably need semtype-sufficent? which doesn't check exact
+     ;; TODO(gene): probably need semtype-sufficent? which doesn't check exact
      ;; equality, but whether an argument is sufficient for the slot type. For
      ;; example (D=>(S=>2))_n is not equal to (D=>(S=>2)), but it is a
      ;; sufficient argument.
@@ -207,7 +207,7 @@
          ;; Optional semtype of either continuing to act as +preds, or as the internal noun.
          (new-semtype  nil nil 1 nil nil :options (list +preds-semtype arg)))))
     ; +preds[n+[T]] + N >> {+preds[n+[T]]|T}(N+PREDS&NP+PREDS)
-    ((and (atomic-type-p op) (eql (domain op)'+preds))
+    ((and (atomic-type-p op) (eql (domain op) '+preds))
      (when (semtype-equal? arg *unary-pred-semtype* :ignore-exp t)
        (let* ((op-params (type-params op))
               (n+-params (remove-if-not #'(lambda (x) (eql (domain x) 'n+)) op-params))

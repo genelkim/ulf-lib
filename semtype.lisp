@@ -42,15 +42,15 @@
 
 ;; Check if a given object is a semtype
 (defun semtype-p (s)
-  (equal (type-of s) 'semtype))
+  (typep s 'semtype))
 
 ;; Check if a given object is an atomic-type.
 (defun atomic-type-p (s)
-  (equal (type-of s) 'atomic-type))
+  (typep s 'atomic-type))
 
 ;; Check if a given object is an optional-type.
 (defun optional-type-p (s)
-  (equal (type-of s) 'optional-type))
+  (typep s 'optional-type))
 
 (defun add-semtype-tense (semtype tense)
   "Adds tense to a semtype. Recurses into optional-type, since it shouldn't
@@ -248,12 +248,6 @@
 (defun semtype2str (s)
   (when (null s)
     (return-from semtype2str nil))
-  ;(format t "~%in semtype2str~%")
-  ;(format t "tense: ~s~%subscript: ~s~%" (tense s) (subscript s))
-  ;(if (tense s)
-  ;  (format t "in tense conditional!~%"))
-  ;(if (subscript s)
-  ;  (format t "in subscript conditional~%"))
   (let ((type-params-str
           (format nil "[~a]"
                   (cl-strings:join (mapcar #'semtype2str (type-params s)) :separator ",")))
@@ -428,10 +422,11 @@
   (labels
     (; Runs a list of accessor-test pair for computing equality on specific
      ; components of two elements.
-     (acc-test (accessor-test)
-       (let ((accfn (first accessor-test))
-             (testfn (second accessor-test)))
-         (funcall testfn (funcall accfn t1) (funcall accfn t2))))
+     (acc-test (t1 t2)
+       #'(lambda (accessor-test)
+           (let ((accfn (first accessor-test))
+                 (testfn (second accessor-test)))
+             (funcall testfn (funcall accfn t1) (funcall accfn t2)))))
      ; Runs equality on two lists of semtypes, ignoring order.
      (set-no-option-equal (set1 set2)
        (and (= (length set1) (length set2))
@@ -446,9 +441,12 @@
          ((or (and (atomic-type-p t1) (not (atomic-type-p t2)))
               (and (not (atomic-type-p t1)) (atomic-type-p t2)))
           (error "Types don't match for t1 and t2 in no-option-equal"))
+         ; Base case.
+         ((and (not (semtype-p t1)) (not (semtype-p t2))) (equal t1 t2))
+         ((or (not (semtype-p t1)) (not (semtype-p t2))) nil)
          ; Atomic (only has domain)
          ((atomic-type-p t1)
-          (every #'acc-test
+          (every (acc-test t1 t2)
                  (list (list #'domain #'no-option-equal)
                        (list #'ex #'equal) 
                        (list #'subscript #'equal) 
@@ -456,7 +454,7 @@
                        (list #'type-params #'set-no-option-equal))))
          ; Non-atomic (has domain and range)
          (t
-          (every #'acc-test
+          (every (acc-test t1 t2)
                  (list (list #'domain #'no-option-equal)
                        (list #'range #'no-option-equal)
                        (list #'ex #'equal) 
@@ -466,10 +464,6 @@
      ) ; end of label definitions.
     ; labels body
     ; If we get to an atomic label, just check the labels.
-    (when (and (atom s1) (atom s2)) 
-      (return-from strict-semtype-equal (equal s1 s2)))
-    (when (or (atom s1) (atom s2))
-      (return-from strict-semtype-equal nil))
     (let ((flat-s1 (types (flatten-options s1)))
           (flat-s2 (types (flatten-options s2))))
       ; Check that the lengths are the same and that for every option in s1,
@@ -524,7 +518,6 @@
                      append (loop for cur-ran in (types flat-ran)
                                   collect (copy-semtype s :c-dom cur-dom
                                                           :c-ran cur-ran))))
-         (format t "new-options: ~s~%" new-options)
          (new-semtype nil nil 1 nil nil :options new-options)))))
 
 (defun binarize-flat-options (s)
