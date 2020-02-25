@@ -407,7 +407,7 @@
       ;; Any of the macros.
       ((lex-macro? sym) (new-semtype sym nil 1 nil nil))
       ;; Any of the extended macros.
-      ((member str '("QT-ATTR1" "QT-ATTR2" "SUB1" "REP1") :test #'equal)
+      ((member str '("QT-ATTR1" "QT-ATTR2" "SUB1" "REP1" "POSTGEN1" "POSTGEN2") :test #'equal)
        (new-semtype sym nil 1 nil nil))
       ;; Macro hole variables (*p, *h, *ref, *s, etc.)
       ((lex-macro-hole? sym) (new-semtype sym nil 1 nil nil))

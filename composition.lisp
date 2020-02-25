@@ -124,6 +124,7 @@
       (let
         ((semtype (cond
                     ((eql ulf '\") (extended-str2semtype "\""))
+                    ((eql ulf '|'S|) (extended-str2semtype "POSTGEN1"))
                     ((atom-semtype? ulf) (atom-semtype? ulf))
                     ((member ulf lambda-vars) (str2semtype "D"))
                     ((lex-tense?  ulf) (extended-str2semtype "TENSE"))
@@ -205,7 +206,7 @@
        (let* ((np+-semtype (new-semtype 'np+ nil 1 nil nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil nil :type-params (list np+-semtype))))
          ;; Optional semtype of either continuing to act as +preds, or as the internal noun.
-         (new-semtype  nil nil 1 nil nil :options (list +preds-semtype arg)))))
+         (new-semtype nil nil 1 nil nil :options (list +preds-semtype arg)))))
     ; +preds[n+[T]] + N >> {+preds[n+[T]]|T}(N+PREDS&NP+PREDS)
     ((and (atomic-type-p op) (eql (domain op) '+preds))
      (when (semtype-equal? arg *unary-pred-semtype* :ignore-exp t)
@@ -356,6 +357,23 @@
                                         (type-params arg))))
            (set-semtype-type-params retval new-type-params)
            retval))))
+    ;;; 'S
+    ;;; 1. D + POSTGEN1 >> POSTGEN2
+    ;;; 2. POSTGEN2 + (D=>(S=>2))_N >> D
+    ; 1. D + POSTGEN1 >> POSTGEN2
+    ((and (atomic-type-p arg)
+          (semtype-equal? op *term-semtype*)
+          (eql (domain arg) 'postgen1))
+     (new-semtype 'postgen2 nil 1 nil nil
+                  :type-params (append (type-params op) (type-params arg))))
+    ; 2. POSTGEN2 + (D=>(S=>2))_N >> D
+    ((and (atomic-type-p op)
+          (eql (domain op) 'postgen2)
+          (semtype-equal? arg *unary-noun-semtype* :ignore-exp t))
+     (let ((term-st (copy-semtype *term-semtype*)))
+       (setf (type-params term-st)
+             (append (type-params op) (type-params arg)))
+       term-st))
 
     ;; Fall back to EL compositional functionality.
     (t (apply-operator! op arg :recurse-fn #'extended-apply-operator!))))
