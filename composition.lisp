@@ -176,11 +176,12 @@
      nil)
     ;;; TENSE
     ;;; TENSE + TYPE_V => TYPE_TV
-    ((and (atomic-type-p op) (eql (domain op) 'tense))
-     (when (semtype-equal? arg *general-verb-semtype* :ignore-exp t)
-       (let ((tensed-semtype (copy-semtype arg)))
-         (add-semtype-tense tensed-semtype t)
-         tensed-semtype)))
+    ((and (atomic-type-p op) (eql (domain op) 'tense)
+          (semtype-equal? arg *general-verb-semtype*
+                          :ignore-exp t))
+     (let ((tensed-semtype (copy-semtype arg)))
+       (add-semtype-tense tensed-semtype t)
+       tensed-semtype))
     ;;; N+PREDS
     ;;; 1. n+preds + N_n >> {+preds[n+[N_n]]|N_n}
     ;;; 2. +preds[n+[T]] + N >> {+preds[n+[T]]|T}
@@ -374,7 +375,29 @@
        (setf (type-params term-st)
              (append (type-params op) (type-params arg)))
        term-st))
-
+    ;;; AUX
+    ;;; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_X
+    ;;; 2. TENSE + AUX => TAUX
+    ;;; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
+    ; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_X
+    ((and (atomic-type-p op) (eql (domain op) 'aux)
+          (null (tense arg)) (null (aux arg))
+          (semtype-equal? arg *unary-verb-semtype*))
+     (copy-semtype *unary-verb-semtype*
+                   :c-type-params (type-params arg)
+                   :c-aux t))
+    ; 2. TENSE + AUX => TAUX
+    ((and (atomic-type-p op) (eql (domain op) 'tense)
+          (atomic-type-p arg) (eql (domain arg) 'aux))
+     (new-semtype 'taux nil 1 nil nil))
+    ; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
+    ((and (atomic-type-p op) (eql (domain op) 'taux)
+          (null (tense arg)) (null (aux arg))
+          (semtype-equal? arg *unary-verb-semtype*))
+     (copy-semtype *unary-verb-semtype*
+                   :c-type-params (type-params arg)
+                   :c-aux t
+                   :c-tense 't))
     ;; Fall back to EL compositional functionality.
     (t (apply-operator! op arg :recurse-fn #'extended-apply-operator!))))
 
@@ -391,6 +414,8 @@
   resulting type as a string. The strict EL type compositions are extended to
   include ULF macros and structural relaxations.
   "
+  (when (or (null type1) (null type2))
+    (return-from extended-compose-type-string! nil))
   (semtype2str (extended-compose-types! (extended-str2semtype type1)
                                         (extended-str2semtype type2))))
 

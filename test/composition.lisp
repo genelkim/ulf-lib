@@ -107,3 +107,29 @@
                 (string-from-compose-types (list '|"| '((qt-attr (= *qt)) it.pro)) '|"|
                                            :extended? t)))
 
+(define-test aux-compose
+  "Tests for auxiliaries."
+  (:tag :aux-compose)
+  ;; This is very similar to tense.
+  ;; AUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_X
+  ;; TENSE + AUX => TAUX
+  ;; TAUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_T_X
+  (assert-equality 
+    #'semtype-str-equal
+    "(D=>(S=>2))_V_X"
+    (string-from-compose-types 'do.aux-s 'run.v :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "TAUX"
+    (string-from-compose-types 'past 'do.aux-s :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "(D=>(S=>2))_V_T_X"
+    (string-from-compose-types '(past do.aux-s) 'run.v :extended? t))
+  (assert-equal nil (string-from-compose-types
+                      'do.aux-s '(do.aux-s run.v) :extended? t))
+  (assert-equal nil (string-from-compose-types
+                      'past '(past do.aux-s) :extended? t))
+  (assert-equal nil (string-from-compose-types
+                      '(past do.aux-s) '(do.aux-s run.v) :extended? t)))
+
