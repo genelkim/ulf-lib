@@ -60,6 +60,8 @@
       ("{S}\\.AUX-S" . "AUX")
       ("{S}\\.AUX-V" . "AUX")
       ("{S}\\.P-ARG" . "PARG")
+      ("\\!" . "((S=>2)=>(S=>2))")
+      ("\\?" . "((S=>2)=>(S=>2))")
       )))
 
 ;; Ensures that the input symbol is in ulf-lib.

@@ -188,6 +188,11 @@
 ;; TODO(gene): see note below
 ;; Note: This function is more of a "compatibility checker" than a function to
 ;; check actual equality. I'll probably rename this to something better later.
+;; For options, checks if there is a single compatible match.
+;; For subscripts, if there are subscripts, checks for equality otherwise doesn't care.
+;; For tenses, if x is tensed, then y must be tensed.
+;; Basically, x is the general class and we check if y has an option that is a
+;; subset of one of the x options.
 (defun semtype-equal? (x y &key ignore-exp)
   (if (or (optional-type-p x) (optional-type-p y))
     ;; At least one optional
@@ -216,7 +221,8 @@
     (when (and (if ignore-exp T (equal (ex x) (ex y)))
                (equal (type-of x) (type-of y))
                (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-               (equal (tense x) (tense y)))
+               ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
+               (if (tense x) (tense y) t))
       (if (atomic-type-p x)
         (equal (domain x) (domain y))
         (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))

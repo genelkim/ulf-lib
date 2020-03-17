@@ -172,7 +172,8 @@
     ; TENSE, N+PREDS, NP+PREDS, +PREDS, etc. can't be the operand type.
     ((and (atomic-type-p arg)
           (member (domain arg)
-                  '(tense n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep rep1)))
+                  '(tense n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep
+                          rep1 parg)))
      nil)
     ;;; TENSE
     ;;; TENSE + TYPE_V => TYPE_TV
