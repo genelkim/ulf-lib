@@ -251,8 +251,8 @@
       ;; Punctuated sentence.
       (tensed-sent? sent-punct?)
       ;; Prepositionally coordinated sentences.
-      ((lex-ps? tensed-sent?) tensed-sent?)
-      (tensed-sent? (lex-ps? tensed-sent?))
+      (ps? tensed-sent?)
+      (tensed-sent? ps?)
       ;; Inverted sentence.
       ((lex-tense? (!2 lex-verb? aux?)) term? verb?)
       ;; Phrasal utterances.
@@ -273,10 +273,14 @@
 (defparameter *ttt-sent-mod*
   '(!1 (lex-coord? (!2 tensed-sent? sent?))
        ;; Prepositionally coordinated sentences.
-       (lex-ps? tensed-sent?)
+       ps?
        adv-e?
        adv-s?
        adv-f?))
+
+(defparameter *ttt-ps*
+  '(!1 (lex-ps? tensed-sent?)
+       (mod-a? ps?)))
 
 (defparameter *ttt-preposs-macro*
   '(term? 's))
@@ -312,6 +316,7 @@
 (defun sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent* y)))
 (defun tensed-sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-sent* y)))
 (defun sent-mod? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent-mod* y)))
+(defun ps? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-ps* y)))
 (defun preposs-macro? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-preposs-macro* y)))
 (defun p-arg? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-p-arg* y)))
 (defun voc? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-voc* y)))
@@ -438,9 +443,7 @@
                (adv-s? e)
                (adv-f? e)
                (member e '(not not.adv-e not.adv-s))
-               (and (listp x) (= (length x) 2)
-                    (lex-ps? (first x))
-                    (tensed-sent? (second x)))
+               (ps? e)
                ;; Weaker verion of (*.ps x) matching. Don't require it to be a
                ;; tensed sentence even though that's what's required in the
                ;; type.
