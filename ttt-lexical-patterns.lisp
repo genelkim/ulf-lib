@@ -52,7 +52,17 @@
       ("SET-OF" . "(D^n=>D)")
       ("NOT" . "((S=>2)=>(S=>2))")
       ("=" . "(D=>(D=>(S=>2)))")
-      ("AND.CC" . "((S=>2)^n=>(S=>2))"))))
+      ("{S}\\.CC" . "((S=>2)^n=>(S=>2))")
+      ("{S}\\.MOD-A" . "((D=>(S=>2))_a=>(D=>(S=>2))_a)")
+      ("{S}\\.MOD-N" . "((D=>(S=>2))_n=>(D=>(S=>2))_n)")
+      ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a=>(D=>(S=>2))_a))")
+      ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n=>(D=>(S=>2))_n))")
+      ("{S}\\.AUX-S" . "AUX")
+      ("{S}\\.AUX-V" . "AUX")
+      ("{S}\\.P-ARG" . "PARG")
+      ("\\!" . "((S=>2)=>(S=>2))")
+      ("\\?" . "((S=>2)=>(S=>2))")
+      )))
 
 ;; Ensures that the input symbol is in ulf-lib.
 (defmacro in-ulf-lib ((x y) &body body)
@@ -269,6 +279,8 @@
   (in-ulf-lib (x y) (equal y 'set-of)))
 (defun lex-macro? (x)
   (in-ulf-lib (x y) (member y '(qt-attr sub rep n+preds np+preds voc voc-O))))
+(defun lex-macro-hole? (x)
+  (in-ulf-lib (x y) (member y '(*h *p *qt *s *ref))))
 
 (defun lex-verbaux? (x)
   (or (lex-verb? x) (aux? x)))

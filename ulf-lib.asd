@@ -2,7 +2,7 @@
 ;; Started ~2018-11-19
 
 (asdf:defsystem :ulf-lib
-  :depends-on (:ttt :cl-strings :cl-ppcre :cl-util)
+  :depends-on (:ttt :cl-strings :cl-ppcre :cl-util :lisp-unit)
   :components ((:file "package")
                (:file "suffix")
                (:file "semtype")
