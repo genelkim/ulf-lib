@@ -192,3 +192,13 @@
     "(S=>2)_T"
     (string-from-compose-types '? '(i.pro ((past go.v) there.pro)) :extended? t)))
 
+(define-test comp-p-arg-mod
+  "Tests for adding mod-a modifiers to p-arg."
+  (:tag :comp-p-arg-mod)
+  (assert-equality
+    #'semtype-str-equal
+    "((S=>2)=>((S=>2)=>(S=>2)))"
+    (string-from-compose-types 'right.mod-a '(before.ps (i.pro ((past move.v) it.pro)))))
+  (assert-equal nil
+    (string-from-compose-types 'right.mod-n '(before.ps (i.pro ((past move.v) it.pro))))))
+
