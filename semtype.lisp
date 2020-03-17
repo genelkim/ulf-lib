@@ -105,7 +105,6 @@
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
 (defun new-semtype (dom ran exponent sub ten &key options type-params (aux nil))
-  ; TODO(gene): finish incorporating aux in here.
   (progn
     (setf dom (copy-semtype dom))
     (setf ran (copy-semtype ran))
@@ -423,6 +422,8 @@
       ;; Auxiliaries.
       ((equal str "AUX") (new-semtype 'aux nil 1 nil nil))
       ((equal str "TAUX") (new-semtype 'taux nil 1 nil nil))
+      ;; p-arg
+      ((equal str "PARG") (new-semtype 'parg nil 1 nil nil))
       ;; Quotes.
       ((equal str "\"") (new-semtype '\" nil 1 nil nil))
       ;; Any of the macros.
@@ -461,7 +462,7 @@
           (error "No optional types allowed in no-option-equal"))
          ((or (and (atomic-type-p t1) (not (atomic-type-p t2)))
               (and (not (atomic-type-p t1)) (atomic-type-p t2)))
-          (error "Types don't match for t1 and t2 in no-option-equal"))
+          nil)
          ; Base case.
          ((and (not (semtype-p t1)) (not (semtype-p t2))) (equal t1 t2))
          ((or (not (semtype-p t1)) (not (semtype-p t2))) nil)

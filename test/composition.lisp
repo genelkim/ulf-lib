@@ -30,8 +30,9 @@
   (:tag :compose-basic)
   (assert-equal "D" (string-from-compose-types 'the.d 'man.n))
   (assert-equal nil (string-from-compose-types 'the.d 'the.d))
-  (assert-equal "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
-                (string-from-compose-types 'help.v 'me.pro))
+  (assert-equal
+    "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
+    (string-from-compose-types 'help.v 'me.pro))
   (assert-equal nil (string-from-compose-types 'be.v 'me.pro))
   (assert-equal "(D=>(S=>2))_V" (string-from-compose-types 'be.v 'happy.a)))
     
@@ -132,4 +133,39 @@
                       'past '(past do.aux-s) :extended? t))
   (assert-equal nil (string-from-compose-types
                       '(past do.aux-s) '(do.aux-s run.v) :extended? t)))
+
+(define-test p-arg-compose
+  "Tests for p-arg types."
+  (:tag :p-arg-compose)
+  ;; PARG + T >> PARG[T]
+  ;; T1_{v,n,a} + PARG[T2] >> T1(T2) {application}
+  (assert-equality #'equal "PARG" (ulf-type-string? 'with.p-arg)) 
+  (assert-equality
+    #'semtype-str-equal
+    "PARG1[D]"
+    (string-from-compose-types 'in.p-arg 'that.pro :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    (format nil "PARG1[~a]" (ulf-type-string? 'chicken.n))
+    (string-from-compose-types 'as.p-arg 'chicken.n :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
+    (string-from-compose-types 'sleep.v '(in.p-arg that.pro) :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}"
+    (string-from-compose-types 'dress.v '(as.p-arg chicken.n) :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "{(D=>(S=>2))_A|(D=>(D=>(S=>2)))_A}"
+    (string-from-compose-types 'liked.a '(by.p-arg (the.d audience.n)) :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "(D=>(S=>2))_N"
+    (string-from-compose-types 'sale.n '(of.p-arg (his.d car.n)) :extended? t))
+  (assert-equal nil (string-from-compose-types 'in.p '(in.p-arg that.pro)))
+  (assert-equal nil (string-from-compose-types 'the.d '(of.p-arg (k force.n))))
+  (assert-equal nil (string-from-compose-types 'him.pro '(in.p-arg that.pro)))
+  (assert-equal nil (string-from-compose-types 'quickly.adv-a '(at.p-arg her.pro))))
 

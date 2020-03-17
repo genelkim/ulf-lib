@@ -59,6 +59,7 @@
       ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n=>(D=>(S=>2))_n))")
       ("{S}\\.AUX-S" . "AUX")
       ("{S}\\.AUX-V" . "AUX")
+      ("{S}\\.P-ARG" . "PARG")
       )))
 
 ;; Ensures that the input symbol is in ulf-lib.
