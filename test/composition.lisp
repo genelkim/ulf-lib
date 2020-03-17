@@ -169,3 +169,26 @@
   (assert-equal nil (string-from-compose-types 'him.pro '(in.p-arg that.pro)))
   (assert-equal nil (string-from-compose-types 'quickly.adv-a '(at.p-arg her.pro))))
 
+
+(define-test sentential-punctuation-compose
+  "Tests for ! and ?."
+  (:tag :sentential-punctuation-compose)
+  (assert-equal "((S=>2)=>(S=>2))" (ulf-type-string? '!))
+  (assert-equal "((S=>2)=>(S=>2))" (ulf-type-string? '?))
+  (assert-equality
+    #'semtype-str-equal
+    "(S=>2)"
+    (string-from-compose-types '(i.pro (go.v there.pro)) '! :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "(S=>2)"
+    (string-from-compose-types '(i.pro (go.v there.pro)) '? :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "(S=>2)_T"
+    (string-from-compose-types '! '(i.pro ((past go.v) there.pro)) :extended? t))
+  (assert-equality
+    #'semtype-str-equal
+    "(S=>2)_T"
+    (string-from-compose-types '? '(i.pro ((past go.v) there.pro)) :extended? t)))
+
