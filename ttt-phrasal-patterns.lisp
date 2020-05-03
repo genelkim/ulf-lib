@@ -57,6 +57,11 @@
       (lex-adjective? term?)
       ;; Some adjectives take arguments with prepositions.
       (adj? p-arg?)
+      ;; A single argument with unlimited additional modifiers.
+      ((* mod-a?) adj? (* mod-a?) (! p-arg? (to verb?)) (* mod-a?))
+      ((* mod-a?) lex-adjective? (* mod-a?) term? (* mod-a?))
+      ((* mod-a?) adj? (+ mod-a?))
+      ((+ mod-a?) adj? (* mod-a?))
       ;; Coordination.
       ((+ adj?) lex-coord? (+ adj?))
       (phrasal-sent-op? adj?)
