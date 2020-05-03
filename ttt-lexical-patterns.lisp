@@ -219,12 +219,13 @@
 ;; Matches a regular name.
 (defun lex-name? (x)
   (util:in-intern (x y *package*)
-    (and
-      (re:all-matches "^\\|\[\^\\|\]\+\\|$"
-                         (format nil "~s" y))
-      (not (lex-name-pred? y))
-      ;; Special handling of quotes '\" == '|"|.
-      (not (eq '\" y)))))
+    (util:in-intern (x z :ulf-lib)
+      (and
+        (re:all-matches "^\\|\[\^\\|\]\+\\|$"
+                           (format nil "~s" y))
+        (not (lex-name-pred? y))
+        ;; Special handling of quotes '\" == '|"|.
+        (not (eq '\" z))))))
 
 ; Adverbs
 (defun lex-adv-a? (x)
