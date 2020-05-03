@@ -1,4 +1,5 @@
 (load "load")
 (load "test/composition")
+(load "test/ttt-phrasal-patterns")
 (in-package :ulf-lib)
 (run-tests)
