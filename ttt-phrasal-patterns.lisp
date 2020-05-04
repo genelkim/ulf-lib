@@ -178,11 +178,9 @@
 (defparameter *ttt-verb*
   '(! lex-verb?
       (pasv lex-verb?)
-      (verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
+      ((* adv-a?) verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
       (adv-a? (* phrasal-sent-op?) verb?)
-      ;(verb? (+ adv-a?))
       (aux? (* phrasal-sent-op?) verb?)
-      ;(verb? adv-a? term?)
       ((* verb?) lex-coord? (+ verb?))
       (phrasal-sent-op? verb?)
 
@@ -214,7 +212,7 @@
 
 (defparameter *ttt-tensed-verb*
   '(! (lex-tense? verb?)
-      (tensed-verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
+      ((* adv-a?) tensed-verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
       (tensed-aux? (* phrasal-sent-op?) verb?)
       (adv-a? (* phrasal-sent-op?) tensed-verb?)
       ((* tensed-verb?) lex-coord? (+ tensed-verb?))
