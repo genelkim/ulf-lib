@@ -89,7 +89,8 @@
 (defparameter *ttt-adv-s*
    '(! lex-adv-s?
       (adv-s pred?)
-      ((+ adv-s?) lex-coord? (+ adv-s?))))
+      ((+ adv-s?) lex-coord? (+ adv-s?))
+      (|(| _+ |)|)))
 
 (defparameter *ttt-adv-f*
    '(! lex-adv-f?
@@ -125,7 +126,8 @@
 ;; predicates.  It has to be an argument to something.
 (defparameter *ttt-p-arg*
   '(! (lex-p-arg? term?)
-      (lex-p-arg? pred?)))
+      (lex-p-arg? pred?)
+      (adv-s? p-arg?)))
 
 ;; Terms.
 (defparameter *ttt-term*
