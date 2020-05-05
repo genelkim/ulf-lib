@@ -244,7 +244,8 @@
   '(! ;; Simple sentence.
       (term? tensed-verb?)
       ;; Coordinated sentence.
-      (tensed-sent? lex-coord? (+ tensed-sent?))
+      ((+ tensed-sent?) lex-coord? (+ tensed-sent?))
+      (lex-coord? tensed-sent? (+ tensed-sent?))
       ;; Modified sentence (e.g. curried coordination).
       (sent-mod? tensed-sent?)
       ;; Postfixed sentence modification.
