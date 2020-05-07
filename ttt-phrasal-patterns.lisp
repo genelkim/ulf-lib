@@ -259,8 +259,10 @@
       ;; Prepositionally coordinated sentences.
       (ps? tensed-sent?)
       (tensed-sent? ps?)
-      ;; Inverted sentence.
-      ((lex-tense? (!2 lex-verb? aux?)) term? verb?)
+      ;; Inverted auxiliary sentence.
+      ((lex-tense? aux?) term? verb?)
+      ;; Inverted verb sentence.
+      ((lex-tense? lex-verb?) term? (! ~ verb?) _*)
       ;; Phrasal utterances.
       (pu (! ~ sent? tensed-sent?))
       ;; Multiple sentences stuck together (e.g. some multi-sentence annotations).
@@ -409,6 +411,7 @@
         (list #'preposs-macro? 'preposs-macro)
         (list #'relativized-sent? 'rel-sent)
         (list #'p-arg? 'p-arg)
+        (list #'voc? 'voc)
         ;; Purely lexical types.
         (list #'lex-equal? 'equal-sign)
         (list #'lex-set-of? 'set-of-op)
