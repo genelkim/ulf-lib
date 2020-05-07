@@ -262,7 +262,8 @@
       ;; Inverted auxiliary sentence.
       ((lex-tense? aux?) term? verb?)
       ;; Inverted verb sentence.
-      ((lex-tense? lex-verb?) term? (! ~ verb?) _*)
+      ((lex-tense? lex-invertible-verb?) term? term?)
+      ((lex-tenes? be.v) term? pred?)
       ;; Phrasal utterances.
       (pu (! ~ sent? tensed-sent?))
       ;; Multiple sentences stuck together (e.g. some multi-sentence annotations).

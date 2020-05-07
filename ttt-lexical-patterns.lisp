@@ -288,6 +288,10 @@
 (defun lex-verbaux? (x)
   (or (lex-verb? x) (aux? x)))
 
+; TODO(gene): fill this in further.
+(defun lex-invertible-verb? (x)
+  (in-ulf-lib (x y) (member y '(make.v have.v))))
+
 ;; Returns true if the token is one that was elided in the surface string.
 ;; In the current guidelines, this is a curly bracketed token.
 ;; e.g. {that}, {he}.pro
