@@ -33,6 +33,7 @@
       ((+ noun?) lex-coord? noun?)
       (phrasal-sent-op? noun?)
       (n+post noun? (+ pred? term? adv? p-arg? unknown?))
+      (= term?)
 
       ;; Fall back if arguments not correctly analyzed.
       (n+preds _+)
