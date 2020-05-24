@@ -96,10 +96,10 @@
     (or x y)
     (let ((comp (funcall op-apply-fn x y)))
       (if comp
-        (values comp (list x y))
+        (values comp "right" (list x y))
         (progn
           (setf comp (funcall op-apply-fn y x))
-          (when comp (values comp (list y x))))))))
+          (when comp (values comp "left" (list y x))))))))
 
 ;; Given two atomic ULFs, return the type formed after composing (if possible)
 (defun compose-atomic-ulfs! (a b)
@@ -170,8 +170,8 @@
   "
   (cond
     ; TENSE, N+PREDS, NP+PREDS, +PREDS, etc. can't be the operand type.
-    ((and (atomic-type-p arg) 
-          (member (domain arg) 
+    ((and (atomic-type-p arg)
+          (member (domain arg)
                   '(tense n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep rep1)))
      nil)
     ;;; TENSE
@@ -253,7 +253,7 @@
     ((and (atomic-type-p op) (eql (domain op) '\")
           (some #'(lambda (param) (eql (domain param) 'qt-attr1))
                 (get-semtype-type-params arg)))
-     (let* ((qt-attr1-param 
+     (let* ((qt-attr1-param
               (find-if #'(lambda (param) (eql (domain param) 'qt-attr1))
                        (get-semtype-type-params arg))))
      (new-semtype 'qt-attr2 nil 1 nil nil :type-params (type-params qt-attr1-param))))
@@ -298,7 +298,7 @@
     ;   (cond
     ;     ((= 1 (length unique-doms))
     ;      (let ((op-dom (copy-semtype (first doms)))
-    ;            (op-range (copy-semtype 
+    ;            (op-range (copy-semtype
 
     ;        ;;; TODO(gene): Hmmm... no, this won't handle all compositions correctly. How about we really should just factorize if that's what we want to do...
     ;      ...)
@@ -322,7 +322,7 @@
          (assert (= 1 (length *h-params)))
          (assert (= 1 (length (type-params (first *h-params)))))
          (let ((arg-copy (copy-semtype arg)))
-           (set-semtype-type-params arg-copy 
+           (set-semtype-type-params arg-copy
                                     (mapcar #'copy-semtype other-params))
            arg-copy))))
     ;;; REP
@@ -331,7 +331,7 @@
     ;;; 2. rep1[T1[*p[T2]]] + T3 >> T1, iff T3 can be the arg of T2.
     ; rep + T1[*p[T2]] >> rep1[T1[*p[T2]]]
     ((and (atomic-type-p op)
-          (eql (domain op) 'rep) 
+          (eql (domain op) 'rep)
           (not (optional-type-p arg)))
      (when (null (type-params arg))
        (return-from extended-apply-operator! nil))
@@ -349,7 +349,7 @@
                              (type-params tp))))
             (t2-fn #'(lambda (t1tp) (eql (domain t1tp) '*p)))
             (t1 (first (remove-if-not t1-fn (type-params op))))
-            (t2 (first (type-params (first (remove-if-not t2-fn 
+            (t2 (first (type-params (first (remove-if-not t2-fn
                                                           (type-params t1)))))))
        (when (semtype-equal? arg t2 :ignore-exp t)
          (let ((retval (copy-semtype t1))
@@ -409,13 +409,25 @@
   (compose-types! type1 type2 :op-apply-fn #'extended-apply-operator!))
 
 
-(defun extended-compose-type-string!(type1 type2)
+(defun extended-compose-type-string! (type1 type2)
   "Given two types as strings, compose them if possible and return the
   resulting type as a string. The strict EL type compositions are extended to
   include ULF macros and structural relaxations.
   "
   (when (or (null type1) (null type2))
     (return-from extended-compose-type-string! nil))
-  (semtype2str (extended-compose-types! (extended-str2semtype type1)
-                                        (extended-str2semtype type2))))
+  (multiple-value-bind
+    (composed direction types)
+    (extended-compose-types! (extended-str2semtype type1)
+                             (extended-str2semtype type2))
+    (values (semtype2str composed)
+            direction
+            (mapcar #'semtype2str types))))
+
+(defun list-extended-compose-type-string! (type1 type2)
+  "Same as extended-compose-type-string! but returns everything in a list
+  rather than a multiple values.
+  "
+  (multiple-value-list (extended-compose-type-string! type1 type2)))
+(util:memoize 'list-extended-compose-type-string!)
 
