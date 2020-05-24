@@ -96,10 +96,10 @@
     (or x y)
     (let ((comp (funcall op-apply-fn x y)))
       (if comp
-        (values comp (list x y))
+        (values comp "right" (list x y))
         (progn
           (setf comp (funcall op-apply-fn y x))
-          (when comp (values comp (list y x))))))))
+          (when comp (values comp "left" (list y x))))))))
 
 ;; Given two atomic ULFs, return the type formed after composing (if possible)
 (defun compose-atomic-ulfs! (a b)
@@ -408,13 +408,25 @@
   (compose-types! type1 type2 :op-apply-fn #'extended-apply-operator!))
 
 
-(defun extended-compose-type-string!(type1 type2)
+(defun extended-compose-type-string! (type1 type2)
   "Given two types as strings, compose them if possible and return the
   resulting type as a string. The strict EL type compositions are extended to
   include ULF macros and structural relaxations.
   "
   (when (or (null type1) (null type2))
     (return-from extended-compose-type-string! nil))
-  (semtype2str (extended-compose-types! (extended-str2semtype type1)
-                                        (extended-str2semtype type2))))
+  (multiple-value-bind
+    (composed direction types)
+    (extended-compose-types! (extended-str2semtype type1)
+                             (extended-str2semtype type2))
+    (values (semtype2str composed)
+            direction
+            (mapcar #'semtype2str types))))
+
+(defun list-extended-compose-type-string! (type1 type2)
+  "Same as extended-compose-type-string! but returns everything in a list
+  rather than a multiple values.
+  "
+  (multiple-value-list (extended-compose-type-string! type1 type2)))
+(util:memoize 'list-extended-compose-type-string!)
 
