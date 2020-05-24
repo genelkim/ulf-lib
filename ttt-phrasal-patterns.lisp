@@ -33,6 +33,7 @@
       ((+ noun?) lex-coord? noun?)
       (phrasal-sent-op? noun?)
       (n+post noun? (+ pred? term? adv? p-arg? unknown?))
+      (= term?)
 
       ;; Fall back if arguments not correctly analyzed.
       (n+preds _+)
@@ -57,6 +58,11 @@
       (lex-adjective? term?)
       ;; Some adjectives take arguments with prepositions.
       (adj? p-arg?)
+      ;; A single argument with unlimited additional modifiers.
+      ((* mod-a?) adj? (* mod-a?) (! p-arg? (to verb?)) (* mod-a?))
+      ((* mod-a?) lex-adjective? (* mod-a?) term? (* mod-a?))
+      ((* mod-a?) adj? (+ mod-a?))
+      ((+ mod-a?) adj? (* mod-a?))
       ;; Coordination.
       ((+ adj?) lex-coord? (+ adj?))
       (phrasal-sent-op? adj?)
@@ -84,7 +90,8 @@
 (defparameter *ttt-adv-s*
    '(! lex-adv-s?
       (adv-s pred?)
-      ((+ adv-s?) lex-coord? (+ adv-s?))))
+      ((+ adv-s?) lex-coord? (+ adv-s?))
+      (|(| _+ |)|)))
 
 (defparameter *ttt-adv-f*
    '(! lex-adv-f?
@@ -120,7 +127,8 @@
 ;; predicates.  It has to be an argument to something.
 (defparameter *ttt-p-arg*
   '(! (lex-p-arg? term?)
-      (lex-p-arg? pred?)))
+      (lex-p-arg? pred?)
+      (adv-s? p-arg?)))
 
 ;; Terms.
 (defparameter *ttt-term*
@@ -173,11 +181,9 @@
 (defparameter *ttt-verb*
   '(! lex-verb?
       (pasv lex-verb?)
-      (verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
+      ((* adv-a?) verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
       (adv-a? (* phrasal-sent-op?) verb?)
-      ;(verb? (+ adv-a?))
       (aux? (* phrasal-sent-op?) verb?)
-      ;(verb? adv-a? term?)
       ((* verb?) lex-coord? (+ verb?))
       (phrasal-sent-op? verb?)
 
@@ -209,7 +215,7 @@
 
 (defparameter *ttt-tensed-verb*
   '(! (lex-tense? verb?)
-      (tensed-verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
+      ((* adv-a?) tensed-verb? (+ term? pred? adv-a? p-arg? phrasal-sent-op?))
       (tensed-aux? (* phrasal-sent-op?) verb?)
       (adv-a? (* phrasal-sent-op?) tensed-verb?)
       ((* tensed-verb?) lex-coord? (+ tensed-verb?))
@@ -241,7 +247,8 @@
   '(! ;; Simple sentence.
       (term? tensed-verb?)
       ;; Coordinated sentence.
-      (tensed-sent? lex-coord? (+ tensed-sent?))
+      ((+ tensed-sent?) lex-coord? (+ tensed-sent?))
+      (lex-coord? tensed-sent? (+ tensed-sent?))
       ;; Modified sentence (e.g. curried coordination).
       (sent-mod? tensed-sent?)
       ;; Postfixed sentence modification.
@@ -251,10 +258,13 @@
       ;; Punctuated sentence.
       (tensed-sent? sent-punct?)
       ;; Prepositionally coordinated sentences.
-      ((lex-ps? tensed-sent?) tensed-sent?)
-      (tensed-sent? (lex-ps? tensed-sent?))
-      ;; Inverted sentence.
-      ((lex-tense? (!2 lex-verb? aux?)) term? verb?)
+      (ps? tensed-sent?)
+      (tensed-sent? ps?)
+      ;; Inverted auxiliary sentence.
+      ((lex-tense? aux?) term? verb?)
+      ;; Inverted verb sentence.
+      ((lex-tense? lex-invertible-verb?) term? term?)
+      ((lex-tenes? be.v) term? pred?)
       ;; Phrasal utterances.
       (pu (! ~ sent? tensed-sent?))
       ;; Multiple sentences stuck together (e.g. some multi-sentence annotations).
@@ -273,10 +283,14 @@
 (defparameter *ttt-sent-mod*
   '(!1 (lex-coord? (!2 tensed-sent? sent?))
        ;; Prepositionally coordinated sentences.
-       (lex-ps? tensed-sent?)
+       ps?
        adv-e?
        adv-s?
        adv-f?))
+
+(defparameter *ttt-ps*
+  '(!1 (lex-ps? tensed-sent?)
+       (mod-a? ps?)))
 
 (defparameter *ttt-preposs-macro*
   '(term? 's))
@@ -312,6 +326,7 @@
 (defun sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent* y)))
 (defun tensed-sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-sent* y)))
 (defun sent-mod? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent-mod* y)))
+(defun ps? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-ps* y)))
 (defun preposs-macro? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-preposs-macro* y)))
 (defun p-arg? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-p-arg* y)))
 (defun voc? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-voc* y)))
@@ -398,6 +413,7 @@
         (list #'preposs-macro? 'preposs-macro)
         (list #'relativized-sent? 'rel-sent)
         (list #'p-arg? 'p-arg)
+        (list #'voc? 'voc)
         ;; Purely lexical types.
         (list #'lex-equal? 'equal-sign)
         (list #'lex-set-of? 'set-of-op)
@@ -438,9 +454,7 @@
                (adv-s? e)
                (adv-f? e)
                (member e '(not not.adv-e not.adv-s))
-               (and (listp x) (= (length x) 2)
-                    (lex-ps? (first x))
-                    (tensed-sent? (second x)))
+               (ps? e)
                ;; Weaker verion of (*.ps x) matching. Don't require it to be a
                ;; tensed sentence even though that's what's required in the
                ;; type.

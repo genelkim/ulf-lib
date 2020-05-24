@@ -172,7 +172,8 @@
     ; TENSE, N+PREDS, NP+PREDS, +PREDS, etc. can't be the operand type.
     ((and (atomic-type-p arg)
           (member (domain arg)
-                  '(tense n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep rep1)))
+                  '(tense n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep
+                          rep1 parg)))
      nil)
     ;;; TENSE
     ;;; TENSE + TYPE_V => TYPE_TV
@@ -287,24 +288,6 @@
        (add-semtype-type-params arg-copy (list op-dom))
        (add-semtype-type-params op-ran (list arg-copy))
        op-ran))
-    ; Hole variables for optional types, requiring either the same domain or
-    ; the same range for all options.
-    ;((and (not (atomic-type-p op)) (atomic-type-p arg) (member (domain arg) '(*h *p)))
-    ; (let ((flat-opts (flatten-options op))
-    ;       (doms (mapcar #'domain (types flat-ops)))
-    ;       (rans (mapcar #'range (types flat-ops)))
-    ;       (unique-doms (remove-duplicates doms :test #'strict-semtype-equal))
-    ;       (unique-rans (remove-duplicates rans :test #'strict-semtype-equal)))
-    ;   (cond
-    ;     ((= 1 (length unique-doms))
-    ;      (let ((op-dom (copy-semtype (first doms)))
-    ;            (op-range (copy-semtype
-
-    ;        ;;; TODO(gene): Hmmm... no, this won't handle all compositions correctly. How about we really should just factorize if that's what we want to do...
-    ;      ...)
-    ;     ((= 1 (length unique-rans))
-    ;      ...)
-    ;     (t nil))))
     ; sub1[T1] + T2[*h[T3]] >> T2, iff T1 can be the arg of T3.
     ((and (atomic-type-p op) (eql (domain op) 'sub1))
      (let ((*h-params (remove-if-not #'(lambda (x) (eql (domain x) '*h))
@@ -398,6 +381,22 @@
                    :c-type-params (type-params arg)
                    :c-aux t
                    :c-tense 't))
+    ;;; PARG
+    ;;; 1. PARG + T => PARG1[T]
+    ;;; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
+    ;;; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A}
+    ; 1. PARG + T => PARG[T]
+    ((and (atomic-type-p op) (eql (domain op) 'parg))
+     (new-semtype 'parg1 nil 1 nil nil :type-params (list (copy-semtype arg))))
+    ; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
+    ((and (semtype-equal? op *general-verb-semtype*)
+          (atomic-type-p arg) (eql (domain arg) 'parg1)
+          (extended-compose-types! op (first (type-params arg))))
+     (extended-compose-types! op (first (type-params arg))))
+    ; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A}
+    ((and (member (subscript op) '(n a))
+          (atomic-type-p arg) (eql (domain arg) 'parg1))
+     (copy-semtype op))
     ;; Fall back to EL compositional functionality.
     (t (apply-operator! op arg :recurse-fn #'extended-apply-operator!))))
 

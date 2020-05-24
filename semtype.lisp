@@ -105,7 +105,6 @@
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
 (defun new-semtype (dom ran exponent sub ten &key options type-params (aux nil))
-  ; TODO(gene): finish incorporating aux in here.
   (progn
     (setf dom (copy-semtype dom))
     (setf ran (copy-semtype ran))
@@ -189,6 +188,11 @@
 ;; TODO(gene): see note below
 ;; Note: This function is more of a "compatibility checker" than a function to
 ;; check actual equality. I'll probably rename this to something better later.
+;; For options, checks if there is a single compatible match.
+;; For subscripts, if there are subscripts, checks for equality otherwise doesn't care.
+;; For tenses, if x is tensed, then y must be tensed.
+;; Basically, x is the general class and we check if y has an option that is a
+;; subset of one of the x options.
 (defun semtype-equal? (x y &key ignore-exp)
   (if (or (optional-type-p x) (optional-type-p y))
     ;; At least one optional
@@ -217,7 +221,8 @@
     (when (and (if ignore-exp T (equal (ex x) (ex y)))
                (equal (type-of x) (type-of y))
                (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-               (equal (tense x) (tense y)))
+               ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
+               (if (tense x) (tense y) t))
       (if (atomic-type-p x)
         (equal (domain x) (domain y))
         (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
@@ -423,6 +428,8 @@
       ;; Auxiliaries.
       ((equal str "AUX") (new-semtype 'aux nil 1 nil nil))
       ((equal str "TAUX") (new-semtype 'taux nil 1 nil nil))
+      ;; p-arg
+      ((equal str "PARG") (new-semtype 'parg nil 1 nil nil))
       ;; Quotes.
       ((equal str "\"") (new-semtype '\" nil 1 nil nil))
       ;; Any of the macros.
@@ -461,7 +468,7 @@
           (error "No optional types allowed in no-option-equal"))
          ((or (and (atomic-type-p t1) (not (atomic-type-p t2)))
               (and (not (atomic-type-p t1)) (atomic-type-p t2)))
-          (error "Types don't match for t1 and t2 in no-option-equal"))
+          nil)
          ; Base case.
          ((and (not (semtype-p t1)) (not (semtype-p t2))) (equal t1 t2))
          ((or (not (semtype-p t1)) (not (semtype-p t2))) nil)

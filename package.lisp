@@ -102,6 +102,7 @@
     :sent?
     :tensed-sent?
     :sent-mod?
+    :ps?
     :preposs-macro?
     :p-arg?
     :voc?

@@ -59,6 +59,9 @@
       ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n=>(D=>(S=>2))_n))")
       ("{S}\\.AUX-S" . "AUX")
       ("{S}\\.AUX-V" . "AUX")
+      ("{S}\\.P-ARG" . "PARG")
+      ("\\!" . "((S=>2)=>(S=>2))")
+      ("\\?" . "((S=>2)=>(S=>2))")
       )))
 
 ;; Ensures that the input symbol is in ulf-lib.
@@ -171,29 +174,31 @@
   (numberp x))
 
 ;; Matches a name predicate.
-;; TODO: generalize to other extensions.
 (defun name-suffix-check (x suffix)
-  (and (re:all-matches "^\\[?\\|\[\^\\|\]\+\\|\\]?$"
-                       (format nil "~s" x))
-       (suffix-check x suffix)))
+  (re:all-matches (concatenate 'string
+                               "^\\[?\\|\[\^\\|\]\+\\." suffix "\\|\\]?$")
+                  (format nil "~s" x)))
 
 (defun in-ulf-lib-named-suffix-check (x suffix)
   (util:in-intern (x y :ulf-lib)
     (name-suffix-check y suffix)))
 
+(defun in-package-named-suffix-check (x suffix)
+  (util:in-intern (x y *package*)
+    (name-suffix-check y suffix)))
+
 (defun lex-name-noun? (x)
-  (in-ulf-lib-named-suffix-check x "N"))
+  (in-package-named-suffix-check x "N"))
 
 (defun lex-name-det? (x)
-  (in-ulf-lib-named-suffix-check x "D"))
+  (in-package-named-suffix-check x "D"))
 
 (defun lex-name-adj? (x)
-  (in-ulf-lib-named-suffix-check x "A"))
+  (in-package-named-suffix-check x "A"))
 
 (defun lex-name-prep? (x)
-  (in-ulf-lib-named-suffix-check x "P"))
+  (in-package-named-suffix-check x "P"))
 
-;; TODO: complete this....
 (defun lex-name-pred? (x)
   (or (lex-name-noun? x)
       (lex-name-det? x)
@@ -216,12 +221,13 @@
 ;; Matches a regular name.
 (defun lex-name? (x)
   (util:in-intern (x y *package*)
-    (and
-      (re:all-matches "^\\|\[\^\\|\]\+\\|$"
-                         (format nil "~s" y))
-      (not (lex-name-pred? y))
-      ;; Special handling of quotes '\" == '|"|.
-      (not (eq '\" y)))))
+    (util:in-intern (x z :ulf-lib)
+      (and
+        (re:all-matches "^\\|\[\^\\|\]\+\\|$"
+                           (format nil "~s" y))
+        (not (lex-name-pred? y))
+        ;; Special handling of quotes '\" == '|"|.
+        (not (eq '\" z))))))
 
 ; Adverbs
 (defun lex-adv-a? (x)
@@ -281,6 +287,10 @@
 
 (defun lex-verbaux? (x)
   (or (lex-verb? x) (aux? x)))
+
+; TODO(gene): fill this in further.
+(defun lex-invertible-verb? (x)
+  (in-ulf-lib (x y) (member y '(make.v have.v))))
 
 ;; Returns true if the token is one that was elided in the surface string.
 ;; In the current guidelines, this is a curly bracketed token.
