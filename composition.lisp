@@ -428,5 +428,4 @@
   rather than a multiple values.
   "
   (multiple-value-list (extended-compose-type-string! type1 type2)))
-(util:memoize 'list-extended-compose-type-string!)
 

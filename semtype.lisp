@@ -105,6 +105,13 @@
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
 (defun new-semtype (dom ran exponent sub ten &key options type-params (aux nil))
+  ; TODO: add a parameter for the package.
+  (when (or (symbolp dom) (listp dom))
+    (setf dom (util:intern-symbols-recursive dom :ulf-lib)))
+  (when (or (symbolp ran) (listp ran))
+    (setf ran (util:intern-symbols-recursive ran :ulf-lib)))
+  (when (or (symbolp sub) (listp sub))
+    (setf sub (util:intern-symbols-recursive sub :ulf-lib)))
   (progn
     (setf dom (copy-semtype dom))
     (setf ran (copy-semtype ran))
@@ -194,39 +201,117 @@
 ;; Basically, x is the general class and we check if y has an option that is a
 ;; subset of one of the x options.
 (defun semtype-equal? (x y &key ignore-exp)
-  (if (or (optional-type-p x) (optional-type-p y))
-    ;; At least one optional
-    (if (and (optional-type-p x) (optional-type-p y))
-      ;; Both optional
-      (when (if ignore-exp T (equal (ex x) (ex y)))
-        (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
-          (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
-                   (semtype-equal? B D :ignore-exp (when (equal ignore-exp 'r) 'r)))
-              (and (semtype-equal? A D :ignore-exp (when (equal ignore-exp 'r) 'r))
-                   (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r))))))
+  ; TODO(gene): test this more thoroughly and clean up comments.
+  ;(format t "semtype-equal?~%    x: ~s~%    y: ~s~%" (semtype2str x) (semtype2str y))
+  ;(format t "ignore-exp: ~s~%" ignore-exp)
+  ;(format t "'r: ~s~%" 'r)
+  ;(format t "(equal ignore-exp 'r): ~s~%" (equal ignore-exp 'r))
+  ;(format t 
+  ;        "(not (or (optional-type-p x) (optional-type-p y))): ~s~%
+  ;        (if ignore-exp T (equal (ex x) (ex y))): ~s~%
+  ;        (equal (type-of x) (type-of y)): ~s~%
+  ;        (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T): ~s~%
+  ;        (if (tense x) (tense y) t): ~s~%
+  ;        (not (atomic-type-p x)): ~s~%"
+  ;        (not (or (optional-type-p x) (optional-type-p y)))
+  ;        (if ignore-exp T (equal (ex x) (ex y)))
+  ;        (equal (type-of x) (type-of y))
+  ;        (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+  ;        (if (tense x) (tense y) t)
+  ;        (not (atomic-type-p x)))
+  ;(format t "(subscript x): ~s~%(subscript y): ~s~%" (subscript x) (subscript y))
+  (cond
+    ((and (or (optional-type-p x) (optional-type-p y))
+          ;; At least one optional
+          (and (optional-type-p x) (optional-type-p y))
+          ;; Both optional
+          (if ignore-exp T (equal (ex x) (ex y))))
+     (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
+       (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
+                (semtype-equal? B D :ignore-exp (when (equal ignore-exp 'r) 'r)))
+           (and (semtype-equal? A D :ignore-exp (when (equal ignore-exp 'r) 'r))
+                (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r))))))
 
-      (if (optional-type-p x)
-        ;; x optional; y not optional
-        (or (and (or (= (ex y) (* (ex (car (types x))) (ex x))) ignore-exp)
-                 (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-            (and (or (= (ex y) (* (ex (cadr (types x))) (ex x))) ignore-exp)
-                 (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T))))
-        ;; y optional; x not optional
-        (or (and (or (= (ex x) (* (ex (car (types y))) (ex y))) ignore-exp)
-                 (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-            (and (or (= (ex x) (* (ex (cadr (types y))) (ex y))) ignore-exp)
-                 (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T))))))
+    ((and (or (optional-type-p x) (optional-type-p y))
+          ;; At least one optional
+          (not (and (optional-type-p x) (optional-type-p y)))
+          (optional-type-p x))
+     ;; x optional; y not optional
+     (or (and (or (= (ex y) (* (ex (car (types x))) (ex x))) ignore-exp)
+              (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+         (and (or (= (ex y) (* (ex (cadr (types x))) (ex x))) ignore-exp)
+              (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
 
-    ;; No optionals
-    (when (and (if ignore-exp T (equal (ex x) (ex y)))
-               (equal (type-of x) (type-of y))
-               (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-               ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
-               (if (tense x) (tense y) t))
-      (if (atomic-type-p x)
-        (equal (domain x) (domain y))
-        (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
-             (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r)))))))
+    ((and (or (optional-type-p x) (optional-type-p y))
+          ;; At least one optional
+          (not (and (optional-type-p x) (optional-type-p y)))
+          (optional-type-p y))
+     ;; y optional; x not optional
+     (or (and (or (= (ex x) (* (ex (car (types y))) (ex y))) ignore-exp)
+              (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+         (and (or (= (ex x) (* (ex (cadr (types y))) (ex y))) ignore-exp)
+              (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
+
+    ;; No optionals 1
+    ((and (not (or (optional-type-p x) (optional-type-p y)))
+          (if ignore-exp T (equal (ex x) (ex y)))
+          (equal (type-of x) (type-of y))
+          (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+          ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
+          (if (tense x) (tense y) t)
+          (atomic-type-p x))
+     (equal (domain x) (domain y)))
+    
+    ;; No optionals 2
+    ((and (not (or (optional-type-p x) (optional-type-p y)))
+          (if ignore-exp T (equal (ex x) (ex y)))
+          (equal (type-of x) (type-of y))
+          (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+          ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
+          (if (tense x) (tense y) t)
+          (not (atomic-type-p x)))
+     (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
+          (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r))))
+
+    ; no possible match
+    (t 
+      nil)))
+
+;  (if (or (optional-type-p x) (optional-type-p y))
+;    ;; At least one optional
+;    (if (and (optional-type-p x) (optional-type-p y))
+;      ;; Both optional
+;      (when (if ignore-exp T (equal (ex x) (ex y)))
+;        (format t "1~%")
+;        (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
+;          (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
+;                   (semtype-equal? B D :ignore-exp (when (equal ignore-exp 'r) 'r)))
+;              (and (semtype-equal? A D :ignore-exp (when (equal ignore-exp 'r) 'r))
+;                   (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r))))))
+;
+;      (if (optional-type-p x)
+;        ;; x optional; y not optional
+;        (or (and (or (= (ex y) (* (ex (car (types x))) (ex x))) ignore-exp)
+;                 (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+;            (and (or (= (ex y) (* (ex (cadr (types x))) (ex x))) ignore-exp)
+;                 (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T))))
+;        ;; y optional; x not optional
+;        (or (and (or (= (ex x) (* (ex (car (types y))) (ex y))) ignore-exp)
+;                 (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+;            (and (or (= (ex x) (* (ex (cadr (types y))) (ex y))) ignore-exp)
+;                 (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T))))))
+;
+;    ;; No optionals
+;    (when (and (if ignore-exp T (equal (ex x) (ex y)))
+;               (equal (type-of x) (type-of y))
+;               (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+;               ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
+;               (if (tense x) (tense y) t))
+;      (format t "2~%")
+;      (if (atomic-type-p x)
+;        (equal (domain x) (domain y))
+;        (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
+;             (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r)))))))
 
 ;; Make a new semtype identical to the given type
 ;; Key word options allow overwriting specific fields if appropriate.
