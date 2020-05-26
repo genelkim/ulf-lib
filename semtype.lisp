@@ -513,6 +513,7 @@
       ;; Auxiliaries.
       ((equal str "AUX") (new-semtype 'aux nil 1 nil nil))
       ((equal str "TAUX") (new-semtype 'taux nil 1 nil nil))
+      ((equal str "ITAUX") (new-semtype 'itaux nil 1 nil nil))
       ;; p-arg
       ((equal str "PARG") (new-semtype 'parg nil 1 nil nil))
       ;; Quotes.

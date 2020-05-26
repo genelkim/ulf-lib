@@ -152,18 +152,40 @@
 (defun str-ulf-type-string? (string-ulf)
   (ulf-type-string? (read-from-string string-ulf)))
 
+
+(defun compose-type-string-builder (compose-fn str2semtype-fn) "Builds a
+  string-based interface to a type composition function with that functions
+  relevant string-to-semtype mapping function.
+  "
+  #'(lambda (type1 type2)
+      (when (and type1 type2)
+        (multiple-value-bind
+          (composed direction types)
+          (funcall compose-fn
+                   (funcall str2semtype-fn type1)
+                   (funcall str2semtype-fn type2))
+          (values (semtype2str composed)
+                  direction
+                  (mapcar #'semtype2str types))))))
+
+
 ;; Given two types are strings, compose them if possible and return the
 ;; resulting type as a string.
 (defun compose-type-string! (type1 type2)
-  (semtype2str (compose-types! (str2semtype type1) (str2semtype type2))))
+  (funcall (compose-type-string-builder #'compose-types!
+                                        #'str2semtype)
+           type1 type2))
 
 (defparameter *unary-noun-semtype* (str2semtype "(D=>(S=>2))_n"))
 (defparameter *unary-pred-semtype* (str2semtype "(D=>(S=>2))"))
 (defparameter *unary-verb-semtype* (str2semtype "(D=>(S=>2))_v"))
-(defparameter *general-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v"))
+(defparameter *unary-tensed-verb-semtype* (str2semtype "(D=>(S=>2))_v_t"))
+(defparameter *general-verb-semtype* (str2semtype "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v|({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t}"))
 (defparameter *term-semtype* (str2semtype "D"))
+(defparameter *sent-mod-semtype* (str2semtype "((S=>2)=>(S=>2))"))
+(defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
 
-(defun extended-apply-operator! (op arg)
+(defun extended-apply-operator! (op arg &key (recurse-fn #'extended-apply-operator!))
   "Compose a given operator and argument if possible. Assumption (for now): Arg
   has no exponent. If it does, it is ignored. The strict EL type compositions
   are extended to include ULF macros and structural relaxations.
@@ -398,7 +420,50 @@
           (atomic-type-p arg) (eql (domain arg) 'parg1))
      (copy-semtype op))
     ;; Fall back to EL compositional functionality.
-    (t (apply-operator! op arg :recurse-fn #'extended-apply-operator!))))
+    (t (apply-operator! op arg :recurse-fn recurse-fn))))
+
+
+(defun left-right-apply-operator! (op arg &key (recurse-fn #'left-right-apply-operator!))
+  "A further relaxation of `extended-apply-operator!` which generalizes the
+  type system to allow left-to-right composition even when there is infixing,
+  inversions, and sentence modifiers.
+  "
+  (cond
+    ;;; SUBJECT(term) + VP
+    ; Treat it like it's VP + TERM
+    ; TODO(gene): Ideally, we would force it to be a sentence, but we won't
+    ; worry about that for now.
+    ((and (semtype-equal? op *term-semtype*)
+          (semtype-equal? arg *general-verb-semtype*))
+     ;(format t "1!!~%")
+     (apply-operator! arg op))
+    ;;; ADV-S + * >> *
+    ; This will over generate for non-paired SENT-MODs
+    ; TODO(gene): generate a type that turns back to * after combining with COMPLEX
+    ; TODO(gene): find a way to distinguish between adv-s, adv-e, and other sent-mods.
+    ((semtype-equal? op *sent-mod-semtype*) arg)
+    ;;; * + SENT-MOD >> *
+    ((semtype-equal? arg *sent-mod-semtype*) op)
+    ;;; TSENT + !/? -> TSENT
+    ; TODO(gene): this is currently subsumed by the rule above of * + SENT-MOD >> *. We should eventually distinguish these so that we don't allows punctuation to appear anywhere in that way the most sent-mod operators do.
+    ;;; Inverted TAUX (ITAUX)
+    ;;; 1. TAUX + TERM >> ITAUX
+    ;;; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
+    ; 1. TAUX + TERM >> ITAUX
+    ((and (atomic-type-p op) (eql (domain op) 'taux)
+          (semtype-equal? arg *term-semtype*))
+     (new-semtype 'itaux nil 1 nil nil))
+    ; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
+    ((and (atomic-type-p op) (eql (domain op) 'itaux)
+          (null (tense arg)) (null (aux arg))
+          (semtype-equal? arg *unary-verb-semtype*)
+          (not (semtype-equal? arg *unary-tensed-verb-semtype*)))
+     (copy-semtype *tensed-sent-semtype*
+                   :c-type-params (type-params arg)
+                   :c-tense 't))
+    ;; Fall back to extended-apply-operator! when special cases are not
+    ;; relevant.
+    (t (extended-apply-operator! op arg :recurse-fn #'left-right-apply-operator!))))
 
 (defun extended-compose-types! (type1 type2)
   "Compose two types if possible and return the composed type. Also return the
@@ -413,15 +478,10 @@
   resulting type as a string. The strict EL type compositions are extended to
   include ULF macros and structural relaxations.
   "
-  (when (or (null type1) (null type2))
-    (return-from extended-compose-type-string! nil))
-  (multiple-value-bind
-    (composed direction types)
-    (extended-compose-types! (extended-str2semtype type1)
-                             (extended-str2semtype type2))
-    (values (semtype2str composed)
-            direction
-            (mapcar #'semtype2str types))))
+  (funcall (compose-type-string-builder #'extended-compose-types!
+                                        #'extended-str2semtype)
+           type1 type2))
+
 
 (defun list-extended-compose-type-string! (type1 type2)
   "Same as extended-compose-type-string! but returns everything in a list
@@ -429,3 +489,23 @@
   "
   (multiple-value-list (extended-compose-type-string! type1 type2)))
 
+
+(defun left-right-compose-types! (type1 type2)
+  "left-right version of compose-types!
+  "
+  (compose-types! type1 type2 :op-apply-fn #'left-right-apply-operator!))
+
+
+(defun left-right-compose-type-string! (type1 type2)
+  "left-right version of compose-type-string!
+  "
+  (funcall (compose-type-string-builder #'left-right-compose-types!
+                                        #'extended-str2semtype)
+           type1 type2))
+
+
+(defun list-left-right-compose-type-string! (type1 type2)
+  "List interface of left-right-compose-type-string!
+  "
+  (multiple-value-list (left-right-compose-type-string! type1 type2)))
+  
