@@ -185,6 +185,19 @@
 (defparameter *sent-mod-semtype* (str2semtype "((S=>2)=>(S=>2))"))
 (defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
 
+(defun get-all-top-domains (types)
+  "Extracts all top-level domains from the list of types, recursing into
+  optional-types.
+  "
+  (apply #'append
+         (mapcar 
+           #'(lambda (typ)
+               (cond
+                 ((optional-type-p typ)
+                  (get-all-top-domains (types typ)))
+                 (t (list (domain typ)))))
+           types)))
+
 (defun extended-apply-operator! (op arg &key (recurse-fn #'extended-apply-operator!))
   "Compose a given operator and argument if possible. Assumption (for now): Arg
   has no exponent. If it does, it is ignored. The strict EL type compositions
@@ -268,7 +281,7 @@
     ; qt-attr + T[*qt] >> qt-attr1[T[*qt]]
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr))
      (let ((type-params (get-semtype-type-params arg)))
-       (when (find '*qt (mapcar #'domain type-params))
+       (when (find '*qt (get-all-top-domains type-params))
          (new-semtype 'qt-attr1 nil 1 nil nil :type-params (list arg)))))
     ; qt-attr1[T1[*qt]] + T2 >> T2[qt-attr1[T1[*qt]]]
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr1))
