@@ -246,12 +246,15 @@
                  "Can't be in both n+pred and np+preds. n+-params: ~s~%np+-params: ~s~%op: ~s~%arg: ~s~%"
                  n+-params np+-params op arg)
          ;; Update inner-semtype with new params.
-         (setf inner-semtype (if n+-params (first n+-params) (first np+-params)))
+         (setf inner-semtype (if n+-params
+                               (first (type-params (first n+-params)))
+                               (first (type-params (first np+-params)))))
          (setf updated-inner-semtype (copy-semtype inner-semtype))
          (setf (type-params updated-inner-semtype)
                (append (type-params updated-inner-semtype) new-params))
          (setf updated-+preds-semtype (copy-semtype op))
-         (setf (type-params updated-+preds-semtype) new-params)
+         (setf (type-params updated-+preds-semtype)
+               (append (type-params updated-+preds-semtype) new-params))
          (new-semtype nil nil 1 nil nil :options (list updated-+preds-semtype updated-inner-semtype)))))
     ;;; QT-ATTR
     ;;; The whole process of this is as follows
