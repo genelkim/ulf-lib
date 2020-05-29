@@ -457,7 +457,7 @@
         (non-atom-regex "^(\\(.*\\))(_([NAVP]))?(_([UT]))?(_([X]))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$")
         ; {A|B}[[type1],[type2],..\]
         (optional-regex "^(\\{.*\\})(_([NAVP]))?(_([UT]))?(_([X]))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$")
-        (atomic-regex "^([A-Z0-9\-\*]+)(_([NAVP]))?(_([UT]))?(_([X]))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$"))
+        (atomic-regex "^([A-Z0-9\-\+\*]+)(_([NAVP]))?(_([UT]))?(_([X]))?(\\^([A-Z]|[2-9]))?(\\[(.*)\\])?$"))
     (setf s (string-upcase s))
     (if (equal (char s 0) #\()
       ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
@@ -521,7 +521,7 @@
       ;; Any of the macros.
       ((lex-macro? sym) (new-semtype sym nil 1 nil nil))
       ;; Any of the extended macros.
-      ((member str '("QT-ATTR1" "QT-ATTR2" "SUB1" "REP1" "POSTGEN1" "POSTGEN2") :test #'equal)
+      ((member str '("QT-ATTR1" "QT-ATTR2" "SUB1" "REP1" "POSTGEN1" "POSTGEN2" "+PREDS") :test #'equal)
        (new-semtype sym nil 1 nil nil))
       ;; Macro hole variables (*p, *h, *ref, *s, etc.)
       ((lex-macro-hole? sym) (new-semtype sym nil 1 nil nil))
