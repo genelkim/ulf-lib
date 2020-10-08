@@ -15,7 +15,7 @@ Library for interfacing with and manipulating unscoped episodic logical forms (U
 ## Running the Code
 This is really meant to be a library, but to check the basic functionality of any of the functions, you can load the file load.lisp and enter the package :ulf-lib.  For example,
 ```
-$ acl
+$ sbcl
 $ (load "load.lisp")
 $ ...[loading messages]...
 $ (in-package :ulf-lib)
