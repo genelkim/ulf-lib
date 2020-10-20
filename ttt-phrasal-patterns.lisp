@@ -304,7 +304,7 @@
 ;; Matches the TTT pattern (ttt) to the s-expression (expr) after hiding TTT
 ;; operators in expr.
 (defun hidden-match-expr (ttt expr)
-  (ttt::match-expr ttt (util:hide-ttt-ops expr)))
+  (ttt::match-expr ttt (hide-ttt-ops expr)))
 
 (defun noun? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-noun* y)))
 (defun adj? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adj* y)))

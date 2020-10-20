@@ -265,7 +265,7 @@
     ((initial-result
        (util:in-intern (inulf ulf :ulf-lib)
          (let ((ttthidden (hide-ttt-ops ulf)))
-           (util:unhide-ttt-ops
+           (unhide-ttt-ops
              (ttt:apply-rules *ttt-uninvert-verbaux*
                               ttthidden
                               :max-n 500
@@ -282,7 +282,7 @@
        (adv-a? (! _*1 _+2)))))
 (defun lift-adv-a (ulf)
   (let ((ttthidden (hide-ttt-ops ulf)))
-    (util:unhide-ttt-ops
+    (unhide-ttt-ops
       (ttt:apply-rules *ttt-lift-adv-a*
                        ttthidden))))
 
