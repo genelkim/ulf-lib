@@ -1,12 +1,7 @@
 ;;; Gene Louis Kim, 3-17-2020
 ;;; Unit tests for verifying the ttt-phrasal-patterns functions.
 
-(in-package :ulf-lib)
-
-(setq *print-failures* t)
-(setq *print-errors* t)
-(setq *print-summary* t)
-(setq *summarize-results* t)
+(in-package :ulf-lib/tests)
 
 (define-test ttt-p-arg-mod
   "Tests for adding mod-a modifiers to p-arg."

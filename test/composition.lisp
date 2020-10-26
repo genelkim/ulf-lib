@@ -1,19 +1,25 @@
 ;;; Gene Louis Kim, 1-14-2020
 ;;; Unit tests for verifying the ulf-composition functions.
 
-(in-package :ulf-lib)
+(in-package :ulf-lib/tests)
 
-(setq *print-failures* t)
-(setq *print-errors* t)
-(setq *print-summary* t)
-(setq *summarize-results* t)
+;; Out-of-package versions of internal function calls.
+(defun extended-compose-type-string! (int1 int2)
+  (util:in-intern (int1 t1 :ulf-lib)
+    (util:inout-intern (int2 t2 :ulf-lib :callpkg :ulf-lib/tests)
+      (ulf-lib::extended-compose-type-string! t1 t2))))
+(defun left-right-compose-type-string! (int1 int2)
+  (util:in-intern (int1 t1 :ulf-lib)
+    (util:inout-intern (int2 t2 :ulf-lib :callpkg :ulf-lib/tests)
+      (ulf-lib::left-right-compose-type-string! t1 t2))))
+
 
 (defun semtype-str-equal (str1 str2)
   "Takes to string representations of semtypes and checks if they are equal,
   expanding out options into the same format."
-  (strict-semtype-equal
-    (extended-str2semtype str1)
-    (extended-str2semtype str2)))
+  (ulf-lib::strict-semtype-equal
+    (ulf-lib::extended-str2semtype str1)
+    (ulf-lib::extended-str2semtype str2)))
 
 (defun string-from-compose-types (ulf1 ulf2 &key (ext nil))
   "Takes two atomic ULF expressions, composes the types and returns the string
