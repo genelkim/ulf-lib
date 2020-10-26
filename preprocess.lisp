@@ -59,12 +59,13 @@
     ((helper (str acc lpcount)
        (multiple-value-bind (sexpr endidx)
          (handler-case (read-from-string str)
-           (end-of-file (c) (values str -1))
-           (sb-int:simple-reader-error (c) (values str -2))
+           (end-of-file () (values str -1))
+           (sb-int:simple-reader-error (c) (declare (ignore c)) (values str -2))
            ;; Allegro common lisp gives a speical error when there's an extra right paren.
            ;(excl::extra-right-paren-error (c) (values str -2))
            )
          ;; Body of multiple-value-bind.
+         (declare (ignore sexpr))
          (cond
            ;; If we got an end of file error and it's not empty, add a paren at
            ;; the end of the current string.
@@ -119,7 +120,8 @@
                (setf start idx)
                (push obj ulf-segments))
             ;; If we hit a read error, abort the loop.
-            (sb-int:simple-reader-error (hre) 
+            (sb-int:simple-reader-error (hre)
+              (declare (ignore hre))
               (format t "Hit a sb-int:simple-reader-error on string: ~s~%At start: ~s~%" 
                       str start)
               (setf start (length str)))))
