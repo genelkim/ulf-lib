@@ -57,6 +57,8 @@
     ;; Acc keeps track of previous completely interpreted strings, which may
     ;; need to be wrapped in parentheses.
     ((helper (str acc lpcount)
+       (declare (type simple-string str)
+                (type fixnum lpcount))
        (multiple-value-bind (sexpr endidx)
          (handler-case (read-from-string str)
            (end-of-file () (values str -1))
@@ -66,6 +68,7 @@
            )
          ;; Body of multiple-value-bind.
          (declare (ignore sexpr))
+         (declare (type fixnum endidx))
          (cond
            ;; If we got an end of file error and it's not empty, add a paren at
            ;; the end of the current string.
@@ -77,7 +80,7 @@
            ;; which should be a right-paren -- into acc, increment lpcount, and
            ;; recurse.
            ((= endidx -2)
-            (let* ((trimmed (util:trim str))
+            (let* ((trimmed (the string (util:trim str)))
                    (firstletter (subseq trimmed 0 1))
                    (restletters (subseq trimmed 1)))
               (assert (equal firstletter ")") (firstletter) (format nil "firstletter ~s" firstletter))
@@ -111,6 +114,7 @@
 ;; they were separated by a semi-colon. Otherwise, the given label is places as
 ;; an operator.
 (defun ulf-from-string (str &key (multi-label nil))
+  (declare (type simple-string str))
   (let ((start 0)
         (ulf-segments nil))
     (loop while (< start (length str))

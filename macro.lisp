@@ -230,10 +230,11 @@
 ;;; (NP ((((<tense> verb/aux) VP) ADV1) ... ADVn))
 ;;;
 ;;; TODO: need to do something fancier, like identifying continuous adverbs
-;;; from the end and wrapping those.  Otherwise, supply the arguments flat.
+;;; from the end and wrapping those. Otherwise, supply the arguments flat.
 ;;; For example: "Made he a table for John?"
 ;;;   (((past make.v) he.pro (a.d table.n) (for.p-arg |John|)) ?)
 (defun uninvert-verbaux! (ulf)
+  (declare (type list ulf))
   (if (< (length ulf) 3)
     (return-from uninvert-verbaux! nil))
   (let ((headva (first ulf))
