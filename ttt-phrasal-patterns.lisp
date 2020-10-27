@@ -7,11 +7,6 @@
 (defmacro inout-ulf-lib ((x y &key (callpkg nil)) &body body)
   `(util:inout-intern (,x ,y :ulf-lib :callpkg ,callpkg)
                       ,@body))
-;; Ensures that the input symbol is in ulf-lib.
-(defmacro in-ulf-lib ((x y) &body body)
-  `(util:in-intern (,x ,y :ulf-lib)
-                   ,@body))
-
 
 (defparameter *ttt-noun*
   '(! lex-noun?

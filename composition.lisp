@@ -91,15 +91,20 @@
 
 ;; Compose two types if possible and return the composed type. Also return the
 ;; order in which the types were composed.
+(declaim (ftype (function ((or semtype null) (or semtype null) &key (:op-apply-fn function))
+                          (values (or semtype null) simple-string list))
+                compose-types!))
 (defun compose-types! (x y &key (op-apply-fn #'apply-operator!))
   (if (or (not x) (not y))
-    (or x y)
-    (let ((comp (funcall op-apply-fn x y)))
-      (if comp
-        (values comp "right" (list x y))
-        (progn
-          (setf comp (funcall op-apply-fn y x))
-          (when comp (values comp "left" (list y x))))))))
+    (values (or x y) "none" nil)
+    (let (comp)
+      (cond
+        ((setf comp (funcall op-apply-fn x y))
+         (values comp "right" (list x y)))
+        ((setf comp (funcall op-apply-fn y x))
+         (values comp "left" (list y x)))
+        (t
+          (values nil "none" nil))))))
 
 ;; Given two atomic ULFs, return the type formed after composing (if possible)
 (defun compose-atomic-ulfs! (a b)
@@ -146,17 +151,17 @@
 
 ;; Given a ULF, evaluate the type if possible and return a string representation
 ;; of the type.
-(defun ulf-type-string? (ulf)
-  (semtype2str (ulf-type? ulf)))
+(defun ulf-type-string? (inulf)
+  (util:in-intern (inulf ulf :ulf-lib)
+    (semtype2str (ulf-type? ulf))))
 
 (defun str-ulf-type-string? (string-ulf)
   (ulf-type-string? (read-from-string string-ulf)))
 
 
-(defun compose-type-string-builder (compose-fn str2semtype-fn) "Builds a
-  string-based interface to a type composition function with that functions
-  relevant string-to-semtype mapping function.
-  "
+(defun compose-type-string-builder (compose-fn str2semtype-fn)
+  "Builds a string-based interface to a type composition function with that
+  functions relevant string-to-semtype mapping function."
   #'(lambda (type1 type2)
       (when (and type1 type2)
         (multiple-value-bind
@@ -479,21 +484,19 @@
                    :c-tense 't))
     ;; Fall back to extended-apply-operator! when special cases are not
     ;; relevant.
-    (t (extended-apply-operator! op arg :recurse-fn #'left-right-apply-operator!))))
+    (t (extended-apply-operator! op arg :recurse-fn recurse-fn))))
 
 (defun extended-compose-types! (type1 type2)
   "Compose two types if possible and return the composed type. Also return the
   order in which the types were composed. The strict EL type compositions are
-  extended to include ULF macros and structural relaxations.
-  "
+  extended to include ULF macros and structural relaxations."
   (compose-types! type1 type2 :op-apply-fn #'extended-apply-operator!))
 
 
 (defun extended-compose-type-string! (type1 type2)
   "Given two types as strings, compose them if possible and return the
   resulting type as a string. The strict EL type compositions are extended to
-  include ULF macros and structural relaxations.
-  "
+  include ULF macros and structural relaxations."
   (funcall (compose-type-string-builder #'extended-compose-types!
                                         #'extended-str2semtype)
            type1 type2))
