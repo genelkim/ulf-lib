@@ -26,11 +26,14 @@
 ;;;  insertion-selector-fn: #'second
 ;;;  bad-use-fn: (lambda (x) (not (and (listp x) (eq 'sub (first x)) (equal (length x) 3))))
 ;;; Returns a function that applies all 'sub macros.
+(declaim (ftype (function (symbol symbol function function function)
+                          function)
+                var-insertion-macro))
 (defun var-insertion-macro (macro-name var-sym
                                        context-selector-fn
                                        insertion-selector-fn
                                        bad-use-fn)
-  (declare (ftype (function ((or list atom)) *) bad-use-fn))
+  (declare (type (function ((or list atom)) t) bad-use-fn))
   (labels
     (;; Helper function that does all the heavy lifting.
      (macro-expand-fn (ulf fail-on-bad-use)
