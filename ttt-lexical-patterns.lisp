@@ -66,7 +66,7 @@
 
 ;; Ensures that the input symbol is in *package*.
 (defmacro in-cur-package ((x y) &body body)
-  `(util:in-intern (,x ,y *package*)
+  `(gute:in-intern (,x ,y *package*)
                    ,@body))
 
 
@@ -77,11 +77,11 @@
             (format nil "~s" x)))
 
 (defun in-ulf-lib-suffix-check (x suffix)
-  (util:in-intern (x y :ulf-lib)
+  (gute:in-intern (x y :ulf-lib)
     (suffix-check y suffix)))
 
 (defun in-package-suffix-check (x suffix)
-  (util:in-intern (x y *package*)
+  (gute:in-intern (x y *package*)
     (suffix-check y suffix)))
 
 (defun lex-noun? (x)
@@ -114,7 +114,7 @@
   (in-package-suffix-check x "P"))
 
 (defun lex-p-arg? (x)
-  (util:in-intern (x y *package*)
+  (gute:in-intern (x y *package*)
               (re:all-matches (concatenate 'string
                                               "^\(\\w\|\\d\|-\)\+.P\\-ARG$")
                                  (format nil "~s" y))))
@@ -176,11 +176,11 @@
                   (format nil "~s" x)))
 
 (defun in-ulf-lib-named-suffix-check (x suffix)
-  (util:in-intern (x y :ulf-lib)
+  (gute:in-intern (x y :ulf-lib)
     (name-suffix-check y suffix)))
 
 (defun in-package-named-suffix-check (x suffix)
-  (util:in-intern (x y *package*)
+  (gute:in-intern (x y *package*)
     (name-suffix-check y suffix)))
 
 (defun lex-name-noun? (x)
@@ -208,16 +208,16 @@
 ;; Can take a symbol or a string.
 ;; TODO: separate into separate functions for symbol and string since the ULF can contain strings!
 (defun is-strict-name? (x)
-  (util:in-intern (x s *package*)
-    (let* ((sstr (if (not (stringp s)) (util:atom2str s) s))
+  (gute:in-intern (x s *package*)
+    (let* ((sstr (if (not (stringp s)) (gute:atom2str s) s))
            (chars (coerce sstr 'list)))
       (and (eql #\| (nth 0 chars))
            (eql #\| (nth (1- (length chars)) chars))))))
 
 ;; Matches a regular name.
 (defun lex-name? (x)
-  (util:in-intern (x y *package*)
-    (util:in-intern (x z :ulf-lib)
+  (gute:in-intern (x y *package*)
+    (gute:in-intern (x z :ulf-lib)
       (and
         (re:all-matches "^\\|\[\^\\|\]\+\\|$"
                            (format nil "~s" y))
@@ -297,8 +297,8 @@
   (in-ulf-lib (intoken token)
     (multiple-value-bind (word _) (split-by-suffix token)
       (declare (ignore _))
-      (let ((wchars (util:split-into-atoms word))
-            (tchars (util:split-into-atoms token)))
+      (let ((wchars (gute:split-into-atoms word))
+            (tchars (gute:split-into-atoms token)))
         ;; Either the whole thing is wrapped in curly brackets or everything but
         ;; the suffix.
         (or
@@ -315,13 +315,13 @@
   (in-ulf-lib (intoken token)
     (multiple-value-bind (word _) (split-by-suffix (unhide-ttt-ops token))
       (declare (ignore _))
-      (let ((wchars (util:split-into-atoms (unhide-ttt-ops word))))
+      (let ((wchars (gute:split-into-atoms (unhide-ttt-ops word))))
         ;; The first character is a *.
         (equal '* (first wchars))))))
 
 ;; Returns a string containing the semantic type of a given atomic ULF expression.
 (defun atom-semtype? (expr)
-  (cdr (assoc (util:atom2str expr) *semtypes*
+  (cdr (assoc (gute:atom2str expr) *semtypes*
               :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
 
 ;; TODO: move this into a separate util.lisp file where we'll put other utility
@@ -331,8 +331,8 @@
   (let ((pkg (symbol-package intoken)))
     (in-ulf-lib (intoken token)
       (multiple-value-bind (word suffix) (split-by-suffix token)
-        (let ((wchars (util:split-into-atoms word))
-              (tchars (util:split-into-atoms token)))
+        (let ((wchars (gute:split-into-atoms word))
+              (tchars (gute:split-into-atoms token)))
           ;; Either the whole thing is wrapped in curly brackets or everything but
           ;; the suffix.
           (cond

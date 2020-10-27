@@ -7,8 +7,8 @@
 
 ;;; Returns t if 'ulf' contains *h, nil otherwise.
 (defun contains-hole (inulf &key (inholevar '*h))
-  (util:in-intern (inulf ulf :ulf-lib)
-    (util:in-intern (inholevar holevar :ulf-lib)
+  (gute:in-intern (inulf ulf :ulf-lib)
+    (gute:in-intern (inholevar holevar :ulf-lib)
                      (cond
                        ((and (atom ulf) (eq holevar ulf)) t)
                        ((atom ulf) nil)
@@ -94,12 +94,12 @@
     #'(lambda (inulf fail-on-bad-use calling-package)
        (let ((initial-result
                (multiple-value-list
-                 (util:in-intern
+                 (gute:in-intern
                    (inulf ulf :ulf-lib)
                    (macro-expand-fn ulf fail-on-bad-use)))))
          (if calling-package
            (values (first initial-result)
-                   (util:intern-symbols-recursive (second initial-result) calling-package))
+                   (gute:intern-symbols-recursive (second initial-result) calling-package))
            (values (first initial-result) (second initial-result)))))))
 
 
@@ -149,7 +149,7 @@
 (defun add-info-to-sub-vars (inulf &key (calling-package nil))
   (let
     ((initial-result
-       (util:in-intern (inulf ulf :ulf-lib)
+       (gute:in-intern (inulf ulf :ulf-lib)
          (labels
            (;; Main recursive function that does all the heavy lifting.
             (recfn (curulf)
@@ -173,13 +173,13 @@
            (recfn ulf)))))
     ;; Intern to calling package.
     (if calling-package
-      (util:intern-symbols-recursive initial-result calling-package)
+      (gute:intern-symbols-recursive initial-result calling-package)
       initial-result)))
 
 
 ;; This assumes that there's at most one relativizer in curulf.
 (defun add-info-to-relativizer (curulf srculf)
-  (let* ((origrel (first (util:tree-find-if curulf #'lex-rel?)))
+  (let* ((origrel (first (gute:tree-find-if curulf #'lex-rel?)))
          (replacement
           ;; Right now, all we care about is plurality.
           (cond
@@ -195,7 +195,7 @@
 (defun add-info-to-relativizers (inulf &key (calling-package nil))
   (let
     ((initial-result
-       (util:in-intern (inulf ulf :ulf-lib)
+       (gute:in-intern (inulf ulf :ulf-lib)
          (labels
            (;; Main recursive function.
             (recfn (curulf)
@@ -267,7 +267,7 @@
 (defun uninvert-verbauxes (inulf &key (calling-package nil))
   (let
     ((initial-result
-       (util:in-intern (inulf ulf :ulf-lib)
+       (gute:in-intern (inulf ulf :ulf-lib)
          (let ((ttthidden (hide-ttt-ops ulf)))
            (unhide-ttt-ops
              (ttt:apply-rules *ttt-uninvert-verbaux*
@@ -275,7 +275,7 @@
                               :max-n 500
                               :trace nil))))))
     (if calling-package
-      (util:intern-symbols-recursive initial-result calling-package)
+      (gute:intern-symbols-recursive initial-result calling-package)
       initial-result)))
 
 ;; Lift adv-a that are mixed in with verb arguments.
@@ -341,7 +341,7 @@
              (values (every #'identity sucs) ress (some #'identity qt-attrs)))))))
        ;; TODO: return untransformed version on failure...
     (let
-      ((initial-result (multiple-value-list (util:in-intern
+      ((initial-result (multiple-value-list (gute:in-intern
                                               (inulf ulf :ulf-lib)
                                               (rec-helper ulf)))))
       (cond
@@ -351,7 +351,7 @@
          (values nil inulf))
         ;; Intern to given package.
         (calling-package  (values (first initial-result)
-                                  (util:intern-symbols-recursive (second initial-result)
+                                  (gute:intern-symbols-recursive (second initial-result)
                                                                  calling-package)))
         ;; Keep ulf-lib pacakge.
         (t (values (first initial-result) (second initial-result)))))))

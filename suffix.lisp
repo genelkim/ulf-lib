@@ -11,7 +11,7 @@
 (defun split-by-suffix (sym)
   (if (not (symbolp sym)) (return-from split-by-suffix sym))
   (let* ((pkg (symbol-package sym))
-         (atoms (util:split-into-atoms sym))
+         (atoms (gute:split-into-atoms sym))
          ;(dotpos (position '|.| atoms :from-end t)))
          ;; Intern instead of literal so that it gets interned into the
          ;; namespace of the caller.
@@ -21,10 +21,10 @@
              ;; Suffixes can't have whitespace in them
              (notany #'(lambda (x)
                          (member (the character x)
-                                 cl-util::*trim-whitespace-chars*))
+                                 gute::*trim-whitespace-chars*))
                      (subseq (coerce (symbol-name sym) 'list) dotpos)))
-      (values (util:fuse-into-atom (util:slice atoms 0 dotpos) :pkg pkg)
-              (util:fuse-into-atom (util:slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
+      (values (gute:fuse-into-atom (gute:slice atoms 0 dotpos) :pkg pkg)
+              (gute:fuse-into-atom (gute:slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
       (values sym nil))))
 
 ;; Strips the suffix, marked with "." from a string.
@@ -42,7 +42,7 @@
     (cond
       ;; If there's a space in the suffix, then don't strip.
       ((some #'(lambda (x)
-                 (member (the character x) cl-util::*trim-whitespace-chars*))
+                 (member (the character x) gute::*trim-whitespace-chars*))
              (car (last (coerce split 'list))))
        s)
       ;; If it's a name, but there is a split, add back the pipe at the end.
@@ -54,11 +54,11 @@
 ;; Assumes that we retain the package of word.
 (defun add-suffix (word suffix &key (pkg (symbol-package word)))
   (if (not suffix) (return-from add-suffix word))
-  (util:fuse-into-atom
+  (gute:fuse-into-atom
     (concatenate 'list
-                 (util:split-into-atoms word)
+                 (gute:split-into-atoms word)
                  (list #\.)
-                 (util:split-into-atoms suffix))
+                 (gute:split-into-atoms suffix))
     :pkg pkg))
 
 ;; An association list of the semantic type name and the suffix extension for

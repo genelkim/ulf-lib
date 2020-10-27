@@ -156,7 +156,7 @@
 ;; Given a ULF, evaluate the type if possible and return a string representation
 ;; of the type.
 (defun ulf-type-string? (inulf)
-  (util:in-intern (inulf ulf :ulf-lib)
+  (gute:in-intern (inulf ulf :ulf-lib)
     (semtype2str (ulf-type? ulf))))
 
 (defun str-ulf-type-string? (string-ulf)

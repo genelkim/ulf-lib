@@ -32,8 +32,8 @@
                              "Both the :tags and :tests keyword "
                              "arguments are given for ulf-lib/tests:run. "
                              "Ignoring the :tags argument...")))
-        ; The cl-util dependency is available via the ulf-lib package.
-        (util:in-intern (tests pkgtests :ulf-lib/tests)
+        ; The gute dependency is available via the ulf-lib package.
+        (gute:in-intern (tests pkgtests :ulf-lib/tests)
           (lisp-unit:run-tests pkgtests :ulf-lib/tests)))
       ;; Specified tags.
       (tags (run-tags tags :ulf-lib/tests))
