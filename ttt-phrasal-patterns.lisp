@@ -418,8 +418,10 @@
 ;; Hypothesizes the type of the given ULF formula.
 (defun phrasal-ulf-type? (inx &key (callpkg nil))
   (inout-ulf-lib (inx x :callpkg callpkg)
-    (let ((matched (remove-if-not #'(lambda (pair) (apply (first pair) (list x)))
-                                  *type-id-fns*)))
+    (let ((matched (remove-if-not
+                     #'(lambda (pair)
+                         (apply (the function (first pair)) (list x)))
+                     *type-id-fns*)))
       (if matched
         (mapcar #'second matched)
         '(unknown)))))

@@ -2,18 +2,21 @@
 
 (in-package :ulf-lib)
 
-(defun  merge-subscripts (ss1 ss2)
+(defun merge-subscripts (ss1 ss2)
   "Merge the two subscripts, considering ss1 as the main subscript. If they are
   contradictory, take the ss1 value.
   "
   (let*
     ((ss1chars (if (null ss1) nil (coerce (symbol-name ss1) 'list)))
-     (ss2chars (if (null ss2) nil (coerce (symbol-name ss2)'list)))
+     (ss2chars (if (null ss2) nil (coerce (symbol-name ss2) 'list)))
      (poses (coerce "NAVP" 'list))
      (new-val
        (cond
-         ((intersection poses ss1chars) (find-if #'(lambda(x) (member x poses)) ss1chars))
-         ((intersection poses ss2chars) (find-if #'(lambda(x) (member x poses)) ss2chars))
+         ;; TODO: isn't the find-if below the same as the intersection? If so, just setf the intersection in the check...
+         ((intersection poses ss1chars)
+          (find-if #'(lambda (x) (member (the character x) poses)) ss1chars))
+         ((intersection poses ss2chars)
+          (find-if #'(lambda (x) (member (the character x) poses)) ss2chars))
          (t nil)))
      (filtered (remove-if #'null (list new-val))))
     (if (null filtered)
@@ -43,6 +46,7 @@
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
 ;; Any subscripts and tenses are propagated from op.
 ;; type-params are propagated from both.
+(declaim (ftype (function (semtype) fixnum) ex))
 (defun apply-operator! (op arg &key (recurse-fn #'apply-operator!))
   (let
     ((new-params (append (type-params op) (type-params arg)))
@@ -190,6 +194,7 @@
 (defparameter *sent-mod-semtype* (str2semtype "((S=>2)=>(S=>2))"))
 (defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
 
+(declaim (ftype (function (list) list) get-all-top-domains))
 (defun get-all-top-domains (types)
   "Extracts all top-level domains from the list of types, recursing into
   optional-types.
@@ -206,8 +211,7 @@
 (defun extended-apply-operator! (op arg &key (recurse-fn #'extended-apply-operator!))
   "Compose a given operator and argument if possible. Assumption (for now): Arg
   has no exponent. If it does, it is ignored. The strict EL type compositions
-  are extended to include ULF macros and structural relaxations.
-  "
+  are extended to include ULF macros and structural relaxations."
   (cond
     ; TENSE, N+PREDS, NP+PREDS, +PREDS, etc. can't be the operand type.
     ((and (atomic-type-p arg)
@@ -300,11 +304,14 @@
      (let* ((qt-attr1-param
               (find-if #'(lambda (param) (eql (domain param) 'qt-attr1))
                        (get-semtype-type-params arg))))
-     (new-semtype 'qt-attr2 nil 1 nil nil :type-params (type-params qt-attr1-param))))
+       (when (not qt-attr1-param)
+         (error "We should NEVER get here! Included to help compiler."))
+       (new-semtype 'qt-attr2 nil 1 nil nil
+                    :type-params (type-params qt-attr1-param))))
     ;;; qt-attr2[T1[*qt]] + \" >> T1
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr2)
           (atomic-type-p arg) (eql (domain arg) '\"))
-     (assert (= 1 (length (type-params op))) (op arg)
+     (assert (= 1 (length (the list (type-params op)))) (op arg)
              "Didn't expect to have multiple type params for qt-attr2.~%op: ~s~%arg: ~s~%"
              (semtype2str op) (semtype2str arg))
      (let* ((result (copy-semtype (first (type-params op))))
@@ -344,9 +351,9 @@
                   (semtype-equal? (first (type-params op))
                                   (first (type-params (first *h-params)))
                                   :ignore-exp t))
-         (assert (= 1 (length (type-params op))))
+         (assert (= 1 (length (the list (type-params op)))))
          (assert (= 1 (length *h-params)))
-         (assert (= 1 (length (type-params (first *h-params)))))
+         (assert (= 1 (length (the list (type-params (first *h-params))))))
          (let ((arg-copy (copy-semtype arg)))
            (set-semtype-type-params arg-copy
                                     (mapcar #'copy-semtype other-params))
