@@ -1,6 +1,6 @@
 # ulf-lib
 [![Build Status](https://travis-ci.com/genelkim/ulf-lib.svg?branch=master)](https://travis-ci.com/genelkim/ulf-lib)
-[![Coverage Status](https://coveralls.io/repos/github/genelkim/ulf-lib/badge.svg?branch=travis-build)](https://coveralls.io/github/genelkim/ulf-lib?branch=travis-build)
+[![Coverage Status](https://coveralls.io/repos/github/genelkim/ulf-lib/badge.svg?branch=master)](https://coveralls.io/github/genelkim/ulf-lib?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Library for interfacing with and manipulating unscoped episodic logical forms (ULF).  
