@@ -44,7 +44,7 @@ cache:
 
 script:
   - if [[ "$LISP" == "sbcl" ]]; then
-      ros -s cl-coveralls -e '(or (coveralls:with-coveralls (:exclude (directory "test/*.lisp")))
+      ros -s cl-coveralls -e '(or (coveralls:with-coveralls (:exclude (directory "test/*.lisp"))
                                     (load "run-tests"))
                                   (uiop:quit -1))';
     else
