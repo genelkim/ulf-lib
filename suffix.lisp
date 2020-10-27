@@ -4,7 +4,7 @@
 
 ;; Takes a symbol and returns whether the symbol has a .-delimited suffix.
 (defun has-suffix? (s)
-  (> (length (cl-strings:split (format nil "~s" s) "."))
+  (> (length (the list (cl-strings:split (format nil "~s" s) ".")))
      1))
 
 ;; Splits the symbol at the last "." and returns the two values.
@@ -16,10 +16,13 @@
          ;; Intern instead of literal so that it gets interned into the
          ;; namespace of the caller.
          (dotpos (position (intern ".") atoms :from-end t)))
+    (declare (type list atoms))
     (if (and dotpos 
              ;; Suffixes can't have whitespace in them
-             (notany #'(lambda (x) (member x cl-util::*trim-whitespace-chars*))
-                     (subseq atoms dotpos)))
+             (notany #'(lambda (x)
+                         (member (the character x)
+                                 cl-util::*trim-whitespace-chars*))
+                     (subseq (coerce (symbol-name sym) 'list) dotpos)))
       (values (util:fuse-into-atom (util:slice atoms 0 dotpos) :pkg pkg)
               (util:fuse-into-atom (util:slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
       (values sym nil))))
@@ -28,14 +31,18 @@
 ;;  e.g. "man.n" -> "man"
 ;; If there are multiple periods in the string, only the substring after the
 ;; last period is stripped off.
+(declaim (ftype (function (string) string) strip-suffix))
 (defun strip-suffix (s)
   (let* ((split (cl-strings:split s "."))
          (base-ret (cl-strings:join
-                     (subseq split 0 (max 1 (1- (length split))))
+                     (subseq (the string split)
+                             0
+                             (max 1 (1- (length (the string split)))))
                      :separator ".")))
     (cond
       ;; If there's a space in the suffix, then don't strip.
-      ((some #'(lambda (x) (member x cl-util::*trim-whitespace-chars*))
+      ((some #'(lambda (x)
+                 (member (the character x) cl-util::*trim-whitespace-chars*))
              (car (last (coerce split 'list))))
        s)
       ;; If it's a name, but there is a split, add back the pipe at the end.
@@ -87,6 +94,10 @@
 
 ;; Returns the suffix for the type. If none found, it just returns the type,
 ;; but in the desired format.
+(declaim (ftype (function (symbol &key (:callpkg (or package symbol null))
+                                       (:form simple-string))
+                          (or symbol string))
+                suffix-for-type))
 (defun suffix-for-type (x &key (callpkg nil) (form "symbol"))
   (assert (member form '("string" "symbol") :test #'equal))
   (let ((suffix (cdr (assoc (safe-intern x :ulf-lib) *type-suffix-alist*))))
@@ -94,7 +105,7 @@
       ;; Cases where we found a type result.
       (cond
         ((equal form "string") (symbol-name suffix))
-        (callpkg (safe-intern suffix callpkg))
+        (callpkg (nth-value 0 (safe-intern suffix callpkg)))
         (t suffix))
       ;; Not found.
       (cond

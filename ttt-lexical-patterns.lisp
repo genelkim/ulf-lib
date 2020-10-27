@@ -92,7 +92,7 @@
     (in-ulf-lib (inx x)
       (multiple-value-bind (word suffix) (split-by-suffix x)
         (declare (ignore suffix)) ; suffix check handled in lex-noun? below.
-        (let ((wchars (cl-strings:chars (atom2str word))))
+        (let ((wchars (the list (cl-strings:chars (atom2str word)))))
           (and (lex-noun? inx)
                (> (length wchars) 3)
                (equal '(#\- #\O #\F) (last wchars 3))))))))
@@ -150,6 +150,7 @@
   (in-package-suffix-check x "D"))
 
 (defun lex-coord? (x)
+  (declare (optimize (speed 1)))
   (in-ulf-lib (x y)
               (or
                 (member y *coordinator*)
@@ -263,9 +264,11 @@
   (in-package-suffix-check x "SENT"))
 
 (defun lex-tense? (x)
+  (declare (optimize (speed 1)))
   (in-ulf-lib (x y) (member y *tense*)))
 
 (defun lex-detformer? (x)
+  (declare (optimize (speed 1)))
   (in-ulf-lib (x y) (member y *detformer*)))
 
 (defun litstring? (x)

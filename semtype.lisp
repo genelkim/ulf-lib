@@ -14,7 +14,8 @@
    (exponent
      :initarg :ex
      :initform 1
-     :accessor ex)
+     :accessor ex
+     :type fixnum)
    (subscript
      :initarg :subscript
      :initform nil
@@ -27,7 +28,8 @@
    (type-params
      :initarg :type-params
      :initform nil
-     :accessor type-params)
+     :accessor type-params
+     :type list)
    ; Whether the current verb phrase has an auxiliary.
    (aux
      :initarg :aux
@@ -43,7 +45,8 @@
 (defclass optional-type (semtype)
   ((types
      :initarg :types
-     :accessor types)))
+     :accessor types
+     :type list)))
 
 ;; Check if a given object is a semtype
 (defun semtype-p (s)
@@ -86,9 +89,15 @@
     ((null semtype) nil)
     (t (setf (type-params semtype) type-params))))
 
+;; Use t instead of semtype for argument check because of the following
+;; compiler note
+;;  note: can't open-code test of unknown type SEMTYPE
+(declaim (ftype (function (t) list) get-semtype-type-params))
 (defun get-semtype-type-params (semtype)
   "Gets the type-params from a semtype. Recurses into optional-type, but only in
   one branch since all final branches should have the same type-params."
+  ;; Locally declare specific function type of generic function.
+  (declare (ftype (function (t) list) types type-params))
   (cond
     ((null semtype) nil)
     ((listp semtype) (get-semtype-type-params (first semtype)))
@@ -105,6 +114,15 @@
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
 (defun new-semtype (dom ran exponent sub ten &key options type-params (aux nil))
+  ;; Fixnum and list are the only allowed number and sequence types,
+  ;; respectively for exponent.
+  (declare (type (or fixnum list (not (or number sequence)))
+                 exponent))
+  ;; Locally declare specific relevant type for generic 'ex' function.
+  ;; Use t instead of semtype for argument check because of the following
+  ;; compiler note
+  ;;  note: can't open-code test of unknown type SEMTYPE
+  (declare (ftype (function (t) fixnum) ex))
   ; TODO: add a parameter for the package.
   (when (or (symbolp dom) (listp dom))
     (setf dom (util:intern-symbols-recursive dom :ulf-lib)))
@@ -206,7 +224,7 @@
   ;(format t "ignore-exp: ~s~%" ignore-exp)
   ;(format t "'r: ~s~%" 'r)
   ;(format t "(equal ignore-exp 'r): ~s~%" (equal ignore-exp 'r))
-  ;(format t 
+  ;(format t
   ;        "(not (or (optional-type-p x) (optional-type-p y))): ~s~%
   ;        (if ignore-exp T (equal (ex x) (ex y))): ~s~%
   ;        (equal (type-of x) (type-of y)): ~s~%
@@ -220,12 +238,17 @@
   ;        (if (tense x) (tense y) t)
   ;        (not (atomic-type-p x)))
   ;(format t "(subscript x): ~s~%(subscript y): ~s~%" (subscript x) (subscript y))
+  ;; Locally declare specific relevant type for generic 'ex' function.
+  ;; Use t instead of semtype for argument check because of the following
+  ;; compiler note
+  ;;  note: can't open-code test of unknown type SEMTYPE
+  (declare (ftype (function (t) fixnum) ex))
   (cond
     ((and (or (optional-type-p x) (optional-type-p y))
           ;; At least one optional
           (and (optional-type-p x) (optional-type-p y))
           ;; Both optional
-          (if ignore-exp T (equal (ex x) (ex y))))
+          (if ignore-exp T (= (ex x) (ex y))))
      (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
        (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
                 (semtype-equal? B D :ignore-exp (when (equal ignore-exp 'r) 'r)))
@@ -237,9 +260,9 @@
           (not (and (optional-type-p x) (optional-type-p y)))
           (optional-type-p x))
      ;; x optional; y not optional
-     (or (and (or (= (ex y) (* (ex (car (types x))) (ex x))) ignore-exp)
+     (or (and (or ignore-exp (= (ex y) (* (ex (car (types x))) (ex x))))
               (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-         (and (or (= (ex y) (* (ex (cadr (types x))) (ex x))) ignore-exp)
+         (and (or ignore-exp (= (ex y) (* (ex (cadr (types x))) (ex x))))
               (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
 
     ((and (or (optional-type-p x) (optional-type-p y))
@@ -247,21 +270,21 @@
           (not (and (optional-type-p x) (optional-type-p y)))
           (optional-type-p y))
      ;; y optional; x not optional
-     (or (and (or (= (ex x) (* (ex (car (types y))) (ex y))) ignore-exp)
+     (or (and (or ignore-exp (= (ex x) (* (ex (car (types y))) (ex y))))
               (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-         (and (or (= (ex x) (* (ex (cadr (types y))) (ex y))) ignore-exp)
+         (and (or ignore-exp (= (ex x) (* (ex (cadr (types y))) (ex y))))
               (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
 
     ;; No optionals 1
     ((and (not (or (optional-type-p x) (optional-type-p y)))
-          (if ignore-exp T (equal (ex x) (ex y)))
+          (if ignore-exp T (= (ex x) (ex y)))
           (equal (type-of x) (type-of y))
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
           ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
           (if (tense x) (tense y) t)
           (atomic-type-p x))
      (equal (domain x) (domain y)))
-    
+
     ;; No optionals 2
     ((and (not (or (optional-type-p x) (optional-type-p y)))
           (if ignore-exp T (equal (ex x) (ex y)))
@@ -274,7 +297,7 @@
           (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r))))
 
     ; no possible match
-    (t 
+    (t
       nil)))
 
 ;  (if (or (optional-type-p x) (optional-type-p y))
@@ -365,13 +388,13 @@
                      (if (subscript s) (format nil "_~a" (subscript s)) "")
                      (if (tense s) (format nil "_~a" (tense s)) "")
                      (if (aux s) "_X" "")
-                     (if (= (ex s) 1) "" (format nil "^~a" (ex s)))))
+                     (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s)))))
             ((optional-type-p s)
              ; Optional type
              (format nil "{~a|~a}~a"
                      (semtype2str (car (types s)))
                      (semtype2str (cadr (types s)))
-                     (if (= (ex s) 1) "" (format nil "^~a" (ex s)))))
+                     (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s)))))
             ((semtype-p s)
              ; Not optional or atomic
              (format nil "(~a=>~a)~a~a~a~a"
@@ -380,7 +403,7 @@
                      (if (subscript s) (format nil "_~a" (subscript s)) "")
                      (if (tense s) (format nil "_~a" (tense s)) "")
                      (if (aux s) "_X" "")
-                     (if (= (ex s) 1) "" (format nil "^~a" (ex s)))))
+                     (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s)))))
             (t nil)))
     (if (equal type-params-str "[]")
       base
@@ -388,8 +411,10 @@
 
 ;; Split a string of the form ([domain]=>[range]) into [domain] and [range].
 ;; Helper for str2semtype.
+(declaim (ftype (function (simple-string) list) split-semtype-str))
 (defun split-semtype-str (s)
   (let ((level 0) (i 1))
+    (declare (type fixnum level i))
     (loop
       (when (equal (char s i) #\()
         (setf level (+ level 1)))
@@ -401,8 +426,10 @@
     (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1)))))
 
 ;; Split a string of the form {A|B} into A and B. Helper for str2semtype.
+(declaim (ftype (function (simple-string) list) split-opt-str))
 (defun split-opt-str (s)
   (let ((level 0) (i 1))
+    (declare (type fixnum level i))
     (loop
       (when (equal (char s i) #\{)
         (setf level (+ level 1)))
@@ -416,13 +443,15 @@
 (defun split-type-param-str (tpstr)
   "Splits a type param list string into the individual type strings.
   These are comma separated, but since the types are recursively defined, only
-  split on commas that are at the top-level square bracketing.
-  "
+  split on commas that are at the top-level square bracketing."
+  (declare (type (or simple-string null) tpstr))
   (when (null tpstr)
     (return-from split-type-param-str nil))
   (let ((params nil)
         (cur-chars nil)
         (bracket-depth 0))
+    (declare (type list params cur-chars)
+             (type fixnum bracket-depth))
     (loop for c across tpstr do
           (cond
             ; Comma at top-level, add word and reset cur-chars.
@@ -538,11 +567,13 @@
      ; components of two elements.
      (acc-test (t1 t2)
        #'(lambda (accessor-test)
-           (let ((accfn (first accessor-test))
-                 (testfn (second accessor-test)))
+           (declare (type list accessor-test))
+           (let ((accfn (the function (first accessor-test)))
+                 (testfn (the function (second accessor-test))))
              (funcall testfn (funcall accfn t1) (funcall accfn t2)))))
      ; Runs equality on two lists of semtypes, ignoring order.
      (set-no-option-equal (set1 set2)
+       (declare (type list set1 set2))
        (and (= (length set1) (length set2))
             (every #'(lambda (set1-elem)
                        (member set1-elem set2 :test #'no-option-equal))
@@ -578,6 +609,11 @@
                        (list #'type-params #'set-no-option-equal)
                        (list #'aux #'equal))))))
      ) ; end of label definitions.
+    ;; Use t instead of semtype for argument check because of the following
+    ;; compiler note
+    ;;  note: can't open-code test of unknown type SEMTYPE
+    (declare (ftype (function (t t) function)
+                    acc-test))
     ; labels body
     ; If we get to an atomic label, just check the labels.
     (let ((flat-s1 (types (flatten-options s1)))
@@ -640,6 +676,7 @@
   "Takes a flat option type and makes it a right-leaning binary tree of options."
   (labels
     ((helper (options)
+       (declare (type list options))
        (cond
          ((< (length options) 3)
           (new-semtype nil nil 1 nil nil :options options))
