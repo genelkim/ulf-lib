@@ -35,9 +35,9 @@
 (defun strip-suffix (s)
   (let* ((split (cl-strings:split s "."))
          (base-ret (cl-strings:join
-                     (subseq (the string split)
+                     (subseq (the list split)
                              0
-                             (max 1 (1- (length (the string split)))))
+                             (max 1 (1- (length (the list split)))))
                      :separator ".")))
     (cond
       ;; If there's a space in the suffix, then don't strip.
@@ -46,7 +46,7 @@
              (car (last (coerce split 'list))))
        s)
       ;; If it's a name, but there is a split, add back the pipe at the end.
-      ((and (is-strict-name? (read-from-string s)) (> (length split) 1))
+      ((and (is-strict-name? (read-from-string s)) (> (length (the list split)) 1))
        (concatenate 'string base-ret "|"))
       (t base-ret))))
 
