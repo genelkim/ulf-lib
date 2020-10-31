@@ -66,7 +66,7 @@
     (declare (ignore _2))
     newvp))
 
-(defun search-np-head (np &key (sub nil) (callpkg *package*))
+(defun search-np-head (innp &key (sub nil) (callpkg *package*))
 ; Searches np (a ULF NP) for the head noun. If sub is not nil, sub substitutes
 ; for the head noun.
 ;
@@ -75,58 +75,58 @@
 ;   whether it was found
 ;   new np
 ; This function treats 'plur' as part of the noun.
-  (cond
-    ;; Simple lexical or plural case.
-    ((or (lex-noun? np) (lex-name? np))
-     (values np t (if sub sub np)))
-    ;; Basic pluralized case.
-    ((and (listp np) (= (length np) 2) (equal (intern "PLUR" callpkg) (first np))
-          (or (lex-noun? (second np)) (lex-name-pred? (second np))))
-     (values np t (if sub sub np)))
-    ;; Pluralized relational noun case.
-    ((and (listp np) (= (length np) 2)
-          (equal (intern "PLUR" callpkg) (first np)) (listp (second np)))
-     (values (list (intern "PLUR" callpkg) (first (second np))) t
-             (if sub (list sub (cdr (second np)))
-               np)))
-    ;; Noun post-modification.
-    ;;   (n+preds ...)
-    ;;   (n+post ...)
-    ((ttt:match-expr (list (list '! (intern "N+PREDS" callpkg)
-                                    (intern "N+POST" callpkg))
-                           'noun? '_+) np)
-     (let ((macro (first np))
-           (inner-np (second np))
-           (post (cddr np)))
-       (multiple-value-bind (hn found new-inner-np) (search-np-head inner-np :sub sub :callpkg callpkg)
-         (values hn found (cons macro (cons new-inner-np post))))))
-    ;; Noun premodification.
-    ;;  (dog.n monster.n)
-    ;;  (happy.a fish.n)
-    ;;  ((mod-n happy.a) fish.n)
-    ;;  (|Rochester| landscape.n)
-    ((ttt:match-expr '((! mod-n? noun? adj? term?) noun?) np)
-     (let ((modifier (first np))
-           (inner-np (second np)))
-       (multiple-value-bind (hn found new-inner-np) (search-np-head inner-np :sub sub :callpkg callpkg)
-         (values hn found (list modifier new-inner-np)))))
-    ;; Phrasal sent op.
-    ;;   (definitely.adv-s table.n)
-    ;;   (not thing.n)
-    ((ttt:match-expr '(phrasal-sent-op? noun?) np)
-     (multiple-value-bind (hn found new-inner-np) (search-np-head (second np) :sub sub :callpkg callpkg)
-       (values hn found (list (first np) new-inner-np))))
-    ;; Otherise, noun followed by other stuff.
-    ;;   (collapse.n (of.p-arg (the.d empire.n)))
-    ((and (listp np) (noun? (first np)))
-     (multiple-value-bind (hn found new-inner-np) (search-np-head (first np) :sub sub :callpkg callpkg)
-       (values hn found (cons new-inner-np (cdr np)))))
-    ;; most-n.
-    ((and (listp np) (= (length np) 3) (eq (first np) (intern "MOST-N" callpkg)))
-     (multiple-value-bind (hn found new-inner-np) (search-np-head (third np) :sub sub :callpkg callpkg)
-       (values hn found (list (first np) (second np) new-inner-np))))
-    ;; If none of these, we can't find it.
-    (t (values nil nil np))))
+  (inout-intern (innp np :ulf-lib :callpkg callpkg)
+    (cond
+      ;; Simple lexical or plural case.
+      ((or (lex-noun? np) (lex-name? np))
+       (values np t (if sub sub np)))
+      ;; Basic pluralized case.
+      ((and (listp np) (= (length np) 2) (equal 'plur (first np))
+            (or (lex-noun? (second np)) (lex-name-pred? (second np))))
+       (values np t (if sub sub np)))
+      ;; Pluralized relational noun case.
+      ((and (listp np) (= (length np) 2)
+            (equal 'plur (first np)) (listp (second np)))
+       (values (list 'plur (first (second np))) t
+               (if sub (list sub (cdr (second np)))
+                 np)))
+      ;; Noun post-modification.
+      ;;   (n+preds ...)
+      ;;   (n+post ...)
+      ((ttt:match-expr (list (list '! 'n+preds 'n+post)
+                             'noun? '_+) np)
+       (let ((macro (first np))
+             (inner-np (second np))
+             (post (cddr np)))
+         (multiple-value-bind (hn found new-inner-np) (search-np-head inner-np :sub sub :callpkg callpkg)
+           (values hn found (cons macro (cons new-inner-np post))))))
+      ;; Noun premodification.
+      ;;  (dog.n monster.n)
+      ;;  (happy.a fish.n)
+      ;;  ((mod-n happy.a) fish.n)
+      ;;  (|Rochester| landscape.n)
+      ((ttt:match-expr '((! mod-n? noun? adj? term?) noun?) np)
+       (let ((modifier (first np))
+             (inner-np (second np)))
+         (multiple-value-bind (hn found new-inner-np) (search-np-head inner-np :sub sub :callpkg callpkg)
+           (values hn found (list modifier new-inner-np)))))
+      ;; Phrasal sent op.
+      ;;   (definitely.adv-s table.n)
+      ;;   (not thing.n)
+      ((ttt:match-expr '(phrasal-sent-op? noun?) np)
+       (multiple-value-bind (hn found new-inner-np) (search-np-head (second np) :sub sub :callpkg callpkg)
+         (values hn found (list (first np) new-inner-np))))
+      ;; Otherise, noun followed by other stuff.
+      ;;   (collapse.n (of.p-arg (the.d empire.n)))
+      ((and (listp np) (noun? (first np)))
+       (multiple-value-bind (hn found new-inner-np) (search-np-head (first np) :sub sub :callpkg callpkg)
+         (values hn found (cons new-inner-np (cdr np)))))
+      ;; most-n.
+      ((and (listp np) (= (length np) 3) (eq (first np) 'most-n))
+       (multiple-value-bind (hn found new-inner-np) (search-np-head (third np) :sub sub :callpkg callpkg)
+         (values hn found (list (first np) (second np) new-inner-np))))
+      ;; If none of these, we can't find it.
+      (t (values nil nil np)))))
 
 
 (defun find-np-head (np &key (callpkg *package*))
