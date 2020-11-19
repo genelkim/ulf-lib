@@ -140,8 +140,8 @@
 (defun lex-mod-a? (x)
   (in-package-suffix-check x "MOD-A"))
 (defun lex-mod-n? (x)
-  (in-package-suffix-check x "MOD-N"))
-
+  (or (in-package-suffix-check x "MOD-N")
+      (in-ulf-lib (x y) (member y '(plur)))))
 
 (defun lex-rel? (x)
   (in-package-suffix-check x "REL"))

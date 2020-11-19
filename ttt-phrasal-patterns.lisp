@@ -380,6 +380,7 @@
 (defparameter *type-id-fns*
   (list (list #'noun? 'noun)
         (list #'adj? 'adj)
+        (list #'lex-p? 'prep)
         (list #'adv-a? 'adv-a)
         (list #'adv-e? 'adv-e)
         (list #'adv-s? 'adv-s)
