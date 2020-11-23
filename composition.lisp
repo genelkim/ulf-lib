@@ -18,7 +18,7 @@
      (filtered (remove-if #'null (list new-val))))
     (if (null filtered)
       nil
-      (intern (coerce filtered 'string)))))
+      (intern (coerce filtered 'string) :ulf-lib))))
 
 (defun merge-tenses (t1 t2)
   "Merge the two tenses, considering t1 as the main subscript. If they are
@@ -37,7 +37,7 @@
      (filtered (remove-if #'null (list tense-val))))
     (if (null filtered)
       nil
-      (intern (coerce filtered 'string)))))
+      (intern (coerce filtered 'string) :ulf-lib))))
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.

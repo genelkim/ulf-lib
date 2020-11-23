@@ -502,7 +502,7 @@
 ;; Exponents must occur after any subscripts.
 (defun extended-str2semtype (s)
   (let* ((str (string-upcase s))
-         (sym (intern str *package*)))
+         (sym (intern str :ulf-lib)))
     (cond
       ;; Non-atomic type.
       ((equal (char str 0) #\() (str2semtype str :recurse-fn #'extended-str2semtype))
