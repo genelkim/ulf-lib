@@ -214,7 +214,7 @@
 ;; Note: This function is more of a "compatibility checker" than a function to
 ;; check actual equality. I'll probably rename this to something better later.
 ;; For options, checks if there is a single compatible match.
-;; For subscripts, if there are subscripts, checks for equality otherwise doesn't care.
+;; For subscripts, if x has a subscript, checks for equality otherwise doesn't care.
 ;; For tenses, if x is tensed, then y must be tensed.
 ;; Basically, x is the general class and we check if y has an option that is a
 ;; subset of one of the x options.
@@ -279,7 +279,8 @@
     ((and (not (or (optional-type-p x) (optional-type-p y)))
           (if ignore-exp T (= (ex x) (ex y)))
           (equal (type-of x) (type-of y))
-          (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+          ;(if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+          (if (subscript x) (equal (subscript x) (subscript y)) T)
           ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
           (if (tense x) (tense y) t)
           (atomic-type-p x))
@@ -289,7 +290,8 @@
     ((and (not (or (optional-type-p x) (optional-type-p y)))
           (if ignore-exp T (equal (ex x) (ex y)))
           (equal (type-of x) (type-of y))
-          (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+          ;(if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
+          (if (subscript x) (equal (subscript x) (subscript y)) T)
           ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
           (if (tense x) (tense y) t)
           (not (atomic-type-p x)))
