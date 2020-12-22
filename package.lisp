@@ -78,6 +78,7 @@
     :lex-verbaux?
     :lex-elided?
     :is-strict-name?
+    :surface-token?
     :lex-hole-variable?
     :make-explicit!
 

@@ -377,6 +377,9 @@
              (and (tensed-sent? y)
                   (contains-relativizer y))))
 
+(defun mod-n-former? (x) (in-ulf-lib (x y) (member y '(mod-n))))
+(defun mod-a-former? (x) (in-ulf-lib (x y) (member y '(mod-a))))
+
 (defparameter *type-id-fns*
   (list (list #'noun? 'noun)
         (list #'adj? 'adj)
@@ -387,6 +390,8 @@
         (list #'adv-f? 'adv-f)
         (list #'mod-a? 'mod-a)
         (list #'mod-n? 'mod-n)
+        (list #'mod-a-former? 'mod-a-former)
+        (list #'mod-n-former? 'mod-n-former)
         (list #'pp? 'pp)
         (list #'term? 'term)
         (list #'verb? 'verb)
@@ -414,6 +419,7 @@
         (list #'lex-equal? 'equal-sign)
         (list #'lex-set-of? 'set-of-op)
         (list #'lex-macro? 'macro-symbol)
+        (list #'lex-ps? 'sent-prep)
         ))
 
 ;; Hypothesizes the type of the given ULF formula.

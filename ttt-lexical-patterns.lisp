@@ -307,6 +307,28 @@
           (and (equal (intern "{") (first wchars))
                (equal (intern "}") (car (last tchars)))))))))
 
+;; Returns t if 'token' is an atomic ULF element that has a corresponding token
+;; in the surface string and return nil otherwise.  e.g.,
+;;   man.n -> t
+;;   that -> t
+;;   tht -> nil
+;;   k -> nil
+;;   to -> t
+;;   perf -> t
+;;   {man}.n -> nil
+;;   2 -> t
+;;   "a" -> t
+(defun surface-token? (intoken+)
+  (in-ulf-lib (intoken+ token+)
+    (let ((token (safe-intern token+ :ulf-lib)))
+      (or (not (symbolp token))
+          (and (has-suffix? token)
+               (not (lex-elided? token))
+               (not (lex-hole-variable? token)))
+          (is-strict-name? token)
+          (member token '(that not and or to most some all every whether if))))))
+
+
 ;; Returns true if the token is a hole variable:
 ;;  e.g. *h, *p, *s, *ref
 ;; Include those that have been augmented with other type information,
