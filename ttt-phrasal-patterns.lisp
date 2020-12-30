@@ -420,6 +420,7 @@
         (list #'lex-set-of? 'set-of-op)
         (list #'lex-macro? 'macro-symbol)
         (list #'lex-ps? 'sent-prep)
+        (list #'lex-coord? 'coordinator)
         ))
 
 ;; Hypothesizes the type of the given ULF formula.
