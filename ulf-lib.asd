@@ -17,7 +17,8 @@
                (:file "search")
                (:file "macro")
                (:file "preprocess")
-               (:file "composition"))
+               (:file "composition")
+               (:file "lang-util"))
   :around-compile (lambda (next)
                     ; For debugging/development.
                     ;(proclaim '(optimize (debug 3) (safety 3) (space 1) (speed 1)))

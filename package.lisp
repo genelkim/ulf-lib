@@ -181,5 +181,9 @@
     :macro-symbol
     :unknown
     :types
+
+    ;; lang-util
+    term2possdet
+    pronoun2possdet
     ))
 
