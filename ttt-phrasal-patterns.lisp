@@ -422,6 +422,7 @@
         (list #'lex-ps? 'sent-prep)
         (list #'lex-coord? 'coordinator)
         (list #'lex-pasv? 'pasv)
+        (list #'lex-possessive-s? 'possessive-s)
         ))
 
 (defun type-shifter? (inx &key (callpkg nil))
