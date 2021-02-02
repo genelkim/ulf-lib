@@ -286,6 +286,9 @@
 (defun lex-verbaux? (x)
   (or (lex-verb? x) (aux? x)))
 
+(defun lex-pasv? (x)
+  (in-ulf-lib (x y) (eql y 'pasv)))
+
 ; TODO(gene): fill this in further.
 (defun lex-invertible-verb? (x)
   (in-ulf-lib (x y) (member y '(make.v have.v))))

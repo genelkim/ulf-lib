@@ -421,7 +421,19 @@
         (list #'lex-macro? 'macro-symbol)
         (list #'lex-ps? 'sent-prep)
         (list #'lex-coord? 'coordinator)
+        (list #'lex-pasv? 'pasv)
         ))
+
+(defun type-shifter? (inx &key (callpkg nil))
+  (inout-ulf-lib (inx x :callpkg callpkg)
+    (or (noun-reifier? x)
+        (verb-reifier? x)
+        (sent-reifier? x)
+        (tensed-sent-reifier? x)
+        (mod-n-former? x)
+        (mod-a-former? x)
+        (advformer? x)
+        (detformer? x))))
 
 ;; Hypothesizes the type of the given ULF formula.
 (defun phrasal-ulf-type? (inx &key (callpkg nil))

@@ -123,6 +123,7 @@
     :ulf-type-string?
     :str-ulf-type-string?
     :compose-type-string!
+    :type-shifter?
 
     ;; gen-phrasal-patterns.lisp
     :plur-term?
