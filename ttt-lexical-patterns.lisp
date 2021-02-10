@@ -290,7 +290,9 @@
   (in-ulf-lib (x y) (eql y 'pasv)))
 
 (defun lex-possessive-s? (x)
-  (in-ulf-lib (x y) (eql y '|'S|)))
+  (in-ulf-lib (x y)
+    (or (eql y '|'S|)
+        (equal '(quote s) y))))
 
 ; TODO(gene): fill this in further.
 (defun lex-invertible-verb? (x)

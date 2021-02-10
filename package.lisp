@@ -80,6 +80,7 @@
     :is-strict-name?
     :surface-token?
     :lex-hole-variable?
+    :lex-possessive-s?
     :make-explicit!
 
     ;; ttt-phrasal-patterns.lisp
