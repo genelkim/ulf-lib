@@ -236,6 +236,8 @@
       ((? sent-mod?) sent? (+ sent? sent-mod?))    ; sentences bracketed together (for semi-colons for example)
       (sent-mod? sent?)
       lex-x?
+      ;; Term substitution, (TODO: generalize all the sub handling in this to apply the sub and then analyze)
+      (sub term? sent?)
       ))
 
 (defparameter *ttt-tensed-sent*
@@ -273,6 +275,8 @@
       (gr _!)
       ;; Implicit sentence marked by single extension.
       lex-sent?
+      ;; Term substitution, (TODO: generalize all the sub handling in this to apply the sub and then analyze)
+      (sub term? tensed-sent?)
       ))
 
 (defparameter *ttt-sent-mod*
