@@ -356,3 +356,12 @@
         ;; Keep ulf-lib pacakge.
         (t (values (first initial-result) (second initial-result)))))))
 
+;; Applies all substitution macros:
+;;   sub, rep, qt-attr
+(defun apply-substitution-macros (inulf &key (calling-package nil))
+  (nth-value 1 (apply-qt-attr-macro
+                 (nth-value 1 (apply-rep-macro
+                                (nth-value 1 (apply-sub-macro inulf :calling-package :ulf-lib))
+                                :calling-package :ulf-lib))
+                 :calling-package calling-package)))
+
