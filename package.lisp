@@ -78,7 +78,9 @@
     :lex-verbaux?
     :lex-elided?
     :is-strict-name?
+    :surface-token?
     :lex-hole-variable?
+    :lex-possessive-s?
     :make-explicit!
 
     ;; ttt-phrasal-patterns.lisp
@@ -122,6 +124,7 @@
     :ulf-type-string?
     :str-ulf-type-string?
     :compose-type-string!
+    :type-shifter?
 
     ;; gen-phrasal-patterns.lisp
     :plur-term?
@@ -180,5 +183,9 @@
     :macro-symbol
     :unknown
     :types
+
+    ;; lang-util
+    term2possdet
+    pronoun2possdet
     ))
 

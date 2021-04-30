@@ -140,8 +140,8 @@
 (defun lex-mod-a? (x)
   (in-package-suffix-check x "MOD-A"))
 (defun lex-mod-n? (x)
-  (in-package-suffix-check x "MOD-N"))
-
+  (or (in-package-suffix-check x "MOD-N")
+      (in-ulf-lib (x y) (member y '(plur)))))
 
 (defun lex-rel? (x)
   (in-package-suffix-check x "REL"))
@@ -286,6 +286,14 @@
 (defun lex-verbaux? (x)
   (or (lex-verb? x) (aux? x)))
 
+(defun lex-pasv? (x)
+  (in-ulf-lib (x y) (eql y 'pasv)))
+
+(defun lex-possessive-s? (x)
+  (in-ulf-lib (x y)
+    (or (eql y '|'S|)
+        (equal '(quote s) y))))
+
 ; TODO(gene): fill this in further.
 (defun lex-invertible-verb? (x)
   (in-ulf-lib (x y) (member y '(make.v have.v))))
@@ -306,6 +314,28 @@
                (equal (intern "}") (car (last wchars))))
           (and (equal (intern "{") (first wchars))
                (equal (intern "}") (car (last tchars)))))))))
+
+;; Returns t if 'token' is an atomic ULF element that has a corresponding token
+;; in the surface string and return nil otherwise.  e.g.,
+;;   man.n -> t
+;;   that -> t
+;;   tht -> nil
+;;   k -> nil
+;;   to -> t
+;;   perf -> t
+;;   {man}.n -> nil
+;;   2 -> t
+;;   "a" -> t
+(defun surface-token? (intoken+)
+  (in-ulf-lib (intoken+ token+)
+    (let ((token (safe-intern token+ :ulf-lib)))
+      (or (not (symbolp token))
+          (and (has-suffix? token)
+               (not (lex-elided? token))
+               (not (lex-hole-variable? token)))
+          (is-strict-name? token)
+          (member token '(that not and or to most some all every whether if))))))
+
 
 ;; Returns true if the token is a hole variable:
 ;;  e.g. *h, *p, *s, *ref

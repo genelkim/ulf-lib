@@ -236,6 +236,8 @@
       ((? sent-mod?) sent? (+ sent? sent-mod?))    ; sentences bracketed together (for semi-colons for example)
       (sent-mod? sent?)
       lex-x?
+      ;; Term substitution, (TODO: generalize all the sub handling in this to apply the sub and then analyze)
+      (sub term? sent?)
       ))
 
 (defparameter *ttt-tensed-sent*
@@ -273,6 +275,8 @@
       (gr _!)
       ;; Implicit sentence marked by single extension.
       lex-sent?
+      ;; Term substitution, (TODO: generalize all the sub handling in this to apply the sub and then analyze)
+      (sub term? tensed-sent?)
       ))
 
 (defparameter *ttt-sent-mod*
@@ -301,30 +305,38 @@
 (defun hidden-match-expr (ttt expr)
   (ttt::match-expr ttt (hide-ttt-ops expr)))
 
-(defun noun? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-noun* y)))
-(defun adj? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adj* y)))
-(defun adv-a? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-a* y)))
-(defun adv-e? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-e* y)))
-(defun adv-s? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-s* y)))
-(defun adv-f? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-adv-f* y)))
+;; Matches a TTT pattern to a ULF expressions after hiding TTT operators in
+;; expr and allowing for substitutions to be completed.
+(defun hidden-maybe-sub-expr (ttt expr)
+  (or (hidden-match-expr ttt expr)
+      (hidden-match-expr ttt (apply-substitution-macros
+                               expr
+                               :calling-package :ulf-lib))))
+
+(defun noun? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-noun* y)))
+(defun adj? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-adj* y)))
+(defun adv-a? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-adv-a* y)))
+(defun adv-e? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-adv-e* y)))
+(defun adv-s? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-adv-s* y)))
+(defun adv-f? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-adv-f* y)))
 (defun adv? (x) (in-ulf-lib (x y) (or (adv-a? y) (adv-e? y) (adv-s? y) (adv-f? y))))
-(defun mod-a? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-mod-a* y)))
-(defun mod-n? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-mod-n* y)))
-(defun pp? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-pp* y)))
-(defun term? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-term* y)))
-(defun verb? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-verb* y)))
-(defun pred? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-pred* y)))
-(defun det? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-det* y)))
-(defun aux? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-aux* y)))
-(defun tensed-aux? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-aux* y)))
-(defun tensed-verb? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-verb* y)))
-(defun sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent* y)))
-(defun tensed-sent? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-tensed-sent* y)))
-(defun sent-mod? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-sent-mod* y)))
-(defun ps? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-ps* y)))
-(defun preposs-macro? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-preposs-macro* y)))
-(defun p-arg? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-p-arg* y)))
-(defun voc? (x) (in-ulf-lib (x y) (hidden-match-expr *ttt-voc* y)))
+(defun mod-a? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-mod-a* y)))
+(defun mod-n? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-mod-n* y)))
+(defun pp? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-pp* y)))
+(defun term? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-term* y)))
+(defun verb? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-verb* y)))
+(defun pred? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-pred* y)))
+(defun det? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-det* y)))
+(defun aux? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-aux* y)))
+(defun tensed-aux? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-tensed-aux* y)))
+(defun tensed-verb? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-tensed-verb* y)))
+(defun sent? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-sent* y)))
+(defun tensed-sent? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-tensed-sent* y)))
+(defun sent-mod? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-sent-mod* y)))
+(defun ps? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-ps* y)))
+(defun preposs-macro? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-preposs-macro* y)))
+(defun p-arg? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-p-arg* y)))
+(defun voc? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-voc* y)))
 
 ;; Memoize the biggies.
 (gute:memoize 'noun?)
@@ -338,7 +350,6 @@
 (gute:memoize 'pp?)
 (gute:memoize 'term?)
 (gute:memoize 'pred?)
-
 
 (defun sent-punct? (x)
   (in-ulf-lib (x y)
@@ -377,15 +388,21 @@
              (and (tensed-sent? y)
                   (contains-relativizer y))))
 
+(defun mod-n-former? (x) (in-ulf-lib (x y) (member y '(mod-n))))
+(defun mod-a-former? (x) (in-ulf-lib (x y) (member y '(mod-a))))
+
 (defparameter *type-id-fns*
   (list (list #'noun? 'noun)
         (list #'adj? 'adj)
+        (list #'lex-p? 'prep)
         (list #'adv-a? 'adv-a)
         (list #'adv-e? 'adv-e)
         (list #'adv-s? 'adv-s)
         (list #'adv-f? 'adv-f)
         (list #'mod-a? 'mod-a)
         (list #'mod-n? 'mod-n)
+        (list #'mod-a-former? 'mod-a-former)
+        (list #'mod-n-former? 'mod-n-former)
         (list #'pp? 'pp)
         (list #'term? 'term)
         (list #'verb? 'verb)
@@ -413,7 +430,22 @@
         (list #'lex-equal? 'equal-sign)
         (list #'lex-set-of? 'set-of-op)
         (list #'lex-macro? 'macro-symbol)
+        (list #'lex-ps? 'sent-prep)
+        (list #'lex-coord? 'coordinator)
+        (list #'lex-pasv? 'pasv)
+        (list #'lex-possessive-s? 'possessive-s)
         ))
+
+(defun type-shifter? (inx &key (callpkg nil))
+  (inout-ulf-lib (inx x :callpkg callpkg)
+    (or (noun-reifier? x)
+        (verb-reifier? x)
+        (sent-reifier? x)
+        (tensed-sent-reifier? x)
+        (mod-n-former? x)
+        (mod-a-former? x)
+        (advformer? x)
+        (detformer? x))))
 
 ;; Hypothesizes the type of the given ULF formula.
 (defun phrasal-ulf-type? (inx &key (callpkg nil))
