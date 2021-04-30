@@ -347,36 +347,45 @@
 
 ;; Make a new semtype identical to the given type
 ;; Key word options allow overwriting specific fields if appropriate.
-(defun copy-semtype (x &key c-dom c-ran c-ex c-subscript c-tense c-types c-type-params c-aux)
+;; Keyword options where nil is a specific value (e.g. false) a keyword symbol
+;; :null is used to indicate no value provided, which defaults to using the
+;; source semtype value.
+;; TODO: use :null for default values everywhere
+(defun copy-semtype (x &key c-dom c-ran c-ex
+                       (c-subscript :null)
+                       (c-tense :null)
+                       (c-types :null)
+                       (c-type-params :null)
+                       (c-aux :null))
   (cond
     ((atomic-type-p x)
      (make-instance 'atomic-type
                     :domain (if c-dom c-dom (domain x))
                     :ex (if c-ex c-ex (ex x))
-                    :subscript (if c-subscript c-subscript (subscript x))
-                    :tense (if c-tense c-tense (tense x))
-                    :type-params (if c-type-params c-type-params (type-params x))
-                    :aux (if c-aux c-aux (aux x))))
+                    :subscript (if (not (eql :null c-subscript)) c-subscript (subscript x))
+                    :tense (if (not (eql :null c-tense)) c-tense (tense x))
+                    :type-params (if (not (eql :null c-type-params)) c-type-params (type-params x))
+                    :aux (if (not (eql :null c-aux)) c-aux (aux x))))
     ((optional-type-p x)
      (make-instance 'optional-type
-                    :types (if c-types
+                    :types (if (not (eql :null c-types))
                              c-types
                              (list (copy-semtype (car (types x)))
                                    (copy-semtype (cadr (types x)))))
                     :ex (if c-ex c-ex (ex x))
-                    :subscript (if c-subscript c-subscript (subscript x))
-                    :tense (if c-tense c-tense (tense x))
-                    :type-params (if c-type-params c-type-params (type-params x))
-                    :aux (if c-aux c-aux (aux x))))
+                    :subscript (if (not (eql :null c-subscript)) c-subscript (subscript x))
+                    :tense (if (not (eql :null c-tense)) c-tense (tense x))
+                    :type-params (if (not (eql :null c-type-params)) c-type-params (type-params x))
+                    :aux (if (not (eql :null c-aux)) c-aux (aux x))))
     ((semtype-p x)
      (make-instance 'semtype
                     :domain (if c-dom c-dom (copy-semtype (domain x)))
                     :range (if c-ran c-ran (copy-semtype (range x)))
                     :ex (if c-ex c-ex (ex x))
-                    :subscript (if c-subscript c-subscript (subscript x))
-                    :tense (if c-tense c-tense (tense x))
-                    :type-params (if c-type-params c-type-params (type-params x))
-                    :aux (if c-aux c-aux (aux x))))
+                    :subscript (if (not (eql :null c-subscript)) c-subscript (subscript x))
+                    :tense (if (not (eql :null c-tense)) c-tense (tense x))
+                    :type-params (if (not (eql :null c-type-params)) c-type-params (type-params x))
+                    :aux (if (not (eql :null c-aux)) c-aux (aux x))))
     (t x)))
 
 ;; Convert a semtype to a string. The string it returns can be read back into a
@@ -665,13 +674,21 @@
     ;;; Variable exponent type, generate all possible variable values and
     ;;; recurse into each.
     ;((not (numberp (ex s)))
-    ;; Concrete >1 exponent type, recurse into the domain and decrement exponent.
-    ((> (ex s) 1)
-     (let ((domain-s (copy-semtype s))
-           (range-s (copy-semtype s))
+    ;; Concrete >1 exponent type of the domain, recurse into the domain and
+    ;; decrement exponent.
+    ((and (not (atomic-type-p s))
+          (not (optional-type-p s))
+          (domain s)
+          (> (ex (domain s)) 1))
+     (let ((domain-s (copy-semtype (domain s)))
+           (range-s (copy-semtype s
+                                  :c-subscript nil
+                                  :c-tense nil
+                                  :c-type-params nil
+                                  :c-aux nil))
            flat-dom flat-ran new-options)
        (setf (ex domain-s) 1) ; domain is single-valued
-       (setf (ex range-s) (1- (ex range-s))) ; decrement range exponent
+       (setf (ex (domain range-s)) (1- (ex (domain range-s)))) ; decrement range exponent
        (setf flat-dom (flatten-options domain-s))
        (setf flat-ran (flatten-options range-s))
        ;(format t "==faltten-options==~%")
