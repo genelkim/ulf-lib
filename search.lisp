@@ -4,7 +4,7 @@
 ;; TODO: clean up the interning in these functions.
 
 (defun marked-conjugated-vp-head? (inx)
-  (util:in-intern (inx x :ulf-lib)
+  (gute:in-intern (inx x :ulf-lib)
     (or (and (symbolp x)
              (multiple-value-bind (word suffix) (ulf:split-by-suffix x)
                (declare (ignore word))
