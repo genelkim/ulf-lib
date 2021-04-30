@@ -2,6 +2,11 @@
 
 (in-package :ulf-lib)
 
+;; Maximum semtype exponent for variable values.
+;; e.g. D^n=>2 can be generated as 2, (D=>2), (D=>(D=>2)), etc. until the
+;; maximum number.
+(defparameter *semtype-max-exponent* 4)
+
 ;; Class representing a ULF semantic type
 (defclass semtype ()
   ((domain
@@ -147,7 +152,9 @@
                                       (new-semtype dom ran (cdr exponent) sub ten :options options :type-params type-params :aux aux))))
         ; If the exponent is not a number or a list, treat it as a variable and
         ; start recursion to form a chain of optionals
-        (new-semtype dom ran '(0 1 2 3 4 5) sub ten :options options :type-params type-params :aux aux))
+        (new-semtype dom ran
+                     (loop for exp-x from 0 upto *semtype-max-exponent* collect exp-x)
+                     sub ten :options options :type-params type-params :aux aux))
 
       ; Unless the exponent is 0 (in which case the type is NIL), create the type
       (unless (= exponent 0)
@@ -643,20 +650,62 @@
        ; Build the optional semtype with these options and return.
        (t (new-semtype nil nil 1 nil nil :options new-options)))))
 
+;; TODO: add proper exponent treatment in equality predicates.
+
 (defun flatten-options (s)
-  "Flattens a semtype so that all options are represented with a single
-  top-level option type. In a sense, this is un-factorizing the semtype.
-  This will always return an optional type even if there is only one option."
+  "Flattens a semtype so that all options and concrete exponents are
+  represented with a single top-level option type. In a sense, this is
+  un-factorizing the semtype. This will always return an optional type even if
+  there is only one option. Will return nil if there's a 0 exponent."
   ; First, flatten the type-params if necessary.
   (setf s (if (type-params s)
             (flatten-type-params s)
             s))
   (cond
+    ;;; Variable exponent type, generate all possible variable values and
+    ;;; recurse into each.
+    ;((not (numberp (ex s)))
+    ;; Concrete >1 exponent type, recurse into the domain and decrement exponent.
+    ((> (ex s) 1)
+     (let ((domain-s (copy-semtype s))
+           (range-s (copy-semtype s))
+           flat-dom flat-ran new-options)
+       (setf (ex domain-s) 1) ; domain is single-valued
+       (setf (ex range-s) (1- (ex range-s))) ; decrement range exponent
+       (setf flat-dom (flatten-options domain-s))
+       (setf flat-ran (flatten-options range-s))
+       ;(format t "==faltten-options==~%")
+       ;(format t "starting: ~s~%" (ulf::semtype2str s))
+       ;(format t "  flat-dom: ~s~%" (mapcar #'ulf::semtype2str (types flat-dom)))
+       ;(format t "  flat-ran: ~s~%" (mapcar #'ulf::semtype2str (types flat-ran)))
+       (assert (optional-type-p flat-dom))
+       (assert (optional-type-p flat-ran))
+       ;; Each combination of domain and range.
+       (setf new-options
+             (loop for cur-dom in (types flat-dom)
+                   append (loop for cur-ran in (types flat-ran)
+                                collect (new-semtype cur-dom
+                                                     cur-ran
+                                                     1
+                                                     (subscript s)
+                                                     (tense s)
+                                                     :type-params (type-params s)
+                                                     :aux (aux s)))))
+       ;(format t "  new-optoins: ~s~%" (mapcar #'ulf::semtype2str new-options))
+       (if new-options
+         (new-semtype nil nil 1 nil nil :options new-options))))
+    ;; Concrete =0 exponent type, return nil.
+    ((= 0 (ex s)) nil)
+    
+    ;;; Below this are all exponent 1.
+
     ;; Optional type, recurse on all and flatten into a single optional type.
     ((optional-type-p s)
-     (let ((new-options (apply #'append (mapcar (compose #'types #'flatten-options)
+     (let ((new-options (apply #'append (mapcar (compose #'(lambda (opt) (if opt (types opt) nil))
+                                                         #'flatten-options)
                                                 (types s)))))
-       (new-semtype nil nil 1 nil nil :options new-options)))
+       (if new-options
+         (new-semtype nil nil 1 nil nil :options new-options))))
     ;; Atomic type, return a copy of it wrapped in an optional type.
     ((atomic-type-p s)
      (new-semtype nil nil 1 nil nil :options (list (copy-semtype s))))
@@ -665,14 +714,19 @@
     (t (let ((flat-dom (flatten-options (domain s)))
              (flat-ran (flatten-options (range s)))
              new-options)
-         (assert (optional-type-p flat-dom))
-         (assert (optional-type-p flat-ran))
          (setf new-options
-               (loop for cur-dom in (types flat-dom)
-                     append (loop for cur-ran in (types flat-ran)
-                                  collect (copy-semtype s :c-dom cur-dom
-                                                          :c-ran cur-ran))))
-         (new-semtype nil nil 1 nil nil :options new-options)))))
+               (cond
+                 ((null flat-dom) flat-ran)
+                 ((null flat-ran) flat-dom)
+                 (t
+                   (assert (optional-type-p flat-dom))
+                   (assert (optional-type-p flat-ran))
+                   (loop for cur-dom in (types flat-dom)
+                         append (loop for cur-ran in (types flat-ran)
+                                      collect (copy-semtype s :c-dom cur-dom
+                                                            :c-ran cur-ran))))))
+         (if new-options
+           (new-semtype nil nil 1 nil nil :options new-options))))))
 
 (defun binarize-flat-options (s)
   "Takes a flat option type and makes it a right-leaning binary tree of options."
