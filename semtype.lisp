@@ -279,6 +279,7 @@
     ((and (not (or (optional-type-p x) (optional-type-p y)))
           (if ignore-exp T (= (ex x) (ex y)))
           (equal (type-of x) (type-of y))
+          (equal (aux x) (aux y))
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
           ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
           (if (tense x) (tense y) t)
@@ -289,6 +290,7 @@
     ((and (not (or (optional-type-p x) (optional-type-p y)))
           (if ignore-exp T (equal (ex x) (ex y)))
           (equal (type-of x) (type-of y))
+          (equal (aux x) (aux y))
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
           ; TODO(gene): make this test more strict after adding an unspecified tense type and better specified tense types.
           (if (tense x) (tense y) t)
@@ -682,7 +684,7 @@
           (new-semtype nil nil 1 nil nil :options options))
          (t (new-semtype nil nil 1 nil nil
                          :options (list (first options)
-                                        (binarize-flat-options (rest options))))))))
+                                        (helper (rest options))))))))
     ; Top-level call.
     (helper (types s))))
 
