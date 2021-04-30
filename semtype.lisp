@@ -671,6 +671,27 @@
             (flatten-type-params s)
             s))
   (cond
+    ;; Exponentiated atomic or optional types.
+    ;; Generate a flat range value and create a non-atomic version.
+    ;; Then recurse and let it get handled with the case below.
+    ((and (> (ex s) 1)
+          (or (atomic-type-p s)
+              (optional-type-p s)))
+     (let ((domain-s (copy-semtype s
+                                   :c-subscript nil
+                                   :c-tense nil
+                                   :c-type-params nil
+                                   :c-aux nil))
+           (range-s (copy-semtype s
+                                  :c-subscript nil
+                                  :c-tense nil
+                                  :c-type-params nil
+                                  :c-aux nil)))
+       (setf (ex domain-s) (1- (ex domain-s)))
+       (setf (ex range-s) 1)
+       (flatten-options (new-semtype domain-s range-s 1 (subscript s) (tense s)
+                                     :type-params (type-params s)
+                                     :aux (aux s)))))
     ;;; Variable exponent type, generate all possible variable values and
     ;;; recurse into each.
     ;((not (numberp (ex s)))
