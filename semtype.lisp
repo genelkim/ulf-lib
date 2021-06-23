@@ -130,11 +130,11 @@
   (declare (ftype (function (t) fixnum) ex))
   ; TODO: add a parameter for the package.
   (when (or (symbolp dom) (listp dom))
-    (setf dom (gute:intern-symbols-recursive dom :ulf-lib)))
+    (setf dom (intern-symbols-recursive dom :ulf-lib)))
   (when (or (symbolp ran) (listp ran))
-    (setf ran (gute:intern-symbols-recursive ran :ulf-lib)))
+    (setf ran (intern-symbols-recursive ran :ulf-lib)))
   (when (or (symbolp sub) (listp sub))
-    (setf sub (gute:intern-symbols-recursive sub :ulf-lib)))
+    (setf sub (intern-symbols-recursive sub :ulf-lib)))
   (progn
     (setf dom (copy-semtype dom))
     (setf ran (copy-semtype ran))

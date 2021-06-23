@@ -1,5 +1,5 @@
 (defpackage #:ulf-lib/tests
-  (:use #:cl #:lisp-unit #:ulf-lib)
+  (:use #:cl #:lisp-unit #:ulf-lib #:gute)
   (:export #:run))
 
 (in-package :ulf-lib/tests)
@@ -33,7 +33,7 @@
                              "arguments are given for ulf-lib/tests:run. "
                              "Ignoring the :tags argument...")))
         ; The gute dependency is available via the ulf-lib package.
-        (gute:in-intern (tests pkgtests :ulf-lib/tests)
+        (in-intern (tests pkgtests :ulf-lib/tests)
           (lisp-unit:run-tests pkgtests :ulf-lib/tests)))
       ;; Specified tags.
       (tags (run-tags tags :ulf-lib/tests))
