@@ -5,7 +5,7 @@
 ;; Ensures that the input symbol is in ulf-lib and the output symbol is in
 ;; callpkg.
 (defmacro inout-ulf-lib ((x y &key (callpkg nil)) &body body)
-  `(util:inout-intern (,x ,y :ulf-lib :callpkg ,callpkg)
+  `(gute:inout-intern (,x ,y :ulf-lib :callpkg ,callpkg)
                       ,@body))
 
 (defparameter *ttt-noun*
@@ -339,17 +339,17 @@
 (defun voc? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-voc* y)))
 
 ;; Memoize the biggies.
-(util:memoize 'noun?)
-(util:memoize 'adj?)
-(util:memoize 'verb?)
-(util:memoize 'adv-a?)
-(util:memoize 'adv-e?)
-(util:memoize 'adv-s?)
-(util:memoize 'adv-f?)
-(util:memoize 'adv?)
-(util:memoize 'pp?)
-(util:memoize 'term?)
-(util:memoize 'pred?)
+(gute:memoize 'noun?)
+(gute:memoize 'adj?)
+(gute:memoize 'verb?)
+(gute:memoize 'adv-a?)
+(gute:memoize 'adv-e?)
+(gute:memoize 'adv-s?)
+(gute:memoize 'adv-f?)
+(gute:memoize 'adv?)
+(gute:memoize 'pp?)
+(gute:memoize 'term?)
+(gute:memoize 'pred?)
 
 (defun sent-punct? (x)
   (in-ulf-lib (x y)

@@ -9,7 +9,7 @@
 ;;  them.pro
 ;;  we.pro
 (defun plur-term? (inx)
-  (util:in-intern (inx x :ulf-lib)
+  (gute:in-intern (inx x :ulf-lib)
     (cond
       ;; If an atom, it's just whether it's one of the selected pronouns.
       ((atom x)
@@ -40,7 +40,7 @@
 
 
 (defun plur-partitive? (inx)
-  (util:in-intern (inx x :ulf-lib)
+  (gute:in-intern (inx x :ulf-lib)
     (and (listp x) (= (length x) 2)
          (lex-p? (first x)) (plur-term? (second x)))))
 
@@ -48,7 +48,7 @@
 (defun plur-noun? (inarg)
 ;````````````````````
 ; True if arg is a plural noun phrase. Basically if the np head is plural.
-  (util:in-intern (inarg arg :ulf-lib)
+  (gute:in-intern (inarg arg :ulf-lib)
     (or
       (and (listp arg) (= (length arg) 2)
            (eql 'plur (first arg)) (noun? (second arg)))
@@ -58,7 +58,7 @@
 (defun plur-lex-noun? (inarg)
 ;````````````````````
 ; True if arg is of the form (plur <lexical noun>) and false otherwise.
-  (util:in-intern (inarg arg :ulf-lib)
+  (gute:in-intern (inarg arg :ulf-lib)
     (and (listp arg) (= (length arg) 2)
          (eql 'plur (first arg)) (or (lex-noun? (second arg))
                                      (lex-name-pred? (second arg))))))
@@ -66,7 +66,7 @@
 (defun pasv-lex-verb? (inarg)
 ;````````````````````
 ; True if arg is of the form (pasv <lexical verb>) and false otherwise.
-  (util:in-intern (inarg arg :ulf-lib)
+  (gute:in-intern (inarg arg :ulf-lib)
     (and (listp arg) (= (length arg) 2)
          (eql 'pasv (first arg)) (lex-verb? (second arg)))))
 
