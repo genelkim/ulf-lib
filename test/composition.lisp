@@ -5,12 +5,12 @@
 
 ;; Out-of-package versions of internal function calls.
 (defun extended-compose-type-string! (int1 int2)
-  (gute:in-intern (int1 t1 :ulf-lib)
-    (gute:inout-intern (int2 t2 :ulf-lib :callpkg :ulf-lib/tests)
+  (in-intern (int1 t1 :ulf-lib)
+    (inout-intern (int2 t2 :ulf-lib :callpkg :ulf-lib/tests)
       (ulf-lib::extended-compose-type-string! t1 t2))))
 (defun left-right-compose-type-string! (int1 int2)
-  (gute:in-intern (int1 t1 :ulf-lib)
-    (gute:inout-intern (int2 t2 :ulf-lib :callpkg :ulf-lib/tests)
+  (in-intern (int1 t1 :ulf-lib)
+    (inout-intern (int2 t2 :ulf-lib :callpkg :ulf-lib/tests)
       (ulf-lib::left-right-compose-type-string! t1 t2))))
 
 
