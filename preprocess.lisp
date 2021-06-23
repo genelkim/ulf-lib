@@ -71,7 +71,7 @@
          (cond
            ;; If we got an end of file error and it's not empty, add a paren at
            ;; the end of the current string.
-           ((and (= endidx -1) (not (equal "" (gute:trim str))))
+           ((and (= endidx -1) (not (equal "" (trim str))))
             (helper (concatenate 'string str ")") acc lpcount))
            ;; If we got a extra-right-paren-error, this means the paren was at
            ;; the beginning (otherwise, read-from-string just reports that we
@@ -79,15 +79,15 @@
            ;; which should be a right-paren -- into acc, increment lpcount, and
            ;; recurse.
            ((= endidx -2)
-            (let* ((trimmed (the string (gute:trim str)))
+            (let* ((trimmed (the string (trim str)))
                    (firstletter (subseq trimmed 0 1))
                    (restletters (subseq trimmed 1)))
               (assert (equal firstletter ")") (firstletter) (format nil "firstletter ~s" firstletter))
               (helper restletters (cons firstletter acc) (1+ lpcount))))
            ;; If we read the whole thing, we're done, return all of acc, str,
            ;; and left parens with space separation
-           ((or (>= endidx (length str)) (equal "" (gute:trim str)))
-            (gute:trim (cl-strings:join (cons (cl-strings:repeat "(" lpcount)
+           ((or (>= endidx (length str)) (equal "" (trim str)))
+            (trim (cl-strings:join (cons (cl-strings:repeat "(" lpcount)
                                          (reverse (cons str acc)))
                                    :separator " ")))
            ;; If we stopped somewhere so include the current segment into acc

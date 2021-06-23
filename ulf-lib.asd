@@ -32,7 +32,7 @@
   :description "Tests for the ULF-LIB library"
   :author "Gene Louis Kim <gkim21@cs.rochester.edu>"
   :license "MIT"
-  :depends-on (:ulf-lib :lisp-unit)
+  :depends-on (:ulf-lib :lisp-unit :gute)
   :components ((:file "test/package")
                (:file "test/composition")
                (:file "test/ttt-phrasal-patterns"))

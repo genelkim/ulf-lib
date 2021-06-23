@@ -11,7 +11,7 @@
 (defun split-by-suffix (sym)
   (if (not (symbolp sym)) (return-from split-by-suffix sym))
   (let* ((pkg (symbol-package sym))
-         (atoms (gute:split-into-atoms sym))
+         (atoms (split-into-atoms sym))
          ;(dotpos (position '|.| atoms :from-end t)))
          ;; Intern instead of literal so that it gets interned into the
          ;; namespace of the caller.
@@ -23,8 +23,8 @@
                          (member (the character x)
                                  gute::*trim-whitespace-chars*))
                      (subseq (coerce (symbol-name sym) 'list) dotpos)))
-      (values (gute:fuse-into-atom (gute:slice atoms 0 dotpos) :pkg pkg)
-              (gute:fuse-into-atom (gute:slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
+      (values (fuse-into-atom (slice atoms 0 dotpos) :pkg pkg)
+              (fuse-into-atom (slice atoms (+ dotpos 1) (length atoms)) :pkg pkg))
       (values sym nil))))
 
 ;; Strips the suffix, marked with "." from a string.
@@ -54,11 +54,11 @@
 ;; Assumes that we retain the package of word.
 (defun add-suffix (word suffix &key (pkg (symbol-package word)))
   (if (not suffix) (return-from add-suffix word))
-  (gute:fuse-into-atom
+  (fuse-into-atom
     (concatenate 'list
-                 (gute:split-into-atoms word)
+                 (split-into-atoms word)
                  (list #\.)
-                 (gute:split-into-atoms suffix))
+                 (split-into-atoms suffix))
     :pkg pkg))
 
 ;; An association list of the semantic type name and the suffix extension for
