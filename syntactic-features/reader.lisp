@@ -11,6 +11,21 @@
 (defconstant +comma+ #\,)
 (defconstant +colon+ #\:)
 
+;; TODO: use named-readtables for read table management https://common-lisp.net/project/named-readtables/
+(defvar *previous-readtables* nil)
+
+(defmacro enable-ulf-type-syntax ()
+  '(eval-when (:compile-toplevel :load-toplevel :execute)
+     (push *readtable* *previous-readtables*)
+     (setf *readtable* (copy-readtable))
+     (set-dispatch-macro-character #\# #\{ 'read-syntactic-features)
+     ;; Set } as a read delimiter.
+     (set-macro-character +right-brace+ 'read-delimiter)))
+
+(defmacro disable-ulf-type-syntax ()
+  '(eval-when (:compile-toplevel :load-toplevel :execute)
+     (setf *readtable* (pop *previous-readtables*))))
+
 ;; Move to gute?
 (defun read-next-object (separator delimiter
                          &optional (input-stream *standard-input*))
@@ -65,10 +80,6 @@
   (declare (ignore stream))
   (error "Delimiter ~S shouldn't be read alone" char))
 
-
-;; Set } as a read delimiter.
-(set-macro-character +right-brace+ 'read-delimiter)
-
 (defun read-syntactic-features (stream char arg)
   "Top-level syntactic feature reader."
   (declare (ignore char arg))
@@ -81,6 +92,4 @@
       while feat
       collect feat into feats
       finally (return (verify+combine-feats feats)))))
-
-(set-dispatch-macro-character #\# #\{ 'read-syntactic-features)
 
