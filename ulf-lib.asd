@@ -10,6 +10,8 @@
   :components ((:file "package")
                (:file "util")
                (:file "suffix")
+               (:file "syntactic-features/syntactic-feature")
+               (:file "syntactic-features/reader")
                (:file "semtype")
                (:file "ttt-lexical-patterns")
                (:file "ttt-phrasal-patterns")
