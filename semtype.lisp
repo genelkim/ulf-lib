@@ -427,18 +427,21 @@
       base
       (format nil "~a~a" base type-params-str))))
 
-;; Split a string of the form ([domain]=>[range]) into [domain] and [range].
-;; Helper for str2semtype.
+;; Split a string of the form ([domain]=>[range]) or ([domain]>>[range]) into
+;; [domain] and [range]. Helper for str2semtype.
 (declaim (ftype (function (simple-string) list) split-semtype-str))
 (defun split-semtype-str (s)
   (let ((level 0) (i 1))
     (declare (type fixnum level i))
     (loop
-      (when (equal (char s i) #\()
+      (when (eql (char s i) #\()
         (setf level (+ level 1)))
-      (when (equal (char s i) #\))
+      (when (eql (char s i) #\))
         (setf level (- level 1)))
-      (when (and (equal (char s i) #\=) (= level 0))
+      (when (and (= level 0)
+                 (> (length s) (+ i 2))
+                 (or (and (eql (char s i) #\=) (eql (char s (1+ i)) #\>))   ; =>
+                     (and (eql (char s i) #\>) (eql (char s (1+ i)) #\>)))) ; >>
         (return i))
       (setf i (+ i 1)))
     (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1)))))
