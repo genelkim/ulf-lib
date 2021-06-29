@@ -76,7 +76,7 @@
    ; Miscellaneous ordered syntactic features.
    (synfeats
      :initarg :synfeats
-     :initform nil
+     :initform *default-syntactic-features*
      :accessor synfeats)))
 
 (defparameter *semtype-subscript-accessors*
@@ -197,7 +197,9 @@
 ;; Types with a variable for an exponent are expanded out into a chain of
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
-(defun new-semtype (dom ran exponent sub ten &key options synfeats type-params (conn '=>))
+(defun new-semtype (dom ran exponent sub ten
+                    &key options (synfeats *default-syntactic-features*)
+                         type-params (conn '=>))
   ;; Fixnum and list are the only allowed number and sequence types,
   ;; respectively for exponent.
   (declare (type (or fixnum list (not (or number sequence)))
@@ -389,7 +391,6 @@
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
           (if (or (tense x) (tense y)) (equal (tense x) (tense y)) t)
           (syntactic-features-equal? (synfeats x) (synfeats y)))
-     
      (if (atomic-type-p x)
        ;; If atomic, simply compare domain symbols.
        (equal (domain x) (domain y))
@@ -637,7 +638,7 @@
                       (if (svref match ten-idx) (read-from-string (svref match ten-idx)) nil)
                       :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
                       :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
-                      :conn (third split-segments))))
+                      :conn (intern (third split-segments) :ulf-lib))))
 
       ; ATOMIC or OPTIONAL
       ((equal (char s 0) #\{)

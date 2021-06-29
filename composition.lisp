@@ -42,6 +42,19 @@
       nil
       (intern (coerce filtered 'string) :ulf-lib))))
 
+(defun compose-synfeats! (op arg)
+  "Composes the synfeats slots of the operator and argument semtypes. Returns
+  the new synfeats slot value."
+  ;; 1. Get the base synfeats based on the operator connective
+  ;; 2. Call the syntactic-features class method for updating individual features.
+  (let ((base-synfeats
+          (cond
+            ((eql '=> (connective op)) (copy (synfeats op)))
+            ((eql '>> (connective op)) (copy (synfeats arg)))
+            (t (error "Unknown connective for determining base synfeat: ~s~%"
+                      (connective op))))))
+    (combine-features base-synfeats (synfeats op) (synfeats arg) op arg))) ; todo: switch op to opr.
+
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
 ;; Any subscripts and tenses are propagated from op.
@@ -54,8 +67,8 @@
        (cond
          ((optional-type-p op)
           ; Operator is an optional type
-          (let ((a (funcall recurse-fn (car (types op)) arg))
-                (b (funcall recurse-fn (cadr (types op)) arg)))
+          (let ((a (funcall recurse-fn (first (types op)) arg))
+                (b (funcall recurse-fn (second (types op)) arg)))
             (if (and a b)
               (new-semtype nil nil 1 nil nil :options (list a b))
               (or a b))))
@@ -64,12 +77,12 @@
           (let ((a (funcall recurse-fn op (first (types arg))))
                 (b (funcall recurse-fn op (second (types arg)))))
             (if (and a b)
-              (new-semtype nil nil 1 nil nil :options (list a b))
+              (new-semtype nil nil 1 nil nil :options (list a b)) ; TODO: add a function new-optional-semtype
               (or a b))))
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p op)
           (when (and (semtype-equal? op arg :ignore-exp T) (> (ex op) 1))
-            (new-semtype  (domain op) nil (- (ex op) 1) (subscript op) (tense op))))
+            (new-semtype (domain op) nil (- (ex op) 1) (subscript op) (tense op))))
          ;; Operator is a non-atomic type with domain exponent n=1
          ((and (semtype-p op) (semtype-equal? (domain op) arg :ignore-exp T) (= (ex (domain op)) 1))
           (let ((result (copy-semtype (range op))))
@@ -81,6 +94,9 @@
             (when (not (atomic-type-p result))
               (setf (tense result)
                     (merge-tenses (tense (range op)) (tense op))))
+            ;; Update syntactic features.
+            (setf (synfeats result)
+                  (compose-synfeats! op arg))
             result))
          ;; Operator is non-atomic type with domain exponent n>1
          ((and (semtype-p op) (semtype-equal? (domain op) arg :ignore-exp T))
@@ -423,7 +439,7 @@
           (semtype-equal? arg *unary-verb-semtype*))
      (copy-semtype *unary-verb-semtype*
                    :c-type-params (type-params arg)
-                   :c-synfeats (add-features (copy (synfeats arg)) '(x))))
+                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(x))))
     ; 2. TENSE + AUX => TAUX
     ((and (atomic-type-p op) (eql (domain op) 'tense)
           (atomic-type-p arg) (eql (domain arg) 'aux))
@@ -436,7 +452,7 @@
           (semtype-equal? arg *unary-verb-semtype*))
      (copy-semtype *unary-verb-semtype*
                    :c-type-params (type-params arg)
-                   :c-synfeats (add-features (copy (synfeats arg)) '(x))
+                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(x))
                    :c-tense 't))
     ;;; PARG
     ;;; 1. PARG + T => PARG1[T]

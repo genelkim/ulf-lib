@@ -5,13 +5,25 @@
 (in-package :ulf-lib)
 
 (defclass syntactic-features ()
-  ;; A mapping from syntactic elements to feature values.
+  ;; A mapping from syntactic elements (feature names) to feature values.
   ((feature-map
      :initarg :feature-map
      :accessor feature-map)))
 
+(defparameter *default-syntactic-features*
+  (make-instance 'syntactic-features
+                 :feature-map nil))
+
 (defmethod empty? ((obj syntactic-features))
-  (null (feature-map obj)))
+  ;; Empty if there are no non-nil entries.
+  (null (remove-if #'(lambda (pair) (null (cdr pair)))
+                   (feature-map obj))))
+
+(defmethod get-feature-names ((obj syntactic-features))
+  (mapcar #'car (feature-map obj)))
+
+(defmethod get-feature-values ((obj syntactic-features))
+  (mapcar #'cdr (feature-map obj)))
 
 (defmethod print-verbose ((obj syntactic-features)
                           &optional (out *standard-output*))
@@ -37,7 +49,7 @@
   "Print syntactic features in a way that it can be read back in by the reader
   macro."
   (format out "#{")
-  (let ((feat-vals (mapcar #'cdr (feature-map obj))))
+  (let ((feat-vals (remove-if #'null (mapcar #'cdr (feature-map obj)))))
     (when feat-vals
       (format out "~s" (car feat-vals)))
     (loop for feat in (cdr feat-vals)
@@ -73,8 +85,8 @@
   (setf element (string-upcase element))
   (cdr (assoc element (feature-map obj) :test #'equal)))
 
-(defmethod add-features ((obj syntactic-features) (new-features list))
-  "Takes a list of new features and adds them to the obj class.
+(defmethod add-feature-values ((obj syntactic-features) (new-features list))
+  "Takes a list of new feature values and adds them to the obj class.
   This will delete any prior feature label for a given syntactic element."
   ;; look up pair for each and update map.
   (loop for feat in new-features
@@ -88,4 +100,61 @@
                                               (feature-map obj))))
   ;; Return the modified object.
   obj)
+
+(defmethod update-feature-map ((obj syntactic-features) (new-feature-map list))
+  "Takes a new feature map and updates the old one to include all of teh
+  entries in the new one. Any feature names that are not specified in
+  `new-feature-map` remains unaffected."
+  (loop for (feat-name . feat-val) in new-feature-map
+        if (assoc feat-name (feature-map obj) :test #'equal)
+        do (setf (cdr (Assoc feat-name (feature-map obj) :test #'equal))
+                 feat-val)
+        else do (setf (feature-map obj) (cons (cons feat-name feat-val)
+                                              (feature-map obj))))
+  obj)
+
+(defmethod combine-features ((base syntactic-features)
+                             (opr-feats syntactic-features)
+                             (arg-feats syntactic-features)
+                             &optional opr-semtype arg-semtype)
+  "Combines syntactic-features objects.
+
+  Arguments:
+    base:
+      Default features based on external information.
+    opr-feats:
+      Syntactic features for the operator semtype.
+    arg-feats:
+      Syntactic features for the argument semtype.
+    opr-semtype (optional):
+      Semtype for the operator; required if any present syntactic elements need
+      access to operator semtype information.
+    arg-semtype (optional):
+      Semtype for the argument; required if any present syntactic elements need
+      access to argument semtype information.
+
+  Returns:
+    The resulting syntactic-features object, which is a modified instance of
+    `base`."
+  ;; For each relevant feature in base, opr-feats, or arg-feats call the
+  ;; corresponding combination function and update base accordingly.
+  (let* ((feat-names (remove-duplicates
+                       (apply #'append
+                              (mapcar #'get-feature-names
+                                      (list base opr-feats arg-feats)))
+                       :test #'equal))
+         (new-feat-vals
+           (loop for feat-name in feat-names
+                 for feat-combinator = (get-syntactic-feature-combinator
+                                         feat-name)
+                 ;; Feature combinator takes the base, opr, and arg feature values
+                 ;; and the semtypes.
+                 collect (cons feat-name
+                               (funcall feat-combinator
+                                        (feature-value base feat-name)
+                                        (feature-value opr-feats feat-name)
+                                        (feature-value arg-feats feat-name)
+                                        opr-semtype
+                                        arg-semtype)))))
+    (update-feature-map base new-feat-vals)))
 

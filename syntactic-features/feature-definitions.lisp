@@ -12,14 +12,18 @@
      :initarg :possible-values
      :initform (error "Must supply possible feature values for syntactic element.")
      :accessor possible-values)
-   (composition-fn
-     :initarg :composition-fn
-     :accessor composition-fn)))
+   ;; A combinator must take three feature symbol arguments and two optional
+   ;; semtype arguments, same as the combine-features method in
+   ;; syntactic-features.lisp.
+   (combinator-fn
+     :initarg :combinator-fn
+     :initform nil
+     :accessor combinator-fn)))
 
 ;; The possible-values must be unique through all definitions since we use
 ;; those values directly for a compact representation of the syntactic feature
 ;; set.
-;; TODO: fill in composition functions.
+;; TODO: fill in combinator-fns.
 (defparameter *syntactic-element-definitions*
   (list
     ;; AUXILIARY
@@ -58,4 +62,18 @@
                       collect (cons feat (name elem-def)))
         into sublists
         finally (return (apply #'append sublists))))
+
+(defmethod get-combinator ((obj syntactic-element-definition))
+  (if (combinator-fn obj)
+    (combinator-fn obj)
+    #'default-combinator-fn))
+
+(defmethod get-syntactic-feature-combinator ((name string))
+  (get-combinator (find name *syntactic-element-definitions* :key #'name)))
+
+(defun default-combinator-fn (base opr arg
+                              &optional opr-semtype arg-semtype)
+  (declare (ignore opr arg opr-semtype arg-semtype))
+  base)
+
 
