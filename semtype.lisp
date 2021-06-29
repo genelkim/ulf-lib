@@ -35,8 +35,6 @@
 ;; 2. ! prefix for any feature for the negation
 ;;
 
-
-;; TODO Put all the syntactic feature info into a single hashmap or association list so that the code is less redundant and allows feature additions later
 ;; TODO Write a class for each syntactic feature which specifies how it propagates in function applications, with defaults written as above. Special propagation examples include: *h, which should default to empty, but propagate through everything (or just use the type param for this?) 
 ;; TODO Make sure *h and *p can have duplicates, or have counts.
 
@@ -397,7 +395,8 @@
        (equal (domain x) (domain y))
        ;; If not atomic, recurse and check bidirectional equality.
        (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
-            (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r)))))
+            (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r))
+            (equal (connective x) (connective y)))))
     
     ; no possible match
     (t
@@ -507,7 +506,7 @@
       (format nil "~a~a" base type-params-str))))
 
 ;; Split a string of the form ([domain]=>[range]) or ([domain]>>[range]) into
-;; [domain] and [range]. Helper for str2semtype.
+;; [domain], [range], [connective]. Helper for str2semtype.
 (declaim (ftype (function (simple-string) list) split-semtype-str))
 (defun split-semtype-str (s)
   (let ((level 0) (i 1))
@@ -523,7 +522,9 @@
                      (and (eql (char s i) #\>) (eql (char s (1+ i)) #\>)))) ; >>
         (return i))
       (setf i (+ i 1)))
-    (list (subseq s 1 i) (subseq s (+ i 2) (- (length s) 1)))))
+    (list (subseq s 1 i)
+          (subseq s (+ i 2) (- (length s) 1))
+          (subseq s i (+ i 2)))))
 
 ;; Split a string of the form {A|B} into A and B. Helper for str2semtype.
 (declaim (ftype (function (simple-string) list) split-opt-str))
@@ -635,7 +636,8 @@
                       (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
                       (if (svref match ten-idx) (read-from-string (svref match ten-idx)) nil)
                       :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
-                      :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx))))))
+                      :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
+                      :conn (third split-segments))))
 
       ; ATOMIC or OPTIONAL
       ((equal (char s 0) #\{)
@@ -747,7 +749,8 @@
                        (list #'subscript #'equal)
                        (list #'tense #'equal)
                        (list #'synfeats #'syntactic-features-equal?)
-                       (list #'type-params #'set-no-option-equal))))))
+                       (list #'type-params #'set-no-option-equal)
+                       (list #'connective #'equal))))))
      ) ; end of label definitions.
     ;; Use t instead of semtype for argument check because of the following
     ;; compiler note
