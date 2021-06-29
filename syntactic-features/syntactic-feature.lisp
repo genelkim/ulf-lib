@@ -34,12 +34,6 @@
           do (format out ",~s" feat)))
   (format out "}"))
 
-(defparameter *syntactic-feature-list*
-  '((pl . plurality)
-    (pf . perfect)
-    (pv . passive)
-    (x . auxiliary)))
-
 (defun lookup-feat-element (featsym)
   "Looks up the corresponding syntactic element for the given feature symbol,
   if any. nil if not found."

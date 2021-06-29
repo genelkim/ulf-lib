@@ -10,6 +10,7 @@
   :components ((:file "package")
                (:file "util")
                (:file "suffix")
+               (:file "syntactic-features/feature-definitions")
                (:file "syntactic-features/syntactic-feature")
                (:file "syntactic-features/reader")
                (:file "semtype")
