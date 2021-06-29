@@ -10,6 +10,9 @@
      :initarg :feature-map
      :accessor feature-map)))
 
+(defmethod empty? ((obj syntactic-features))
+  (null (feature-map obj)))
+
 (defmethod print-verbose ((obj syntactic-features)
                           &optional (out *standard-output*))
   "Print syntactic features in an informative manner, which may not be able to

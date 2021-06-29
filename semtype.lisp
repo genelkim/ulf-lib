@@ -140,6 +140,12 @@
 (defun optional-type-p (s)
   (typep s 'optional-type))
 
+(defmethod print-object ((obj semtype) out)
+  "Prints out semtype in #<SEMTYPE [string]> where [string] can be read in
+  using str2semtype or extended-str2semtype."
+  (print-unreadable-object (obj out :type t)
+    (format out (semtype2str obj))))
+
 (defun add-semtype-tense (semtype tense)
   "Adds tense to a semtype. Recurses into optional-type, since it shouldn't
   directly carry tense."
@@ -383,8 +389,7 @@
           (if ignore-exp T (= (ex x) (ex y)))
           (equal (type-of x) (type-of y))
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-          ;; TODO: generalize this to all relevant subscripts
-          (if (or (tense x) (tense y)) (equal (tense x) (tense y)))
+          (if (or (tense x) (tense y)) (equal (tense x) (tense y)) t)
           (syntactic-features-equal? (synfeats x) (synfeats y)))
      
      (if (atomic-type-p x)
@@ -465,7 +470,7 @@
                                   (if (tense s)
                                     (format nil "_~s" (tense s))
                                     "")
-                                  (if (synfeats s)
+                                  (if (and (synfeats s) (not (empty? (synfeats s))))
                                     (format nil "_~a"
                                             (let ((full-synfeat-str (to-string (synfeats s))))
                                               ;; TODO: use cl-str package to make this nicer
@@ -622,9 +627,10 @@
     (cond
       ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
       ((equal (char s 0) #\()
-       (let ((match (nth-value 1 (cl-ppcre:scan-to-strings non-atom-regex s))))
-         (new-semtype (funcall recurse-fn (car (split-semtype-str (svref match 0))))
-                      (funcall recurse-fn (cadr (split-semtype-str (svref match 0))))
+       (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings non-atom-regex s)))
+              (split-segments (split-semtype-str (svref match 0))))
+         (new-semtype (funcall recurse-fn (first split-segments))
+                      (funcall recurse-fn (second split-segments))
                       (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
                       (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
                       (if (svref match ten-idx) (read-from-string (svref match ten-idx)) nil)
@@ -634,13 +640,14 @@
       ; ATOMIC or OPTIONAL
       ((equal (char s 0) #\{)
        ; OPTIONAL {A|B}[[type1],[type2],..\]
-       (let ((match (nth-value 1 (cl-ppcre:scan-to-strings optional-regex s))))
+       (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings optional-regex s)))
+              (options (split-opt-str (svref match 0))))
            (new-semtype NIL NIL
                         (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
                         (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
                         (if (svref match ten-idx) (read-from-string (svref match ten-idx)) nil)
-                        :options (list (funcall recurse-fn (car (split-opt-str (svref match 0))))
-                                       (funcall recurse-fn (cadr (split-opt-str (svref match 0)))))
+                        :options (list (funcall recurse-fn (first options))
+                                       (funcall recurse-fn (second options)))
                         :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
                         :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx))))))
       ; ATOMIC
@@ -773,8 +780,6 @@
        ((= 1 (length new-options)) (first new-options))
        ; Build the optional semtype with these options and return.
        (t (new-semtype nil nil 1 nil nil :options new-options)))))
-
-;; TODO: add proper exponent treatment in equality predicates.
 
 (defun flatten-options (s)
   "Flattens a semtype so that all options and concrete exponents are
