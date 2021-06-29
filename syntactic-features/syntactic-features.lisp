@@ -4,12 +4,14 @@
 
 (in-package :ulf-lib)
 
+;; TODO: change all reference of syntactic elements to feature names.
 (defclass syntactic-features ()
   ;; A mapping from syntactic elements (feature names) to feature values.
   ((feature-map
      :initarg :feature-map
      :accessor feature-map)))
 
+;; TODO: compile this from default feature values for each feature.
 (defparameter *default-syntactic-features*
   (make-instance 'syntactic-features
                  :feature-map nil))
