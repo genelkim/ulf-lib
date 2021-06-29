@@ -52,24 +52,24 @@
   (read-next-object separator delimiter input-stream))
 
 (defun verify+combine-feats (infeats)
-  "Given a list of feature symbols, verifies that the features are not
-  conflicting, all correspond to defined syntactic elements and translates them
-  into the appropriate classes."
+  "Given a list of feature values, verifies that the values are not
+  conflicting, all correspond to defined feature names and translates them into
+  the appropriate classes."
   (when (not (= (length infeats)
                 (length (remove-duplicates infeats))))
-    (error "Features must be unique: ~S~%" infeats))
+    (error "Feature values must be unique: ~S~%" infeats))
   ;; For each feature,
-  ;;  1. Look up the corresponding syntactic element
+  ;;  1. Look up the corresponding feature name
   ;;  2. Instantiate the syntactic feature set class with element-value pairs.
-  ;; The element name will be used to look up default value exceptions.
+  ;; The feature name will be used to look up default value exceptions.
   (in-intern (infeats feats :ulf-lib)
   (make-instance
     'syntactic-features
     :feature-map            
     (loop for feat in feats
-          for elem = (lookup-feat-element feat)
+          for elem = (lookup-feature-name feat)
           if (not elem)
-          do (error "No syntactic element for feature ~S~%" feat) 
+          do (error "No feature name for feature value ~S~%" feat) 
           else collect (cons elem feat)))))
 
 (defun read-separator (stream char)

@@ -4,9 +4,8 @@
 
 (in-package :ulf-lib)
 
-;; TODO: change all reference of syntactic elements to feature names.
 (defclass syntactic-features ()
-  ;; A mapping from syntactic elements (feature names) to feature values.
+  ;; A mapping from feature names to feature values.
   ((feature-map
      :initarg :feature-map
      :accessor feature-map)))
@@ -58,10 +57,10 @@
           do (format out ",~s" feat)))
   (format out "}"))
 
-(defun lookup-feat-element (featsym)
-  "Looks up the corresponding syntactic element for the given feature symbol,
-  if any. nil if not found."
-  (cdr (assoc featsym *syntactic-feature-list*)))
+(defun lookup-feature-name (featsym)
+  "Looks up the corresponding feature name for the given feature value, if any.
+  nil if not found."
+  (cdr (assoc featsym *syntactic-feature-values*)))
 
 (defmethod copy ((obj syntactic-features))
   (make-instance
@@ -80,8 +79,8 @@
                (sort (feature-map y) #'element-sort))))))
 
 (defmethod feature-value ((obj syntactic-features) element)
-  "Finds the feature value for the given syntactic element. The element value
-  can be a string or a symbol."
+  "Finds the feature value for the given feature name. The name can be a string
+  or a symbol."
   (when (symbolp element)
     (setf element (symbol-name element)))
   (setf element (string-upcase element))
@@ -89,12 +88,12 @@
 
 (defmethod add-feature-values ((obj syntactic-features) (new-features list))
   "Takes a list of new feature values and adds them to the obj class.
-  This will delete any prior feature label for a given syntactic element."
+  This will delete any prior feature label for a given feature name."
   ;; look up pair for each and update map.
   (loop for feat in new-features
-        for elem = (lookup-feat-element feat)
+        for elem = (lookup-feature-name feat)
         if (not elem)
-        do (error "No syntactic element for feature ~S~%" feat)
+        do (error "No feature name for feature value ~S~%" feat)
         if (assoc elem (feature-map obj) :test #'equal)
         do (setf (cdr (assoc elem (feature-map obj) :test #'equal))
                  feat)
@@ -129,11 +128,11 @@
     arg-feats:
       Syntactic features for the argument semtype.
     opr-semtype (optional):
-      Semtype for the operator; required if any present syntactic elements need
-      access to operator semtype information.
+      Semtype for the operator; required if any present features need access to
+      operator semtype information.
     arg-semtype (optional):
-      Semtype for the argument; required if any present syntactic elements need
-      access to argument semtype information.
+      Semtype for the argument; required if any present features need access to
+      argument semtype information.
 
   Returns:
     The resulting syntactic-features object, which is a modified instance of

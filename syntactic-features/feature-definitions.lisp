@@ -3,14 +3,14 @@
 
 (in-package :ulf-lib)
 
-(defclass syntactic-element-definition ()
+(defclass feature-defintion ()
   ((name
      :initarg :name
-     :initform (error "Must supply a name for the element definition.")
+     :initform (error "Must supply a name for the feature definition.")
      :accessor name)
    (possible-values
      :initarg :possible-values
-     :initform (error "Must supply possible feature values for syntactic element.")
+     :initform (error "Must supply possible feature values for the feature.")
      :accessor possible-values)
    ;; A combinator must take three feature symbol arguments and two optional
    ;; semtype arguments, same as the combine-features method in
@@ -24,52 +24,53 @@
 ;; those values directly for a compact representation of the syntactic feature
 ;; set.
 ;; TODO: fill in combinator-fns.
-(defparameter *syntactic-element-definitions*
+(defparameter *feature-defintions*
   (list
     ;; AUXILIARY
     (make-instance
-      'syntactic-element-definition
+      'feature-defintion
       :name "AUXILIARY"
       :possible-values '(x))
     ;; PLURALITY
     (make-instance
-      'syntactic-element-definition
+      'feature-defintion
       :name "PLURALITY"
       :possible-values '(pl))
     ;; PERFECT
     (make-instance
-      'syntactic-element-definition
+      'feature-defintion
       :name "PERFECT"
       :possible-values '(pf))
     ;; PASSIVE
     (make-instance
-      'syntactic-element-definition
+      'feature-defintion
       :name "PASSIVE"
       :possible-values '(pv))
     ;; PROGRESSIVE
     (make-instance
-      'syntactic-element-definition
+      'feature-defintion
       :name "PROGRESSIVE"
       :possible-values '(pg))))
 ;; TODO: p-arg, lexical, *h, qt-attr, 's, etc.
 ;;       maybe macro features should be different?
 
-(defparameter *syntactic-feature-list*
+;; Association list from syntactic feature values to the feature names.
+(defparameter *syntactic-feature-values*
   ;; GK: For some reason Lisp gets mad when I try to access possible-values
   ;; directly in the loop macro, so I nested another level.
-  (loop for elem-def in *syntactic-element-definitions*
+  (loop for elem-def in *feature-defintions*
         collect (loop for feat in (possible-values elem-def)
                       collect (cons feat (name elem-def)))
         into sublists
         finally (return (apply #'append sublists))))
 
-(defmethod get-combinator ((obj syntactic-element-definition))
+(defmethod get-combinator ((obj feature-defintion))
   (if (combinator-fn obj)
     (combinator-fn obj)
     #'default-combinator-fn))
 
 (defmethod get-syntactic-feature-combinator ((name string))
-  (get-combinator (find name *syntactic-element-definitions* :key #'name)))
+  (get-combinator (find name *feature-defintions* :key #'name)))
 
 (defun default-combinator-fn (base opr arg
                               &optional opr-semtype arg-semtype)

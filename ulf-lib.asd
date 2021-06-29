@@ -11,7 +11,7 @@
                (:file "util")
                (:file "suffix")
                (:file "syntactic-features/feature-definitions")
-               (:file "syntactic-features/syntactic-feature")
+               (:file "syntactic-features/syntactic-features")
                (:file "syntactic-features/reader")
                (:file "semtype")
                (:file "ttt-lexical-patterns")
