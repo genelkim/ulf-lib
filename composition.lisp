@@ -189,7 +189,8 @@
 (defparameter *unary-pred-semtype* (str2semtype "(D=>(S=>2))"))
 (defparameter *unary-verb-semtype* (str2semtype "(D=>(S=>2))_v"))
 (defparameter *unary-tensed-verb-semtype* (str2semtype "(D=>(S=>2))_v_t"))
-(defparameter *general-verb-semtype* (str2semtype "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v|({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t}"))
+(defparameter *general-verb-semtype* (str2semtype "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t|({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t}"))
+(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
 (defparameter *term-semtype* (str2semtype "D"))
 (defparameter *sent-mod-semtype* (str2semtype "((S=>2)=>(S=>2))"))
 (defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
@@ -220,9 +221,9 @@
                           rep1 parg)))
      nil)
     ;;; TENSE
-    ;;; TENSE + TYPE_V => TYPE_TV
+    ;;; TENSE + TYPE_V_U => TYPE_V_T
     ((and (atomic-type-p op) (eql (domain op) 'tense)
-          (semtype-equal? arg *general-verb-semtype*
+          (semtype-equal? arg *general-untensed-verb-semtype*
                           :ignore-exp t))
      (let ((tensed-semtype (copy-semtype arg)))
        (add-semtype-tense tensed-semtype t)
@@ -409,10 +410,10 @@
              (append (type-params op) (type-params arg)))
        term-st))
     ;;; AUX
-    ;;; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_X
+    ;;; 1. AUX + (D=>(S=>2))_V_U >> (D=>(S=>2))_V_U_X
     ;;; 2. TENSE + AUX => TAUX
     ;;; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
-    ; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_X
+    ; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_X
     ((and (atomic-type-p op) (eql (domain op) 'aux)
           (null (tense arg)) (null (aux arg))
           (semtype-equal? arg *unary-verb-semtype*))
