@@ -57,9 +57,13 @@
 (defun syntactic-features-equal? (x y)
   "Checks whether the two syntactic-features class instances are the same. This
   is only true if the feature map is identical."
-  (flet ((element-sort (a b) (string< (cdr a) (cdr b))))
-    (equal (sort x #'element-sort)
-           (sort y #'element-sort))))
+  (cond
+    ((and (null x) (null y)) t)
+    ((or (null x) (null y)) nil)
+    (t
+      (flet ((element-sort (a b) (string< (cdr a) (cdr b))))
+        (equal (sort (feature-map x) #'element-sort)
+               (sort (feature-map y) #'element-sort))))))
 
 (defmethod feature-value ((obj syntactic-features) element)
   "Finds the feature value for the given syntactic element. The element value
