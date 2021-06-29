@@ -189,8 +189,10 @@
 (defparameter *unary-pred-semtype* (str2semtype "(D=>(S=>2))"))
 (defparameter *unary-verb-semtype* (str2semtype "(D=>(S=>2))_v"))
 (defparameter *unary-tensed-verb-semtype* (str2semtype "(D=>(S=>2))_v_t"))
-(defparameter *general-verb-semtype* (str2semtype "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t|({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t}"))
-(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
+;(defparameter *general-verb-semtype* (str2semtype "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t|({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t}"))
+(defparameter *general-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t"))
+;(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
+(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v"))
 (defparameter *term-semtype* (str2semtype "D"))
 (defparameter *sent-mod-semtype* (str2semtype "((S=>2)=>(S=>2))"))
 (defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
@@ -414,23 +416,27 @@
     ;;; 2. TENSE + AUX => TAUX
     ;;; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
     ; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_X
-    ((and (atomic-type-p op) (eql (domain op) 'aux)
-          (null (tense arg)) (null (aux arg))
+    ((and (atomic-type-p op)
+          (eql (domain op) 'aux)
+          (null (tense arg))
+          (null (feature-value (synfeats arg) 'auxiliary))
           (semtype-equal? arg *unary-verb-semtype*))
      (copy-semtype *unary-verb-semtype*
                    :c-type-params (type-params arg)
-                   :c-aux t))
+                   :c-synfeats (add-features (copy (synfeats arg)) '(x))))
     ; 2. TENSE + AUX => TAUX
     ((and (atomic-type-p op) (eql (domain op) 'tense)
           (atomic-type-p arg) (eql (domain arg) 'aux))
      (new-semtype 'taux nil 1 nil nil))
     ; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
-    ((and (atomic-type-p op) (eql (domain op) 'taux)
-          (null (tense arg)) (null (aux arg))
+    ((and (atomic-type-p op)
+          (eql (domain op) 'taux)
+          (null (tense arg))
+          (null (feature-value (synfeats arg) 'auxiliary))
           (semtype-equal? arg *unary-verb-semtype*))
      (copy-semtype *unary-verb-semtype*
                    :c-type-params (type-params arg)
-                   :c-aux t
+                   :c-synfeats (add-features (copy (synfeats arg)) '(x))
                    :c-tense 't))
     ;;; PARG
     ;;; 1. PARG + T => PARG1[T]
@@ -483,8 +489,10 @@
           (semtype-equal? arg *term-semtype*))
      (new-semtype 'itaux nil 1 nil nil))
     ; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
-    ((and (atomic-type-p op) (eql (domain op) 'itaux)
-          (null (tense arg)) (null (aux arg))
+    ((and (atomic-type-p op)
+          (eql (domain op) 'itaux)
+          (null (tense arg))
+          (null (feature-value (synfeats arg) 'auxiliary))
           (semtype-equal? arg *unary-verb-semtype*)
           (not (semtype-equal? arg *unary-tensed-verb-semtype*)))
      (copy-semtype *tensed-sent-semtype*

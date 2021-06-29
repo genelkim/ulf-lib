@@ -25,23 +25,30 @@
     ;; AUXILIARY
     (make-instance
       'syntactic-element-definition
-      :name "auxiliary"
+      :name "AUXILIARY"
       :possible-values '(x))
     ;; PLURALITY
     (make-instance
       'syntactic-element-definition
-      :name "plurality"
+      :name "PLURALITY"
       :possible-values '(pl))
     ;; PERFECT
     (make-instance
       'syntactic-element-definition
-      :name "perfect"
+      :name "PERFECT"
       :possible-values '(pf))
     ;; PASSIVE
     (make-instance
       'syntactic-element-definition
-      :name "passive"
-      :possible-values '(pv))))
+      :name "PASSIVE"
+      :possible-values '(pv))
+    ;; PROGRESSIVE
+    (make-instance
+      'syntactic-element-definition
+      :name "PROGRESSIVE"
+      :possible-values '(pg))))
+;; TODO: p-arg, lexical, *h, qt-attr, 's, etc.
+;;       maybe macro features should be different?
 
 (defparameter *syntactic-feature-list*
   ;; GK: For some reason Lisp gets mad when I try to access possible-values
