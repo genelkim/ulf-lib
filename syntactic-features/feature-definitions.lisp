@@ -35,6 +35,12 @@
 ;; TODO: fill in combinator-fns.
 (defparameter *feature-defintions*
   (list
+    ;; TENSE
+    (make-instance
+      'feature-defintion
+      :name "TENSE"
+      :possible-values '(t !t)
+      :default-value '!t)
     ;; AUXILIARY
     (make-instance
       'feature-defintion
