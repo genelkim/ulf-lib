@@ -12,17 +12,26 @@
      :initarg :possible-values
      :initform (error "Must supply possible feature values for the feature.")
      :accessor possible-values)
-   ;; A combinator must take three feature symbol arguments and two optional
+   ;; A combinator must take four feature symbol arguments and two optional
    ;; semtype arguments, same as the combine-features method in
    ;; syntactic-features.lisp.
    (combinator-fn
      :initarg :combinator-fn
      :initform nil
-     :accessor combinator-fn)))
+     :accessor combinator-fn)
+   ;; Default value for when the feature is unspecified in non-antecedent
+   ;; position. Must be one of the possible values.
+   (default-value
+     :initarg :default-value
+     :initform (error "Must supply a default feature value.")
+     :accessor default-value)))
 
 ;; The possible-values must be unique through all definitions since we use
 ;; those values directly for a compact representation of the syntactic feature
 ;; set.
+;;
+;; The convention for binary features (+/-) is to indicate the negation with a
+;; ! prefix. Then nil is used for unspecified feature values.
 ;; TODO: fill in combinator-fns.
 (defparameter *feature-defintions*
   (list
@@ -30,27 +39,32 @@
     (make-instance
       'feature-defintion
       :name "AUXILIARY"
-      :possible-values '(x))
+      :possible-values '(x !x)
+      :default-value '!x)
     ;; PLURALITY
     (make-instance
       'feature-defintion
       :name "PLURALITY"
-      :possible-values '(pl))
+      :possible-values '(pl !pl)
+      :default-value '!pl)
     ;; PERFECT
     (make-instance
       'feature-defintion
       :name "PERFECT"
-      :possible-values '(pf))
+      :possible-values '(pf !pf)
+      :default-value '!pf)
     ;; PASSIVE
     (make-instance
       'feature-defintion
       :name "PASSIVE"
-      :possible-values '(pv))
+      :possible-values '(pv !pv)
+      :default-value '!pv)
     ;; PROGRESSIVE
     (make-instance
       'feature-defintion
       :name "PROGRESSIVE"
-      :possible-values '(pg))))
+      :possible-values '(pg !pg)
+      :default-value '!pg)))
 ;; TODO: p-arg, lexical, *h, qt-attr, 's, etc.
 ;;       maybe macro features should be different?
 
@@ -72,9 +86,9 @@
 (defmethod get-syntactic-feature-combinator ((name string))
   (get-combinator (find name *feature-defintions* :key #'name)))
 
-(defun default-combinator-fn (base opr arg
+(defun default-combinator-fn (base opr arg csq
                               &optional opr-semtype arg-semtype)
-  (declare (ignore opr arg opr-semtype arg-semtype))
+  "Default feature combinator function simply uses the base feature."
+  (declare (ignore opr arg csq opr-semtype arg-semtype))
   base)
-
 

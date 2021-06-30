@@ -5,7 +5,7 @@
 ;; Maximum semtype exponent for variable values.
 ;; e.g. D^n=>2 can be generated as 2, (D=>2), (D=>(D=>2)), etc. until the
 ;; maximum number.
-(defparameter *semtype-max-exponent* 4)
+(defparameter *semtype-max-exponent* 5)
 
 
 ;; A MORE COMPACT REPRESENTATIONS
@@ -78,41 +78,6 @@
      :initarg :synfeats
      :initform *default-syntactic-features*
      :accessor synfeats)))
-
-(defparameter *semtype-subscript-accessors*
-  ;; TODO: generate this from inidvidual class definitions
-  ;; "Ordered semtype subscript accessor functions."
-  (list 'suffix
-        'tense
-        'aux
-        'perf
-        'progs
-        'plur))
-
-(defparameter *semtype-subscript-labels*
-  ;; TODO: generate this from the individual class definitions.
-  ; "Ordered semtype subscript labels as shown in types.
-  ; This does not include the main suffix subscript which has four values."
-  '(t x pf pg pl))
-
-;; TODO: represent top-level values internally as (2=>VALUE)
-;;       Then just pretty print (2=>VALUE) as simply VALUE. Default domain is then 2.
-(defmethod default-value ((st semtype) slot)
-  "Returns the INTERPRETIVE (not programming class) default value for the given
-  slot of the semtype. The slot is given as a symbol."
-  (case slot
-    (domain nil)
-    (range nil)
-    (exponent 1)
-    (subscript nil)
-    (tense '!t)
-    (type-params nil)
-    (aux '!x)
-    (perf '!pf)
-    (progs '!pg)
-    (plur '!pl)
-    (p-arg '!parg)
-    (lexical '!lex)))
 
 ;; Subclass for atomic types
 (defclass atomic-type (semtype)
@@ -390,7 +355,7 @@
           (equal (type-of x) (type-of y))
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
           (if (or (tense x) (tense y)) (equal (tense x) (tense y)) t)
-          (syntactic-features-equal? (synfeats x) (synfeats y)))
+          (syntactic-features-match? (synfeats x) (synfeats y)))
      (if (atomic-type-p x)
        ;; If atomic, simply compare domain symbols.
        (equal (domain x) (domain y))
@@ -426,8 +391,8 @@
              (make-instance 'optional-type
                             :types (if (not (eql :null c-types))
                                      c-types
-                                     (list (copy-semtype (car (types x)))
-                                           (copy-semtype (cadr (types x)))))
+                                     (list (copy-semtype (first (types x)))
+                                           (copy-semtype (second (types x)))))
                             :ex (if c-ex c-ex (ex x))))
             ((semtype-p x)
              (make-instance 'semtype
@@ -439,72 +404,65 @@
       ((nnull-backup (nnull backup)
          (if (not (eql :null nnull)) nnull (funcall backup x))))
       ;; Fill in not null slots.
-      (nnull-backup c-subscript 'subscript)
-      (nnull-backup c-tense 'tense)
-      (nnull-backup c-type-params 'type-params)
-      (nnull-backup c-synfeats 'synfeats)
-      (nnull-backup c-conn 'connective)
+      (setf (subscript result) (nnull-backup c-subscript #'subscript))
+      (setf (tense result) (nnull-backup c-tense #'tense))
+      (setf (type-params result) (nnull-backup c-type-params #'type-params))
+      (setf (synfeats result) (nnull-backup c-synfeats #'synfeats))
+      (setf (connective result) (nnull-backup c-conn #'connective))
       result)))
 
 ;; Convert a semtype to a string. The string it returns can be read back into a
 ;; type using str2semtype.
 (defun semtype2str (s)
-  (when (null s)
-    (return-from semtype2str nil))
-  (let ((type-params-str
-          (format nil "[~a]"
-                  (cl-strings:join (mapcar #'semtype2str (type-params s)) :separator ",")))
-        ;(subscripts
-        ;  (apply #'concatenate
-        ;         (cons 'string
-        ;               (mapcar #'(lambda (acsr)
-        ;                           (if (funcall acsr s)
-        ;                             (format nil "_~a" (funcall acsr s))
-        ;                             ""))
-        ;                       *semtype-subscript-accessors*))))
-        ;; Synfeats without the macro dispatch symbol.
-        (synfeat-str (concatenate 'string
-                                  (if (subscript s)
-                                    (format nil "_~s" (subscript s))
-                                    "")
-                                  (if (tense s)
-                                    (format nil "_~s" (tense s))
-                                    "")
-                                  (if (and (synfeats s) (not (empty? (synfeats s))))
-                                    (format nil "_~a"
-                                            (let ((full-synfeat-str (to-string (synfeats s))))
-                                              ;; TODO: use cl-str package to make this nicer
-                                              (subseq full-synfeat-str 2 (1- (length full-synfeat-str)))))
-                                    "")))
-        (exponents
-          (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s))))
-        base)
-    (setf base
-          (cond
-            ((atomic-type-p s)
-             ; Atomic type
-             (format nil "~a~a~a"
-                     (domain s)
-                     synfeat-str
-                     exponents))
-            ((optional-type-p s)
-             ; Optional type
-             (format nil "{~a|~a}~a"
-                     (semtype2str (car (types s)))
-                     (semtype2str (cadr (types s)))
-                     exponents))
-            ((semtype-p s)
-             ; Not optional or atomic
-             (format nil "(~a~a~a)~a~a"
-                     (semtype2str (domain s))
-                     (connective s)
-                     (semtype2str (range s))
-                     synfeat-str
-                     exponents))
-            (t nil)))
-    (if (equal type-params-str "[]")
-      base
-      (format nil "~a~a" base type-params-str))))
+  (let ((*package* (find-package "ULF-LIB"))) ; avoid package prefixes in symbols.
+    (when (null s)
+      (return-from semtype2str nil))
+    (let ((type-params-str
+            (format nil "[~a]"
+                    (cl-strings:join (mapcar #'semtype2str (type-params s)) :separator ",")))
+          ;; Synfeats without the macro dispatch symbol.
+          (synfeat-str (concatenate 'string
+                                    (if (subscript s)
+                                      (format nil "_~s" (subscript s))
+                                      "")
+                                    (if (tense s)
+                                      (format nil "_~s" (tense s))
+                                      "")
+                                    (if (and (synfeats s) (not (empty? (synfeats s))))
+                                      (format nil "_~a"
+                                              (let ((full-synfeat-str (to-string (synfeats s))))
+                                                ;; TODO: use cl-str package to make this nicer
+                                                (subseq full-synfeat-str 2 (1- (length full-synfeat-str)))))
+                                      "")))
+          (exponents
+            (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s))))
+          base)
+      (setf base
+            (cond
+              ((atomic-type-p s)
+               ; Atomic type
+               (format nil "~a~a~a"
+                       (domain s)
+                       synfeat-str
+                       exponents))
+              ((optional-type-p s)
+               ; Optional type
+               (format nil "{~a|~a}~a"
+                       (semtype2str (first (types s)))
+                       (semtype2str (second (types s)))
+                       exponents))
+              ((semtype-p s)
+               ; Not optional or atomic
+               (format nil "(~a~a~a)~a~a"
+                       (semtype2str (domain s))
+                       (connective s)
+                       (semtype2str (range s))
+                       synfeat-str
+                       exponents))
+              (t nil)))
+      (if (equal type-params-str "[]")
+        base
+        (format nil "~a~a" base type-params-str)))))
 
 ;; Split a string of the form ([domain]=>[range]) or ([domain]>>[range]) into
 ;; [domain], [range], [connective]. Helper for str2semtype.
@@ -640,9 +598,8 @@
                       :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
                       :conn (intern (third split-segments) :ulf-lib))))
 
-      ; ATOMIC or OPTIONAL
+      ; OPTIONAL {A|B}[[type1],[type2],..\]
       ((equal (char s 0) #\{)
-       ; OPTIONAL {A|B}[[type1],[type2],..\]
        (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings optional-regex s)))
               (options (split-opt-str (svref match 0))))
            (new-semtype NIL NIL
@@ -656,8 +613,6 @@
       ; ATOMIC
       (t
        (let ((match (nth-value 1 (cl-ppcre:scan-to-strings atomic-regex s))))
-         ;(format t "s: ~s~%" s)
-         ;(format t "match1: ~s~%" (read-from-string (svref match 0)))
          (new-semtype (read-from-string (svref match 0)) NIL
                       (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
                       (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
