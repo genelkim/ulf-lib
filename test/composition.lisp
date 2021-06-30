@@ -188,8 +188,8 @@
 (define-test sentential-punctuation-compose
   "Tests for ! and ?."
   (:tag :sentential-punctuation-compose)
-  (assert-equal "((S=>2)=>(S=>2))" (ulf-type-string? '!))
-  (assert-equal "((S=>2)=>(S=>2))" (ulf-type-string? '?))
+  (assert-equal "((S=>2)>>(S=>2))" (ulf-type-string? '!))
+  (assert-equal "((S=>2)>>(S=>2))" (ulf-type-string? '?))
   (assert-equality
     #'semtype-str-equal
     "(S=>2)"
@@ -215,7 +215,7 @@
   ; right.mod-p when we introduce it.
   (assert-equality
     #'semtype-str-equal
-    "((S=>2)=>((S=>2)=>(S=>2)))"
+    "((S=>2)>>(S=>2))"
     (string-from-compose-types 'right.mod-a '(before.ps (i.pro ((past move.v) it.pro)))))
   (assert-equal nil
     (string-from-compose-types 'right.mod-n '(before.ps (i.pro ((past move.v) it.pro))))))
@@ -261,11 +261,11 @@
 
 (define-test free-sent-mod
   (:tag :free-sent-mod :left-right)
-  (assert-equality #'semtype-str-equal "((S=>2)=>(S=>2))" (ulf-type-string? 'not))
-  (assert-equality #'semtype-str-equal "((S=>2)=>(S=>2))" (ulf-type-string? 'not.adv-s))
-  (assert-equality #'semtype-str-equal "((S=>2)=>(S=>2))" (ulf-type-string? 'always.adv-f))
-  (assert-equality #'semtype-str-equal "((S=>2)=>(S=>2))" (ulf-type-string? 'today.adv-e))
-  (assert-equality #'semtype-str-equal "((S=>2)=>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'not))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'not.adv-s))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'always.adv-f))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'today.adv-e))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
   (let ((ulf-segments
           '(he.pro
              run.v
@@ -290,11 +290,11 @@
                     (typestr dir original)
                     (string-from-compose-types sent-mod ulf-segment :ext 'left-right)
                     (declare (ignore original))
-                    ; TODO(gene): this direction shouold only work for adv-s if we were being precise.
+                    ; TODO(gene): this direction should only work for adv-s if we were being precise.
                     (assert-equality #'semtype-str-equal
                                      (ulf-type-string? ulf-segment)
                                      typestr)
-                    (assert-equal "right" dir))
+                    (assert-equal "right" dir sent-mod ulf-segment))
                   (multiple-value-bind
                     (typestr dir original)
                     (string-from-compose-types ulf-segment sent-mod :ext 'left-right)
@@ -302,7 +302,7 @@
                     (assert-equality #'semtype-str-equal
                                      (ulf-type-string? ulf-segment)
                                      typestr)
-                    (assert-equal "right" dir)))))))
+                    (assert-equal "right" dir ulf-segment sent-mod)))))))
 
 (define-test itaux
   (:tag :itaux :left-right)

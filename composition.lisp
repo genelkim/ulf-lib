@@ -53,13 +53,13 @@
             ((eql '>> (connective op)) (copy (synfeats arg)))
             (t (error "Unknown connective for determining base synfeat: ~s~%"
                       (connective op))))))
-         ; todo: switch op to opr.
-         (combine-features base-synfeats
-                           (synfeats op)
-                           (synfeats arg)
-                           (synfeats (range op))
-                           op
-                           arg)))
+    ; todo: switch op to opr.
+    (combine-features base-synfeats
+                      (synfeats op)
+                      (synfeats arg)
+                      (synfeats (range op))
+                      op
+                      arg)))
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
@@ -216,7 +216,7 @@
 ;(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
 (defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v"))
 (defparameter *term-semtype* (str2semtype "D"))
-(defparameter *sent-mod-semtype* (str2semtype "((S=>2)=>(S=>2))"))
+(defparameter *sent-mod-semtype* (str2semtype "((S=>2)>>(S=>2))"))
 (defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
 
 (declaim (ftype (function (list) list) get-all-top-domains))

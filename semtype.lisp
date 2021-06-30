@@ -354,7 +354,7 @@
           (if ignore-exp T (= (ex x) (ex y)))
           (equal (type-of x) (type-of y))
           (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-          (if (or (tense x) (tense y)) (equal (tense x) (tense y)) t)
+          (if (tense x) (tense y) t)
           (syntactic-features-match? (synfeats x) (synfeats y)))
      (if (atomic-type-p x)
        ;; If atomic, simply compare domain symbols.
