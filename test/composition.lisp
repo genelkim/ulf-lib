@@ -265,7 +265,7 @@
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'not.adv-s))
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'always.adv-f))
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'today.adv-e))
-  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))_T" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
   (let ((ulf-segments
           '(he.pro
              run.v
