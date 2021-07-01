@@ -12,7 +12,7 @@
 ;;
 ;; 1. Add a different connective, which assumes that unspecified,
 ;;    non-contradicted features are preserved. For example, instead of
-;;    {((S=>2)_!t=>(S=>2)_!t)|((S=>2)_t=>(S=>2)_t)}, for a sentence modifier,
+;;    {((S=>2)%!t=>(S=>2)%!t)|((S=>2)_t=>(S=>2)%t)}, for a sentence modifier,
 ;;    preserving tense we can have ((S=>2)>>(S=>2)).
 ;;
 ;;    In comparison, the => connective must specify any restrictive feature in
@@ -31,6 +31,16 @@
 ;;
 ;;    => := basic antecendent/consequent
 ;;    >> := subscript-preserving antecedent/consequent
+;;    
+;;    Shorthand operator
+;;    %> := synfeat modification (retains all other information and distributes
+;;          accordingly)
+;;          This is always reducible to a >> with synfeat changes applied
+;;          before and after distributions. The semantic content and
+;;          unspecified synfeats remain unchanged.
+;;          This shorthand operator is preprocessed out and will not appear in
+;;          system generated semtypes.
+;;      See tense entry (PRES|PAST|CF) in ttt-lexical patterns for example.
 ;;
 ;; 2. ! prefix for any feature for the negation
 ;;
@@ -389,7 +399,7 @@
                                       (format nil "_~s" (subscript s))
                                       "")
                                     (if (and (synfeats s) (not (empty? (synfeats s))))
-                                      (format nil "_~a"
+                                      (format nil "%~a"
                                               (let ((full-synfeat-str (to-string (synfeats s))))
                                                 ;; TODO: use cl-str package to make this nicer
                                                 (subseq full-synfeat-str 2 (1- (length full-synfeat-str)))))
@@ -438,7 +448,8 @@
       (when (and (= level 0)
                  (> (length s) (+ i 2))
                  (or (and (eql (char s i) #\=) (eql (char s (1+ i)) #\>))   ; =>
-                     (and (eql (char s i) #\>) (eql (char s (1+ i)) #\>)))) ; >>
+                     (and (eql (char s i) #\>) (eql (char s (1+ i)) #\>))   ; >>
+                     (and (eql (char s i) #\%) (eql (char s (1+ i)) #\>)))) ; %>
         (return i))
       (setf i (+ i 1)))
     (list (subseq s 1 i)
@@ -493,6 +504,42 @@
             bracket-depth tpstr params)
     (reverse params)))
 
+(defun process-out-synfeat-connective (base-semtype new-synfeats type-params)
+  "Processes out the special synfeat connective, %>, which assumes that the
+  antecedent and consequent semantic types match except for the explicit
+  synfeat changes listed in the consequent of %>.
+
+  We simply convert A%>S into {a1>>a1%S|{a2>>a2%S|{...}}} for the a1, a2, ...
+  flattened versions of A. This ensures that after applying this rule, the
+  semantic type in fact stays the same even if the original semantic type had a
+  bunch of alternatives. We don't want all alternatives to be possible in the
+  consequent for each of the antecedent alternatives."
+  ;; Steps
+  ;; 1. Flatten out the options
+  ;; For each option
+  ;;  2. Make a copy
+  ;;  3. Overwrite the synfeats of the copy with new synfeats
+  ;;  4. Create the new type with the base as antecedent and copy as consequent
+  ;; Then
+  ;; 5. Merge into a new single option type
+  ;; 6. Binarize
+  (let
+    ((new-types
+       ;; Flatten, overwrite synfeats, and create new type.
+       (loop for st in (types (flatten-options base-semtype))
+             for copy-st = (copy-semtype st)
+             for new-synfeat = (update-syntactic-features (synfeats copy-st)
+                                                          new-synfeats)
+             collect (new-semtype st copy-st 1 nil
+                                  :synfeats new-synfeats
+                                  :type-params type-params
+                                  :conn '>>)))
+     flat-type)
+    ;; Merge and binarize.
+    (setf flat-type (new-semtype nil nil 1 nil :options new-types))
+    (binarize-flat-options flat-type)))
+
+
 ;; Convert a string into a semantic type.
 ;; Strings must be of the form ([domain]=>[range]) or a single character, where
 ;; [domain] and [range] are valid strings of the same form.
@@ -503,8 +550,8 @@
 (defun str2semtype (s &key (recurse-fn #'str2semtype))
   (declare (type function recurse-fn))
   (let* ((subscript-regex (concatenate 'string
-                                       "(_([NAVP]))?"     ; POS
-                                       "(_([^\\^\\[]+))?")) ; synfeats
+                                       "(_([NAVP]))?"       ; POS
+                                       "(%([^\\^\\[]+))?")) ; synfeats
          (superscript-regex "(\\^([A-Z]|[2-9]))?")
          (type-param-regex "(\\[(.*)\\])?")
          ; ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
@@ -543,17 +590,29 @@
     
     (setf s (string-upcase s))
     (cond
+      ; TODO: update these comments
       ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
       ((equal (char s 0) #\()
        (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings non-atom-regex s)))
-              (split-segments (split-semtype-str (svref match 0))))
-         (new-semtype (funcall recurse-fn (first split-segments))
-                      (funcall recurse-fn (second split-segments))
-                      (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
-                      (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
-                      :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
-                      :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
-                      :conn (intern (third split-segments) :ulf-lib))))
+              (split-segments (split-semtype-str (svref match 0)))
+              (conn (intern (third split-segments) :ulf-lib)))
+         (if (eql '%> conn)
+           ;; If connective is %> then we need to process the antecedent first
+           ;; and apply the consequent synfeats accordingly.
+           ;; This will never have top-level exponents, subscripts, or synfeats of its own. 
+           (process-out-synfeat-connective
+             (funcall recurse-fn (first split-segments))        ; get antecedents
+             (funcall synfeat-parse-fn (second split-segments)) ; consequent is just synfeats
+             (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))) ; type params
+
+           ;; For other connectives, simply find the components in the string.
+           (new-semtype (funcall recurse-fn (first split-segments))
+                        (funcall recurse-fn (second split-segments))
+                        (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
+                        (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
+                        :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
+                        :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
+                        :conn conn))))
 
       ; OPTIONAL {A|B}[[type1],[type2],..\]
       ((equal (char s 0) #\{)
@@ -590,11 +649,6 @@
       ((equal (char str 0) #\() (str2semtype str :recurse-fn #'extended-str2semtype))
       ;; Optional type.
       ((equal (char str 0) #\{) (str2semtype str :recurse-fn #'extended-str2semtype))
-      ;; Tense.
-      ((equal str "TENSE") (new-semtype 'tense nil 1 nil))
-      ;; Auxiliaries.
-      ((equal str "AUX") (new-semtype 'aux nil 1 nil))
-      ((equal str "TAUX") (new-semtype 'taux nil 1 nil))
       ((equal str "ITAUX") (new-semtype 'itaux nil 1 nil))
       ;; p-arg
       ((equal str "PARG") (new-semtype 'parg nil 1 nil))

@@ -155,7 +155,6 @@
                     ((eql ulf '|'S|) (extended-str2semtype "POSTGEN1"))
                     ((atom-semtype? ulf) (atom-semtype? ulf))
                     ((member ulf lambda-vars) (str2semtype "D"))
-                    ((lex-tense?  ulf) (extended-str2semtype "TENSE"))
                     ((lex-macro?  ulf) (extended-str2semtype (symbol-name ulf)))
                     ((eql ulf '*qt) (extended-str2semtype "D[*QT]"))
                     ((lex-macro-hole? ulf) (extended-str2semtype (symbol-name ulf)))
@@ -213,13 +212,13 @@
 (defparameter *unary-noun-semtype* (str2semtype "(D=>(S=>2))_n"))
 (defparameter *unary-pred-semtype* (str2semtype "(D=>(S=>2))"))
 (defparameter *unary-verb-semtype* (str2semtype "(D=>(S=>2))_v"))
-(defparameter *unary-tensed-verb-semtype* (str2semtype "(D=>(S=>2))_v_t"))
+(defparameter *unary-tensed-verb-semtype* (str2semtype "(D=>(S=>2))_v%t"))
 (defparameter *general-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v"))
-(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
+(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v%!t"))
 (defparameter *term-semtype* (str2semtype "D"))
 (defparameter *sent-mod-semtype* (str2semtype "{((S=>2)=>(S=>2))|((S=>2)>>(S=>2))}"))
-(defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
-(defparameter *auxiliary-semtype* (str2semtype "((D=>(S=>2))_v_!t,!x>>(D=>(S=>2))_v_!t,x)"))
+(defparameter *tensed-sent-semtype* (str2semtype "(S=>2)%t"))
+(defparameter *auxiliary-semtype* (str2semtype "((D=>(S=>2))_v%!t,!x>>(D=>(S=>2))_v%!t,x)"))
 
 (declaim (ftype (function (list) list) get-all-top-domains))
 (defun get-all-top-domains (types)
@@ -240,20 +239,12 @@
   has no exponent. If it does, it is ignored. The strict EL type compositions
   are extended to include ULF macros and structural relaxations."
   (cond
-    ; TENSE, N+PREDS, NP+PREDS, +PREDS, etc. can't be the operand type.
+    ; N+PREDS, NP+PREDS, +PREDS, etc. can't be the operand type.
     ((and (atomic-type-p arg)
           (member (domain arg)
-                  '(tense n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep
+                  '(n+preds np+preds +preds qt-attr qt-attr1 sub sub1 rep
                           rep1 parg)))
      nil)
-    ;;; TENSE
-    ;;; TENSE + TYPE_V_U => TYPE_V_T
-    ((and (atomic-type-p op) (eql (domain op) 'tense)
-          (semtype-equal? *general-untensed-verb-semtype* arg
-                          :ignore-exp t))
-     (let ((tensed-semtype (copy-semtype arg)))
-       (add-semtype-tense tensed-semtype 't)
-       tensed-semtype))
     ;;; N+PREDS
     ;;; 1. n+preds + N_n >> {+preds[n+[N_n]]|N_n}
     ;;; 2. +preds[n+[T]] + N >> {+preds[n+[T]]|T}
@@ -435,22 +426,6 @@
        (setf (type-params term-st)
              (append (type-params op) (type-params arg)))
        term-st))
-    ;;; AUX
-    ;;; 1. TENSE + AUX => TAUX
-    ;;; 2. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
-    ; 1. TENSE + AUX => TAUX
-    ((and (atomic-type-p op) (eql (domain op) 'tense)
-          (semtype-equal? *auxiliary-semtype* arg))
-     (new-semtype 'taux nil 1 nil))
-    ; 2. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
-    ((and (atomic-type-p op)
-          (eql (domain op) 'taux)
-          (not (eql 't (feature-value (synfeats arg) 'tense)))
-          (null (feature-value (synfeats arg) 'auxiliary))
-          (semtype-equal? *unary-verb-semtype* arg))
-     (copy-semtype *unary-verb-semtype*
-                   :c-type-params (type-params arg)
-                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(x t))))
     ;;; PARG
     ;;; 1. PARG + T => PARG1[T]
     ;;; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}

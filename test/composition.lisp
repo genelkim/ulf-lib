@@ -132,7 +132,7 @@
   ;; TAUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_T_X
   (assert-equality
     #'semtype-str-equal
-    "(D=>(S=>2))_V_X,!T"
+    "(D=>(S=>2))_V%X,!T"
     (string-from-compose-types 'do.aux-s 'run.v :ext 'extended))
   (assert-equality
     #'semtype-str-equal
@@ -140,7 +140,7 @@
     (string-from-compose-types 'past 'do.aux-s :ext 'extended))
   (assert-equality
     #'semtype-str-equal
-    "(D=>(S=>2))_V_X,T"
+    "(D=>(S=>2))_V%X,T"
     (string-from-compose-types '(past do.aux-s) 'run.v :ext 'extended))
   (assert-equal nil (string-from-compose-types
                       'do.aux-s '(do.aux-s run.v) :ext 'extended))
@@ -200,11 +200,11 @@
     (string-from-compose-types '(i.pro (go.v there.pro)) '? :ext 'extended))
   (assert-equality
     #'semtype-str-equal
-    "(S=>2)_T"
+    "(S=>2)%T"
     (string-from-compose-types '! '(i.pro ((past go.v) there.pro)) :ext 'extended))
   (assert-equality
     #'semtype-str-equal
-    "(S=>2)_T"
+    "(S=>2)%T"
     (string-from-compose-types '? '(i.pro ((past go.v) there.pro)) :ext 'extended)))
 
 (define-test comp-p-arg-mod
@@ -249,14 +249,14 @@
     (declare (ignore original))
     (assert-equal "right" dir
                   (ulf-type-string? 'it.pro) (ulf-type-string? '((pres do.aux-s) see.v)))
-    (assert-equality #'semtype-str-equal "(S=>2)_T" typestr))
+    (assert-equality #'semtype-str-equal "(S=>2)%T" typestr))
   (multiple-value-bind
     (typestr dir original)
     (string-from-compose-types 'it.pro '((pres do.aux-s) see.v) :ext 'extended)
     (declare (ignore original))
     (assert-equal "left" dir
                   (ulf-type-string? 'it.pro) (ulf-type-string? '((pres do.aux-s) see.v)))
-    (assert-equality #'semtype-str-equal "(S=>2)_T" typestr)))
+    (assert-equality #'semtype-str-equal "(S=>2)%T" typestr)))
 
 
 (define-test free-sent-mod
@@ -265,7 +265,7 @@
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'not.adv-s))
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'always.adv-f))
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'today.adv-e))
-  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))_T" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))%T" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
   (let ((ulf-segments
           '(he.pro
              run.v
@@ -315,7 +315,7 @@
   ; this one passed.
   (assert-equality
     #'semtype-str-equal
-    "(S=>2)_T"
+    "(S=>2)%T"
     (left-right-compose-type-string! "ITAUX" (ulf-type-string? 'run.v)))
   (assert-equal nil (string-from-compose-types
                       '(past do.aux-s) 'dog.n
