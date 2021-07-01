@@ -55,7 +55,7 @@
   "Basic examples for macro ULF composition"
   (:tag :compose-basic)
   ; tense
-  (assert-equal "{(D=>(S=>2))_V_T|{{(D=>(D=>(S=>2)))_V_T|((D=>(S=>2))=>(D=>(S=>2)))_V_T}|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V_T|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V_T|{({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V_T|({D|(D=>(S=>2))}^5=>(D=>(S=>2)))_V_T}}}}}" (string-from-compose-types 'pres 'run.v :ext 'extended))
+  (assert-equal "{(D=>(S=>2))_V%T|{{(D=>(D=>(S=>2)))_V%T|((D=>(S=>2))=>(D=>(S=>2)))_V%T}|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V%T|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V%T|{({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V%T|({D|(D=>(S=>2))}^5=>(D=>(S=>2)))_V%T}}}}}" (string-from-compose-types 'pres 'run.v :ext 'extended))
   (assert-equal nil (string-from-compose-types 'past 'happy.a :ext 'extended))
   (assert-equal nil (string-from-compose-types 'cf 'man.n :ext 'extended))
   ; *+preds
@@ -127,9 +127,9 @@
   "Tests for auxiliaries."
   (:tag :aux-compose)
   ;; This is very similar to tense.
-  ;; AUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_X,!T
+  ;; AUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V%X,!T
   ;; TENSE + AUX => TAUX
-  ;; TAUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_T_X
+  ;; TAUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V%T,X
   (assert-equality
     #'semtype-str-equal
     "(D=>(S=>2))_V%X,!T"

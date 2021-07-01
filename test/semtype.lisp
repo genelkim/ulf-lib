@@ -59,8 +59,8 @@
   (assert-equality #'semtype-equal?-str "{D|2}^2" "{D^2|{2^2|{(D=>2)|(2=>D)}}}")
 
   ;; Optionals in argument exponents.
-  (assert-equality #'semtype-equal?-str "({D|2}^3=>S)" "(D=>(2=(D=>S)))")
-  (assert-equality #'semtype-equal?-str "({D|2}^n=>S)" "(D=>(2=(D=>S)))")
+  (assert-equality #'semtype-equal?-str "({D|2}^3=>S)" "(D=>(2=>(D=>S)))")
+  (assert-equality #'semtype-equal?-str "({D|2}^n=>S)" "(D=>(2=>(D=>S)))")
   (assert-equality #'semtype-equal?-str "({D|2}^n=>S)" "(D=>S)")
   (assert-equality #'semtype-equal?-str "({D|2}^n=>S)" "S")
   (assert-equality #'semtype-equal?-str "({D|2}^n=>S)" "(D=>(D=>(D=>(D=>S))))"))

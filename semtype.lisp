@@ -279,7 +279,7 @@
 
 ;; Check if two semantic types are equal. If one of the types is an optional
 ;; type then return true if either of the two options match. If both types are
-;; optional they must contain the same options (order doesn't matter).
+;; optional their intersection must not be empty.
 ;; If :ignore-exp is not NIL then exponents of the two types aren't checked
 ;; If :ignore-exp is 'r then ignore exponents recursively
 ;; Tenses and subscripts are checked if both types have a specified
@@ -294,49 +294,79 @@
 ;; For synfeats, call syntactic-features-match? with x as the pattern.
 ;; Basically, x is the general class and we check if y has an option that is a
 ;; subset of one of the x options.
-(defun semtype-equal? (x y &key ignore-exp)
+(defun semtype-equal? (raw-x raw-y &key ignore-exp)
   (declare (ftype (function (t) fixnum) ex))
-  (cond
-    ;; Both optional
-    ((and (and (optional-type-p x) (optional-type-p y))
-          (if ignore-exp T (= (ex x) (ex y))))
-     (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
-       (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
-                (semtype-equal? B D :ignore-exp (when (equal ignore-exp 'r) 'r)))
-           (and (semtype-equal? A D :ignore-exp (when (equal ignore-exp 'r) 'r))
-                (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r))))))
+  (labels
+    ((pull-arg-from-exp (st)
+       "If `st` has an exponent >1 or its domain has an exponent >1, this
+       function generates a equivalent semtype where the expoenent is
+       decremented and a new domain is introduced.
 
-    ;; x optional; y not optional
-    ((and (and (optional-type-p x) (not (optional-type-p y))))
-     (or (and (or ignore-exp (= (ex y) (* (ex (car (types x))) (ex x))))
-              (semtype-equal? (car (types x)) y :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-         (and (or ignore-exp (= (ex y) (* (ex (cadr (types x))) (ex x))))
-              (semtype-equal? (cadr (types x)) y :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
+       Examples:
+         A           ----> A
+         A^4         ----> (A=>A^3)
+         (A^3=>B^2)  ----> (A=>(A^2=>B^2))"
+       (let (new-dom new-ran)
+         (cond
+           ;; Top-level exponent >1.
+           ((> (ex st) 1)
+            (setf new-dom (copy-semtype st :c-ex 1))
+            (setf new-ran (copy-semtype st :c-ex (1- (ex st)))))
+           ;; Domain exponent >1.
+           ((and (not (atomic-type-p st))
+                 (not (optional-type-p st))
+                 (> (ex (domain st)) 1))
+            (setf new-dom (copy-semtype (domain st) :c-ex 1))
+            (setf new-ran
+                  (copy-semtype
+                    st
+                    :c-dom (copy-semtype (domain st)
+                                         :c-ex (1- (ex (domain st))))))))
+         (if (and new-dom new-ran)
+           ;; New domain and range.
+           (new-semtype new-dom new-ran 1 nil)
+           ;; Nothing new, return input.
+           st)))) ; end of labels def.
+    ;; Expand out one level of exponents if relevant.
+    (let ((x (if ignore-exp raw-x (pull-arg-from-exp raw-x)))
+          (y (if ignore-exp raw-y (pull-arg-from-exp raw-y)))
+          (rec-ignore-exp (when (equal ignore-exp 'r) 'r)))
+      ;; Now we can assume exponent = 1 for the domain and at the top-level.
+      (cond
+        ;; One is optional.
+        ;; Make option lists and see if any pair of options work.
+        ((or (optional-type-p x) (optional-type-p y))
+         (let ((x-options (if (optional-type-p x) (types x) (list x)))
+               (y-options (if (optional-type-p y) (types y) (list y))))
+           (loop for x-option in x-options
+                 if (loop for y-option in y-options
+                          if (semtype-equal? x-option
+                                             y-option
+                                             :ignore-exp rec-ignore-exp)
+                          return t)
+                 return t)))
 
-    ;; y optional; x not optional
-    ((and (and (not (optional-type-p x)) (optional-type-p y)))
-     (or (and (or ignore-exp (= (ex x) (* (ex (car (types y))) (ex y))))
-              (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
-         (and (or ignore-exp (= (ex x) (* (ex (cadr (types y))) (ex y))))
-              (semtype-equal? x (cadr (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
-
-    ;; No optionals
-    ((and (not (or (optional-type-p x) (optional-type-p y)))
-          (if ignore-exp T (= (ex x) (ex y)))
-          (equal (type-of x) (type-of y))
-          (if (and (subscript x) (subscript y)) (equal (subscript x) (subscript y)) T)
-          (syntactic-features-match? (synfeats x) (synfeats y)))
-     (if (atomic-type-p x)
-       ;; If atomic, simply compare domain symbols.
-       (equal (domain x) (domain y))
-       ;; If not atomic, recurse and check bidirectional equality.
-       (and (semtype-equal? (domain x) (domain y) :ignore-exp (when (equal ignore-exp 'r) 'r))
-            (semtype-equal? (range x) (range y) :ignore-exp (when (equal ignore-exp 'r) 'r))
-            (equal (connective x) (connective y)))))
-    
-    ; no possible match
-    (t
-      nil)))
+        ;; No optionals
+        (t
+         (and
+           ;; Subscripts.
+           ;; If both are specified, must match.
+           (if (and (subscript x) (subscript y))
+             (equal (subscript x) (subscript y))
+             t)
+           ;; Syntactic features.
+           (syntactic-features-match? (synfeats x) (synfeats y))
+           (if (or (atomic-type-p x) (atomic-type-p y))
+             ;; If atomic, both must be and match domain values.
+             (and (atomic-type-p x)
+                  (atomic-type-p y)
+                  (equal (domain x) (domain y)))
+             ;; If not atomic, domain, range, and connective must match.
+             (and (semtype-equal? (domain x) (domain y)
+                                  :ignore-exp ignore-exp)
+                  (semtype-equal? (range x) (range y)
+                                  :ignore-exp ignore-exp)
+                  (equal (connective x) (connective y))))))))))
 
 ;; Make a new semtype identical to the given type
 ;; Key word options allow overwriting specific fields if appropriate.
@@ -531,7 +561,6 @@
              for new-synfeat = (update-syntactic-features (synfeats copy-st)
                                                           new-synfeats)
              collect (new-semtype st copy-st 1 nil
-                                  :synfeats new-synfeats
                                   :type-params type-params
                                   :conn '>>)))
      flat-type)
@@ -551,7 +580,7 @@
   (declare (type function recurse-fn))
   (let* ((subscript-regex (concatenate 'string
                                        "(_([NAVP]))?"       ; POS
-                                       "(%([^\\^\\[]+))?")) ; synfeats
+                                       "(%([^>\\^\\[]+))?")) ; synfeats
          (superscript-regex "(\\^([A-Z]|[2-9]))?")
          (type-param-regex "(\\[(.*)\\])?")
          ; ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
