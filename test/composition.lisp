@@ -127,12 +127,12 @@
   "Tests for auxiliaries."
   (:tag :aux-compose)
   ;; This is very similar to tense.
-  ;; AUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_X
+  ;; AUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_X,!T
   ;; TENSE + AUX => TAUX
   ;; TAUX + (D=>(S=>2))_V (no T, X) >> (D=>(S=>2))_V_T_X
   (assert-equality
     #'semtype-str-equal
-    "(D=>(S=>2))_V_X"
+    "(D=>(S=>2))_V_X,!T"
     (string-from-compose-types 'do.aux-s 'run.v :ext 'extended))
   (assert-equality
     #'semtype-str-equal
@@ -140,7 +140,7 @@
     (string-from-compose-types 'past 'do.aux-s :ext 'extended))
   (assert-equality
     #'semtype-str-equal
-    "(D=>(S=>2))_V_T_X"
+    "(D=>(S=>2))_V_X,T"
     (string-from-compose-types '(past do.aux-s) 'run.v :ext 'extended))
   (assert-equal nil (string-from-compose-types
                       'do.aux-s '(do.aux-s run.v) :ext 'extended))
@@ -265,7 +265,7 @@
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'not.adv-s))
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'always.adv-f))
   (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? 'today.adv-e))
-  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
+  (assert-equality #'semtype-str-equal "((S=>2)>>(S=>2))_T" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
   (let ((ulf-segments
           '(he.pro
              run.v

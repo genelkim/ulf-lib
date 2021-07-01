@@ -4,8 +4,7 @@
 
 (defun merge-subscripts (ss1 ss2)
   "Merge the two subscripts, considering ss1 as the main subscript. If they are
-  contradictory, take the ss1 value.
-  "
+  contradictory, take the ss1 value."
   (let*
     ((ss1chars (if (null ss1) nil (coerce (symbol-name ss1) 'list)))
      (ss2chars (if (null ss2) nil (coerce (symbol-name ss2) 'list)))
@@ -23,10 +22,10 @@
       nil
       (intern (coerce filtered 'string) :ulf-lib))))
 
+;; TODO: incorporate this into tense synfeats stuff. Also make sure tense isn't included on atoms.
 (defun merge-tenses (t1 t2)
   "Merge the two tenses, considering t1 as the main subscript. If they are
-  contradictory, take the t1 value.
-  "
+  contradictory, take the t1 value."
   (let*
     ((t1chars (if (null t1) nil (coerce (symbol-name t1) 'list)))
      (t2chars (if (null t2) nil (coerce (symbol-name t2) 'list)))
@@ -63,7 +62,9 @@
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
-;; Any subscripts and tenses are propagated from op.
+;; Subscripts are propagated from op.
+;; Synfeats are propagated from op if => and arg if >> with
+;; exceptions per synfeat.
 ;; type-params are propagated from both.
 (declaim (ftype (function (semtype) fixnum) ex))
 (defun apply-operator! (op arg &key (recurse-fn #'apply-operator!))
@@ -76,19 +77,19 @@
           (let ((a (funcall recurse-fn (first (types op)) arg))
                 (b (funcall recurse-fn (second (types op)) arg)))
             (if (and a b)
-              (new-semtype nil nil 1 nil nil :options (list a b))
+              (new-semtype nil nil 1 nil :options (list a b))
               (or a b))))
          ((optional-type-p arg)
           ; Argument is an optional type
           (let ((a (funcall recurse-fn op (first (types arg))))
                 (b (funcall recurse-fn op (second (types arg)))))
             (if (and a b)
-              (new-semtype nil nil 1 nil nil :options (list a b)) ; TODO: add a function new-optional-semtype
+              (new-semtype nil nil 1 nil :options (list a b)) ; TODO: add a function new-optional-semtype
               (or a b))))
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p op)
           (when (and (semtype-equal? op arg :ignore-exp T) (> (ex op) 1))
-            (new-semtype (domain op) nil (- (ex op) 1) (subscript op) (tense op))))
+            (new-semtype (domain op) nil (- (ex op) 1) (subscript op))))
          ;; Operator is a non-atomic type with domain exponent n=1
          ((and (semtype-p op) (semtype-equal? (domain op) arg :ignore-exp T) (= (ex (domain op)) 1))
           (let ((result (copy-semtype (range op))))
@@ -96,10 +97,6 @@
             (when (not (or (atomic-type-p result) (equal (semtype2str result) "(S=>2)")))
               (setf (subscript result)
                     (merge-subscripts (subscript (range op)) (subscript op))))
-            ;; Only add tense when not atomic.
-            (when (not (atomic-type-p result))
-              (setf (tense result)
-                    (merge-tenses (tense (range op)) (tense op))))
             ;; Update syntactic features.
             (setf (synfeats result)
                   (compose-synfeats! op arg))
@@ -168,12 +165,18 @@
     (if (equal (car ulf) 'lambda)
       ; ULF is of the form (lambda var (expr))
       (when (= (length ulf) 3)
-        (new-semtype (str2semtype "D") (ulf-type? (third ulf) :lambda-vars (cons (cadr ulf) lambda-vars)) 1 nil nil))
+        (new-semtype (str2semtype "D")
+                     (ulf-type? (third ulf)
+                                :lambda-vars (cons (cadr ulf) lambda-vars))
+                     1
+                     nil))
       ; ULF is neither a lambda nor an atom
       (if (= (length ulf) 1)
         (ulf-type? (car ulf) :lambda-vars lambda-vars)
-        (extended-compose-types! (ulf-type? (reverse (cdr (reverse ulf))) :lambda-vars lambda-vars)
-                                 (ulf-type? (car (last ulf)) :lambda-vars lambda-vars))))))
+        (extended-compose-types! (ulf-type? (reverse (cdr (reverse ulf)))
+                                            :lambda-vars lambda-vars)
+                                 (ulf-type? (car (last ulf))
+                                            :lambda-vars lambda-vars))))))
 
 ;; Given a ULF, evaluate the type if possible and return a string representation
 ;; of the type.
@@ -211,13 +214,12 @@
 (defparameter *unary-pred-semtype* (str2semtype "(D=>(S=>2))"))
 (defparameter *unary-verb-semtype* (str2semtype "(D=>(S=>2))_v"))
 (defparameter *unary-tensed-verb-semtype* (str2semtype "(D=>(S=>2))_v_t"))
-;(defparameter *general-verb-semtype* (str2semtype "{({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t|({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_t}"))
 (defparameter *general-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v"))
-;(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
-(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v"))
+(defparameter *general-untensed-verb-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v_!t"))
 (defparameter *term-semtype* (str2semtype "D"))
-(defparameter *sent-mod-semtype* (str2semtype "((S=>2)>>(S=>2))"))
+(defparameter *sent-mod-semtype* (str2semtype "{((S=>2)=>(S=>2))|((S=>2)>>(S=>2))}"))
 (defparameter *tensed-sent-semtype* (str2semtype "(S=>2)_t"))
+(defparameter *auxiliary-semtype* (str2semtype "((D=>(S=>2))_v_!t,!x>>(D=>(S=>2))_v_!t,x)"))
 
 (declaim (ftype (function (list) list) get-all-top-domains))
 (defun get-all-top-domains (types)
@@ -250,7 +252,7 @@
           (semtype-equal? *general-untensed-verb-semtype* arg
                           :ignore-exp t))
      (let ((tensed-semtype (copy-semtype arg)))
-       (add-semtype-tense tensed-semtype t)
+       (add-semtype-tense tensed-semtype 't)
        tensed-semtype))
     ;;; N+PREDS
     ;;; 1. n+preds + N_n >> {+preds[n+[N_n]]|N_n}
@@ -263,10 +265,10 @@
      ;; example (D=>(S=>2))_n is not equal to (D=>(S=>2)), but it is a
      ;; sufficient argument.
      (when (semtype-equal? *unary-noun-semtype* arg :ignore-exp t)
-       (let* ((n+-semtype (new-semtype 'n+ nil 1 nil nil :type-params (list arg)))
-              (+preds-semtype (new-semtype '+preds nil 1 nil nil :type-params (list n+-semtype))))
+       (let* ((n+-semtype (new-semtype 'n+ nil 1 nil :type-params (list arg)))
+              (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list n+-semtype))))
          ;;Optional semtype of either continuing to act as +preds, or as the internal noun.
-         (new-semtype nil nil 1 nil nil :options (list +preds-semtype arg)))))
+         (new-semtype nil nil 1 nil :options (list +preds-semtype arg)))))
     ;;; NP+PREDS
     ;;; 1. np+preds + D >> {+preds[n+[D]]|D}
     ;;; 2. +preds[n+[T]] + N >> {+preds[n+[T]]|T}
@@ -274,10 +276,10 @@
     ; np+preds + D >> {+preds[n+[D]]|D}
     ((and (atomic-type-p op) (eql (domain op) 'np+preds))
      (when (semtype-equal? *term-semtype* arg :ignore-exp t)
-       (let* ((np+-semtype (new-semtype 'np+ nil 1 nil nil :type-params (list arg)))
-              (+preds-semtype (new-semtype '+preds nil 1 nil nil :type-params (list np+-semtype))))
+       (let* ((np+-semtype (new-semtype 'np+ nil 1 nil :type-params (list arg)))
+              (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list np+-semtype))))
          ;; Optional semtype of either continuing to act as +preds, or as the internal noun.
-         (new-semtype nil nil 1 nil nil :options (list +preds-semtype arg)))))
+         (new-semtype nil nil 1 nil :options (list +preds-semtype arg)))))
     ; +preds[n+[T]] + N >> {+preds[n+[T]]|T}(N+PREDS&NP+PREDS)
     ((and (atomic-type-p op) (eql (domain op) '+preds))
      (when (semtype-equal? *unary-pred-semtype* arg :ignore-exp t)
@@ -302,7 +304,7 @@
          (setf updated-+preds-semtype (copy-semtype op))
          (setf (type-params updated-+preds-semtype)
                (append (type-params updated-+preds-semtype) new-params))
-         (new-semtype nil nil 1 nil nil :options (list updated-+preds-semtype updated-inner-semtype)))))
+         (new-semtype nil nil 1 nil :options (list updated-+preds-semtype updated-inner-semtype)))))
     ;;; QT-ATTR
     ;;; The whole process of this is as follows
     ;;; Type(*qt): D[*qt],   Type(qt-attr): qt-attr
@@ -316,7 +318,7 @@
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr))
      (let ((type-params (get-semtype-type-params arg)))
        (when (find '*qt (get-all-top-domains type-params))
-         (new-semtype 'qt-attr1 nil 1 nil nil :type-params (list arg)))))
+         (new-semtype 'qt-attr1 nil 1 nil :type-params (list arg)))))
     ; qt-attr1[T1[*qt]] + T2 >> T2[qt-attr1[T1[*qt]]]
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr1))
      (let ((result (copy-semtype arg)))
@@ -331,7 +333,7 @@
                        (get-semtype-type-params arg))))
        (when (not qt-attr1-param)
          (error "We should NEVER get here! Included to help compiler."))
-       (new-semtype 'qt-attr2 nil 1 nil nil
+       (new-semtype 'qt-attr2 nil 1 nil
                     :type-params (type-params qt-attr1-param))))
     ;;; qt-attr2[T1[*qt]] + \" >> T1
     ((and (atomic-type-p op) (eql (domain op) 'qt-attr2)
@@ -351,7 +353,7 @@
     ;;; 2. sub1[T1] + T2[*h[T3]] >> T2, iff T1 can be the arg of T3.
     ; sub + T >> sub1[T]
     ((and (atomic-type-p op) (eql (domain op) 'sub))
-     (new-semtype 'sub1 nil 1 nil nil :type-params (list (copy-semtype arg))))
+     (new-semtype 'sub1 nil 1 nil :type-params (list (copy-semtype arg))))
     ; Hole variables.
     ; T + *h << Range(T)[*h[Dom(T)]]
     ; T + *p >> Range(T)[*h[Dom(T)]]
@@ -398,7 +400,7 @@
        (when (and (not (null *p-params))
                   (not (null (type-params (first *p-params)))))
          (assert (= 1 (length *p-params)))
-         (new-semtype 'rep1 nil 1 nil nil
+         (new-semtype 'rep1 nil 1 nil
                       :type-params (list (copy-semtype arg))))))
     ; rep1[T1[*p[T2]]] + T3 >> T1, iff T3 can be the arg of T2.
     ((and (atomic-type-p op) (eql (domain op) 'rep1))
@@ -423,7 +425,7 @@
     ((and (atomic-type-p arg)
           (semtype-equal? *term-semtype* op)
           (eql (domain arg) 'postgen1))
-     (new-semtype 'postgen2 nil 1 nil nil
+     (new-semtype 'postgen2 nil 1 nil
                   :type-params (append (type-params op) (type-params arg))))
     ; 2. POSTGEN2 + (D=>(S=>2))_N >> D
     ((and (atomic-type-p op)
@@ -434,39 +436,28 @@
              (append (type-params op) (type-params arg)))
        term-st))
     ;;; AUX
-    ;;; 1. AUX + (D=>(S=>2))_V_U >> (D=>(S=>2))_V_U_X
-    ;;; 2. TENSE + AUX => TAUX
-    ;;; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
-    ; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_X
-    ((and (atomic-type-p op)
-          (eql (domain op) 'aux)
-          (null (tense arg))
-          (null (feature-value (synfeats arg) 'auxiliary))
-          (semtype-equal? *unary-verb-semtype* arg))
-     (copy-semtype *unary-verb-semtype*
-                   :c-type-params (type-params arg)
-                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(x))))
-    ; 2. TENSE + AUX => TAUX
+    ;;; 1. TENSE + AUX => TAUX
+    ;;; 2. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
+    ; 1. TENSE + AUX => TAUX
     ((and (atomic-type-p op) (eql (domain op) 'tense)
-          (atomic-type-p arg) (eql (domain arg) 'aux))
-     (new-semtype 'taux nil 1 nil nil))
-    ; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
+          (semtype-equal? *auxiliary-semtype* arg))
+     (new-semtype 'taux nil 1 nil))
+    ; 2. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
     ((and (atomic-type-p op)
           (eql (domain op) 'taux)
-          (null (tense arg))
+          (not (eql 't (feature-value (synfeats arg) 'tense)))
           (null (feature-value (synfeats arg) 'auxiliary))
           (semtype-equal? *unary-verb-semtype* arg))
      (copy-semtype *unary-verb-semtype*
                    :c-type-params (type-params arg)
-                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(x))
-                   :c-tense 't))
+                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(x t))))
     ;;; PARG
     ;;; 1. PARG + T => PARG1[T]
     ;;; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
     ;;; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A}
     ; 1. PARG + T => PARG[T]
     ((and (atomic-type-p op) (eql (domain op) 'parg))
-     (new-semtype 'parg1 nil 1 nil nil :type-params (list (copy-semtype arg))))
+     (new-semtype 'parg1 nil 1 nil :type-params (list (copy-semtype arg))))
     ; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
     ((and (semtype-equal? *general-verb-semtype* op)
           (atomic-type-p arg) (eql (domain arg) 'parg1)
@@ -483,8 +474,7 @@
 (defun left-right-apply-operator! (op arg &key (recurse-fn #'left-right-apply-operator!))
   "A further relaxation of `extended-apply-operator!` which generalizes the
   type system to allow left-to-right composition even when there is infixing,
-  inversions, and sentence modifiers.
-  "
+  inversions, and sentence modifiers."
   (cond
     ;;; SUBJECT(term) + VP
     ; Treat it like it's VP + TERM
@@ -509,17 +499,17 @@
     ; 1. TAUX + TERM >> ITAUX
     ((and (atomic-type-p op) (eql (domain op) 'taux)
           (semtype-equal? *term-semtype* arg))
-     (new-semtype 'itaux nil 1 nil nil))
+     (new-semtype 'itaux nil 1 nil))
     ; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
     ((and (atomic-type-p op)
           (eql (domain op) 'itaux)
-          (null (tense arg))
+          (not (eql 't (feature-value (synfeats arg) 'tense)))
           (null (feature-value (synfeats arg) 'auxiliary))
           (semtype-equal? *unary-verb-semtype* arg)
           (not (semtype-equal? *unary-tensed-verb-semtype* arg)))
      (copy-semtype *tensed-sent-semtype*
                    :c-type-params (type-params arg)
-                   :c-tense 't))
+                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(t))))
     ;; Fall back to extended-apply-operator! when special cases are not
     ;; relevant.
     (t (extended-apply-operator! op arg :recurse-fn recurse-fn))))
