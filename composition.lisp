@@ -436,23 +436,13 @@
              (append (type-params op) (type-params arg)))
        term-st))
     ;;; AUX
-    ;;; [NO LONGEr USED] 1. AUX + (D=>(S=>2))_V_U >> (D=>(S=>2))_V_U_X
-    ;;; 2. TENSE + AUX => TAUX
-    ;;; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
-    ; 1. AUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_X
-    ;((and (atomic-type-p op)
-    ;      (eql (domain op) 'aux)
-    ;      (null (tense arg))
-    ;      (null (feature-value (synfeats arg) 'auxiliary))
-    ;      (semtype-equal? *unary-verb-semtype* arg))
-    ; (copy-semtype *unary-verb-semtype*
-    ;               :c-type-params (type-params arg)
-    ;               :c-synfeats (add-feature-values (copy (synfeats arg)) '(x))))
-    ; 2. TENSE + AUX => TAUX
+    ;;; 1. TENSE + AUX => TAUX
+    ;;; 2. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
+    ; 1. TENSE + AUX => TAUX
     ((and (atomic-type-p op) (eql (domain op) 'tense)
           (semtype-equal? *auxiliary-semtype* arg))
      (new-semtype 'taux nil 1 nil))
-    ; 3. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
+    ; 2. TAUX + (D=>(S=>2))_V [no T or X] >> (D=>(S=>2))_V_T_X
     ((and (atomic-type-p op)
           (eql (domain op) 'taux)
           (not (eql 't (feature-value (synfeats arg) 'tense)))
