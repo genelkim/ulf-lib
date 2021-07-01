@@ -3,28 +3,26 @@
 
 (in-package :ulf-lib)
 
-(defclass feature-defintion ()
-  ((name
-     :initarg :name
-     :initform (error "Must supply a name for the feature definition.")
-     :accessor name)
-   (possible-values
-     :initarg :possible-values
-     :initform (error "Must supply possible feature values for the feature.")
-     :accessor possible-values)
-   ;; A combinator must take four feature symbol arguments and two optional
-   ;; semtype arguments, same as the combine-features method in
-   ;; syntactic-features.lisp.
-   (combinator-fn
-     :initarg :combinator-fn
-     :initform nil
-     :accessor combinator-fn)
-   ;; Default value for when the feature is unspecified in non-antecedent
-   ;; position. Must be one of the possible values.
-   (default-value
-     :initarg :default-value
-     :initform (error "Must supply a default feature value.")
-     :accessor default-value)))
+;;;
+;;; Combinator definitions.
+;;; See feature-definition-declarations.lisp for default and usage.
+;;;
+(defparameter *predicate-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))"))
+
+(defun auxiliary-combinator-fn (base opr arg csq
+                                &optional opr-semtype arg-semtype)
+  "Feature combinator function for auxiliaries.
+  If the operator consequent is not some form of predicate, return nil.
+  Otherwise, use the base feature."
+  (declare (ignore opr arg csq arg-semtype))
+  (if (not (semtype-equal? *predicate-semtype* (range opr-semtype)))
+    nil
+    base))
+
+
+;;;
+;;; Feature Definitions.
+;;;
 
 ;; The possible-values must be unique through all definitions since we use
 ;; those values directly for a compact representation of the syntactic feature
@@ -33,7 +31,7 @@
 ;; The convention for binary features (+/-) is to indicate the negation with a
 ;; ! prefix. Then nil is used for unspecified feature values.
 ;; TODO: fill in combinator-fns.
-(defparameter *feature-defintions*
+(setf *feature-defintions*
   (list
     ;; TENSE
     (make-instance
@@ -45,6 +43,7 @@
     (make-instance
       'feature-defintion
       :name "AUXILIARY"
+      :combinator-fn #'auxiliary-combinator-fn
       :possible-values '(x !x)
       :default-value '!x)
     ;; PLURALITY
@@ -75,7 +74,7 @@
 ;;       maybe macro features should be different?
 
 ;; Association list from syntactic feature values to the feature names.
-(defparameter *syntactic-feature-values*
+(setf *syntactic-feature-values*
   ;; GK: For some reason Lisp gets mad when I try to access possible-values
   ;; directly in the loop macro, so I nested another level.
   (loop for elem-def in *feature-defintions*
@@ -83,18 +82,4 @@
                       collect (cons feat (name elem-def)))
         into sublists
         finally (return (apply #'append sublists))))
-
-(defmethod get-combinator ((obj feature-defintion))
-  (if (combinator-fn obj)
-    (combinator-fn obj)
-    #'default-combinator-fn))
-
-(defmethod get-syntactic-feature-combinator ((name string))
-  (get-combinator (find name *feature-defintions* :key #'name)))
-
-(defun default-combinator-fn (base opr arg csq
-                              &optional opr-semtype arg-semtype)
-  "Default feature combinator function simply uses the base feature."
-  (declare (ignore opr arg csq opr-semtype arg-semtype))
-  base)
 
