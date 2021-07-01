@@ -287,10 +287,8 @@
 (defun semtype-equal? (x y &key ignore-exp)
   (declare (ftype (function (t) fixnum) ex))
   (cond
-    ((and (or (optional-type-p x) (optional-type-p y))
-          ;; At least one optional
-          (and (optional-type-p x) (optional-type-p y))
-          ;; Both optional
+    ;; Both optional
+    ((and (and (optional-type-p x) (optional-type-p y))
           (if ignore-exp T (= (ex x) (ex y))))
      (let ((A (car (types x))) (B (cadr (types x))) (C (car (types y))) (D (cadr (types y))))
        (or (and (semtype-equal? A C :ignore-exp (when (equal ignore-exp 'r) 'r))
@@ -298,21 +296,15 @@
            (and (semtype-equal? A D :ignore-exp (when (equal ignore-exp 'r) 'r))
                 (semtype-equal? B C :ignore-exp (when (equal ignore-exp 'r) 'r))))))
 
-    ((and (or (optional-type-p x) (optional-type-p y))
-          ;; At least one optional
-          (not (and (optional-type-p x) (optional-type-p y)))
-          (optional-type-p x))
-     ;; x optional; y not optional
+    ;; x optional; y not optional
+    ((and (and (optional-type-p x) (not (optional-type-p y))))
      (or (and (or ignore-exp (= (ex y) (* (ex (car (types x))) (ex x))))
-              (semtype-equal? y (car (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
+              (semtype-equal? (car (types x)) y :ignore-exp (if (equal ignore-exp 'r) 'r T)))
          (and (or ignore-exp (= (ex y) (* (ex (cadr (types x))) (ex x))))
-              (semtype-equal? y (cadr (types x)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
+              (semtype-equal? (cadr (types x)) y :ignore-exp (if (equal ignore-exp 'r) 'r T)))))
 
-    ((and (or (optional-type-p x) (optional-type-p y))
-          ;; At least one optional
-          (not (and (optional-type-p x) (optional-type-p y)))
-          (optional-type-p y))
-     ;; y optional; x not optional
+    ;; y optional; x not optional
+    ((and (and (not (optional-type-p x)) (optional-type-p y)))
      (or (and (or ignore-exp (= (ex x) (* (ex (car (types y))) (ex y))))
               (semtype-equal? x (car (types y)) :ignore-exp (if (equal ignore-exp 'r) 'r T)))
          (and (or ignore-exp (= (ex x) (* (ex (cadr (types y))) (ex y))))

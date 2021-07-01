@@ -484,8 +484,7 @@
 (defun left-right-apply-operator! (op arg &key (recurse-fn #'left-right-apply-operator!))
   "A further relaxation of `extended-apply-operator!` which generalizes the
   type system to allow left-to-right composition even when there is infixing,
-  inversions, and sentence modifiers.
-  "
+  inversions, and sentence modifiers."
   (cond
     ;;; SUBJECT(term) + VP
     ; Treat it like it's VP + TERM
