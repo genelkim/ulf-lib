@@ -146,6 +146,12 @@
                                               (feature-map obj))))
   obj)
 
+(defmethod update-syntactic-features ((obj syntactic-features)
+                                      (new syntactic-features))
+  "Same as update-feature-map, but uses syntactic-features object for new
+  values instead of a raw feature map."
+  (update-feature-map obj (feature-map new)))
+
 (defmethod combine-features ((base syntactic-features)
                              (opr-feats syntactic-features)
                              (arg-feats syntactic-features)
