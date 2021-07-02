@@ -344,7 +344,7 @@
 ;; For synfeats, call syntactic-features-match? with x as the pattern.
 ;; Basically, x is the general class and we check if y has an option that is a
 ;; subset of one of the x options.
-(defun semtype-equal? (raw-x raw-y &key ignore-exp)
+(defun semtype-match? (raw-x raw-y &key ignore-exp)
   (declare (ftype (function (t) fixnum) ex))
   ;; Expand out one level of exponents if relevant.
   (let ((x (if ignore-exp raw-x (unroll-exponent-step raw-x)))
@@ -359,7 +359,7 @@
              (y-options (if (optional-type-p y) (types y) (list y))))
          (loop for x-option in x-options
                if (loop for y-option in y-options
-                        if (semtype-equal? x-option
+                        if (semtype-match? x-option
                                            y-option
                                            :ignore-exp rec-ignore-exp)
                         return t)
@@ -381,9 +381,9 @@
                 (atomic-type-p y)
                 (equal (domain x) (domain y)))
            ;; If not atomic, domain, range, and connective must match.
-           (and (semtype-equal? (domain x) (domain y)
+           (and (semtype-match? (domain x) (domain y)
                                 :ignore-exp ignore-exp)
-                (semtype-equal? (range x) (range y)
+                (semtype-match? (range x) (range y)
                                 :ignore-exp ignore-exp)
                 (equal (connective x) (connective y)))))))))
 
@@ -712,9 +712,8 @@
       ;; Non-special atomic type.
       (t (str2semtype s :recurse-fn #'extended-str2semtype)))))
 
-; TODO(gene): change this to semtype-equal? to semtype-sufficient? and this to semtype-equal?
 ; TODO(gene): add tests for this
-(defun strict-semtype-equal (s1 s2)
+(defun semtype-equal? (s1 s2)
   "Determines whether two semtypes are equivalent. For optional types, order
   doesn't matter and allows flattening of options."
   (labels
@@ -771,9 +770,9 @@
     ; labels body
     ; If we get to an atomic label, just check the labels.
     (let ((flat-s1 (remove-duplicates (types (flatten-options s1))
-                                      :test #'strict-semtype-equal))
+                                      :test #'semtype-equal?))
           (flat-s2 (remove-duplicates (types (flatten-options s2))
-                                      :test #'strict-semtype-equal)))
+                                      :test #'semtype-equal?)))
       ; Check that the lengths are the same and that for every option in s1,
       ; the same option exists in s2.
       (set-no-option-equal flat-s1 flat-s2))))

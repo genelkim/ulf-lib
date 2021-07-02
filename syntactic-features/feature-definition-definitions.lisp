@@ -15,7 +15,7 @@
   If the operator consequent is not some form of predicate, return nil.
   Otherwise, use the base feature."
   (declare (ignore opr arg csq arg-semtype))
-  (if (not (semtype-equal? *predicate-semtype* (range opr-semtype)))
+  (if (not (semtype-match? *predicate-semtype* (range opr-semtype)))
     nil
     base))
 
