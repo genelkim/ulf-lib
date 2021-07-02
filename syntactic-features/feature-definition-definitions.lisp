@@ -8,16 +8,38 @@
 ;;; See feature-definition-declarations.lisp for default and usage.
 ;;;
 (defparameter *predicate-semtype* (str2semtype "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))"))
+(defparameter *sentence-semtype* (str2semtype "(S=>2)"))
 
-(defun auxiliary-combinator-fn (base opr arg csq
-                                &optional opr-semtype arg-semtype)
-  "Feature combinator function for auxiliaries.
-  If the operator consequent is not some form of predicate, return nil.
-  Otherwise, use the base feature."
-  (declare (ignore opr arg csq arg-semtype))
-  (if (not (semtype-match? *predicate-semtype* (range opr-semtype)))
-    nil
-    base))
+(defun base-result-pattern-combinator-generator (result-pattern)
+  "A function that generates combinator functions that return base if the
+  resulting semtype of the combination matches the given pattern (defined
+  as a semtype itself). Otherwise, returns the nil."
+  (lambda (base opr arg csq &optional opr-semtype arg-semtype)
+    (declare (ignore opr arg csq))
+    (when base ; don't bother if base is nil. 
+      (let ((res-semtype (compose-types! opr-semtype arg-semtype
+                                         ; including synfeats would lead to an
+                                         ; infinite recursion.
+                                         :ignore-synfeats t)))
+        (if (semtype-match? result-pattern res-semtype)
+          base
+          nil)))))
+
+;; Simple combinator functions. 
+(setf (fdefinition 'tense-combinator-fn)
+      (base-result-pattern-combinator-generator
+        (new-semtype nil nil 1 nil :options (list *sentence-semtype*
+                                                  *predicate-semtype*))))
+(setf (fdefinition 'auxiliary-combinator-fn)
+      (base-result-pattern-combinator-generator *predicate-semtype*))
+(setf (fdefinition 'plurality-combinator-fn)
+      (base-result-pattern-combinator-generator *predicate-semtype*))
+(setf (fdefinition 'perfect-combinator-fn)
+      (base-result-pattern-combinator-generator *predicate-semtype*))
+(setf (fdefinition 'passive-combinator-fn)
+      (base-result-pattern-combinator-generator *predicate-semtype*))
+(setf (fdefinition 'progressive-combinator-fn)
+      (base-result-pattern-combinator-generator *predicate-semtype*))
 
 
 ;;;
@@ -30,13 +52,13 @@
 ;;
 ;; The convention for binary features (+/-) is to indicate the negation with a
 ;; ! prefix. Then nil is used for unspecified feature values.
-;; TODO: fill in combinator-fns.
 (setf *feature-defintions*
   (list
     ;; TENSE
     (make-instance
       'feature-defintion
       :name "TENSE"
+      :combinator-fn #'tense-combinator-fn
       :possible-values '(t !t)
       :default-value '!t)
     ;; AUXILIARY
@@ -50,24 +72,28 @@
     (make-instance
       'feature-defintion
       :name "PLURALITY"
+      :combinator-fn #'plurality-combinator-fn
       :possible-values '(pl !pl)
       :default-value '!pl)
     ;; PERFECT
     (make-instance
       'feature-defintion
       :name "PERFECT"
+      :combinator-fn #'perfect-combinator-fn
       :possible-values '(pf !pf)
       :default-value '!pf)
     ;; PASSIVE
     (make-instance
       'feature-defintion
       :name "PASSIVE"
+      :combinator-fn #'passive-combinator-fn
       :possible-values '(pv !pv)
       :default-value '!pv)
     ;; PROGRESSIVE
     (make-instance
       'feature-defintion
       :name "PROGRESSIVE"
+      :combinator-fn #'progressive-combinator-fn
       :possible-values '(pg !pg)
       :default-value '!pg)))
 ;; TODO: p-arg, lexical, *h, qt-attr, 's, etc.
