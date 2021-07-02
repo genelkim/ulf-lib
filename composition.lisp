@@ -71,10 +71,10 @@
               (or a b))))
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p op)
-          (when (and (semtype-equal? op arg) (> (ex op) 1))
+          (when (and (semtype-match? op arg) (> (ex op) 1))
             (new-semtype (domain op) nil (- (ex op) 1) (suffix op))))
          ;; Operator is a non-atomic type with domain exponent n=1
-         ((and (semtype-p op) (semtype-equal? (domain op) arg) (= (ex (domain op)) 1))
+         ((and (semtype-p op) (semtype-match? (domain op) arg) (= (ex (domain op)) 1))
           (let ((result (copy-semtype (range op))))
             ;; Only add suffix when not atomic or (S=>2)
             (when (not (or (atomic-type-p result) (equal (semtype2str result) "(S=>2)")))
@@ -232,7 +232,7 @@
      ;; equality, but whether an argument is sufficient for the slot type. For
      ;; example (D=>(S=>2))_n is not equal to (D=>(S=>2)), but it is a
      ;; sufficient argument.
-     (when (semtype-equal? *unary-noun-semtype* arg :ignore-exp t)
+     (when (semtype-match? *unary-noun-semtype* arg :ignore-exp t)
        (let* ((n+-semtype (new-semtype 'n+ nil 1 nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list n+-semtype))))
          ;;Optional semtype of either continuing to act as +preds, or as the internal noun.
@@ -243,14 +243,14 @@
     ;;; Stops when it (+preds) is used as the T (a variant of the unary noun).
     ; np+preds + D >> {+preds[n+[D]]|D}
     ((and (atomic-type-p op) (eql (domain op) 'np+preds))
-     (when (semtype-equal? *term-semtype* arg :ignore-exp t)
+     (when (semtype-match? *term-semtype* arg :ignore-exp t)
        (let* ((np+-semtype (new-semtype 'np+ nil 1 nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list np+-semtype))))
          ;; Optional semtype of either continuing to act as +preds, or as the internal noun.
          (new-semtype nil nil 1 nil :options (list +preds-semtype arg)))))
     ; +preds[n+[T]] + N >> {+preds[n+[T]]|T}(N+PREDS&NP+PREDS)
     ((and (atomic-type-p op) (eql (domain op) '+preds))
-     (when (semtype-equal? *unary-pred-semtype* arg :ignore-exp t)
+     (when (semtype-match? *unary-pred-semtype* arg :ignore-exp t)
        (let* ((op-params (type-params op))
               (n+-params (remove-if-not #'(lambda (x) (eql (domain x) 'n+)) op-params))
               (np+-params (remove-if-not #'(lambda (x) (eql (domain x) 'np+)) op-params))
@@ -343,7 +343,7 @@
        (when (and (not (null (type-params op)))
                   (not (null *h-params))
                   (not (null (type-params (first *h-params))))
-                  (semtype-equal? (first (type-params op))
+                  (semtype-match? (first (type-params op))
                                   (first (type-params (first *h-params)))
                                   :ignore-exp t))
          (assert (= 1 (length (the list (type-params op)))))
@@ -379,7 +379,7 @@
             (t1 (first (remove-if-not t1-fn (type-params op))))
             (t2 (first (type-params (first (remove-if-not t2-fn
                                                           (type-params t1)))))))
-       (when (semtype-equal? t2 arg :ignore-exp t)
+       (when (semtype-match? t2 arg :ignore-exp t)
          (let ((retval (copy-semtype t1))
                (new-type-params (append (remove-if t1-fn (type-params op))
                                         (remove-if t2-fn (type-params t1))
@@ -391,14 +391,14 @@
     ;;; 2. POSTGEN2 + (D=>(S=>2))_N >> D
     ; 1. D + POSTGEN1 >> POSTGEN2
     ((and (atomic-type-p arg)
-          (semtype-equal? *term-semtype* op)
+          (semtype-match? *term-semtype* op)
           (eql (domain arg) 'postgen1))
      (new-semtype 'postgen2 nil 1 nil
                   :type-params (append (type-params op) (type-params arg))))
     ; 2. POSTGEN2 + (D=>(S=>2))_N >> D
     ((and (atomic-type-p op)
           (eql (domain op) 'postgen2)
-          (semtype-equal? *unary-noun-semtype* arg :ignore-exp t))
+          (semtype-match? *unary-noun-semtype* arg :ignore-exp t))
      (let ((term-st (copy-semtype *term-semtype*)))
        (setf (type-params term-st)
              (append (type-params op) (type-params arg)))
@@ -411,7 +411,7 @@
     ((and (atomic-type-p op) (eql (domain op) 'parg))
      (new-semtype 'parg1 nil 1 nil :type-params (list (copy-semtype arg))))
     ; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
-    ((and (semtype-equal? *general-verb-semtype* op)
+    ((and (semtype-match? *general-verb-semtype* op)
           (atomic-type-p arg) (eql (domain arg) 'parg1)
           (extended-compose-types! op (first (type-params arg))))
      (extended-compose-types! op (first (type-params arg))))
@@ -432,17 +432,17 @@
     ; Treat it like it's VP + TERM
     ; TODO(gene): Ideally, we would force it to be a sentence, but we won't
     ; worry about that for now.
-    ((and (semtype-equal? *term-semtype* op)
-          (semtype-equal? *general-verb-semtype* arg))
+    ((and (semtype-match? *term-semtype* op)
+          (semtype-match? *general-verb-semtype* arg))
      ;(format t "1!!~%")
      (apply-operator! arg op))
     ;;; ADV-S + * >> *
     ; This will over generate for non-paired SENT-MODs
     ; TODO(gene): generate a type that turns back to * after combining with COMPLEX
     ; TODO(gene): find a way to distinguish between adv-s, adv-e, and other sent-mods.
-    ((semtype-equal? *sent-mod-semtype* op) arg)
+    ((semtype-match? *sent-mod-semtype* op) arg)
     ;;; * + SENT-MOD >> *
-    ((semtype-equal? *sent-mod-semtype* arg) op)
+    ((semtype-match? *sent-mod-semtype* arg) op)
     ;;; TSENT + !/? -> TSENT
     ; TODO(gene): this is currently subsumed by the rule above of * + SENT-MOD >> *. We should eventually distinguish these so that we don't allows punctuation to appear anywhere in that way the most sent-mod operators do.
     ;;; Inverted TAUX (ITAUX)
@@ -450,15 +450,15 @@
     ;;; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
     ; 1. TAUX + TERM >> ITAUX
     ((and (atomic-type-p op) (eql (domain op) 'taux)
-          (semtype-equal? *term-semtype* arg))
+          (semtype-match? *term-semtype* arg))
      (new-semtype 'itaux nil 1 nil))
     ; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
     ((and (atomic-type-p op)
           (eql (domain op) 'itaux)
           (not (eql 't (feature-value (synfeats arg) 'tense)))
           (null (feature-value (synfeats arg) 'auxiliary))
-          (semtype-equal? *unary-verb-semtype* arg)
-          (not (semtype-equal? *unary-tensed-verb-semtype* arg)))
+          (semtype-match? *unary-verb-semtype* arg)
+          (not (semtype-match? *unary-tensed-verb-semtype* arg)))
      (copy-semtype *tensed-sent-semtype*
                    :c-type-params (type-params arg)
                    :c-synfeats (add-feature-values (copy (synfeats arg)) '(t))))

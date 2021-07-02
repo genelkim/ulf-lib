@@ -17,7 +17,7 @@
 (defun semtype-str-equal (str1 str2)
   "Takes to string representations of semtypes and checks if they are equal,
   expanding out options into the same format."
-  (ulf-lib::strict-semtype-equal
+  (ulf-lib::semtype-equal?
     (ulf-lib::extended-str2semtype str1)
     (ulf-lib::extended-str2semtype str2)))
 
