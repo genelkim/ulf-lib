@@ -11,32 +11,12 @@
      (poses (coerce "NAVP" 'list))
      (new-val
        (cond
-         ;; TODO: isn't the find-if below the same as the intersection? If so, just setf the intersection in the check...
          ((intersection poses ss1chars)
           (find-if #'(lambda (x) (member (the character x) poses)) ss1chars))
          ((intersection poses ss2chars)
           (find-if #'(lambda (x) (member (the character x) poses)) ss2chars))
          (t nil)))
      (filtered (remove-if #'null (list new-val))))
-    (if (null filtered)
-      nil
-      (intern (coerce filtered 'string) :ulf-lib))))
-
-;; TODO: incorporate this into tense synfeats stuff. Also make sure tense isn't included on atoms.
-(defun merge-tenses (t1 t2)
-  "Merge the two tenses, considering t1 as the main subscript. If they are
-  contradictory, take the t1 value."
-  (let*
-    ((t1chars (if (null t1) nil (coerce (symbol-name t1) 'list)))
-     (t2chars (if (null t2) nil (coerce (symbol-name t2) 'list)))
-     (tense-val
-       (cond
-         ((member #\T t1chars) #\T)
-         ((member #\U t1chars) #\U)
-         ((member #\T t2chars) #\T)
-         ((member #\U t2chars) #\U)
-         (t nil)))
-     (filtered (remove-if #'null (list tense-val))))
     (if (null filtered)
       nil
       (intern (coerce filtered 'string) :ulf-lib))))
@@ -67,9 +47,12 @@
 ;; exceptions per synfeat.
 ;; type-params are propagated from both.
 (declaim (ftype (function (semtype) fixnum) ex))
-(defun apply-operator! (op arg &key (recurse-fn #'apply-operator!))
-  (let
-    ((new-params (append (type-params op) (type-params arg)))
+(defun apply-operator! (raw-op raw-arg &key (recurse-fn #'apply-operator!))
+  (let*
+    ((new-params (append (type-params raw-op) (type-params raw-arg)))
+     (op (unroll-exponent-step raw-op))
+     (arg (unroll-exponent-step raw-arg))
+     ; we can now assume all domain and top-level exponents are = 1.
      (result
        (cond
          ((optional-type-p op)
@@ -88,23 +71,17 @@
               (or a b))))
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p op)
-          (when (and (semtype-equal? op arg :ignore-exp T) (> (ex op) 1))
+          (when (and (semtype-equal? op arg) (> (ex op) 1))
             (new-semtype (domain op) nil (- (ex op) 1) (subscript op))))
          ;; Operator is a non-atomic type with domain exponent n=1
-         ((and (semtype-p op) (semtype-equal? (domain op) arg :ignore-exp T) (= (ex (domain op)) 1))
+         ((and (semtype-p op) (semtype-equal? (domain op) arg) (= (ex (domain op)) 1))
           (let ((result (copy-semtype (range op))))
             ;; Only add subscript when not atomic or (S=>2)
             (when (not (or (atomic-type-p result) (equal (semtype2str result) "(S=>2)")))
-              (setf (subscript result)
-                    (merge-subscripts (subscript (range op)) (subscript op))))
+              (set-subscript result
+                             (merge-subscripts (subscript (range op)) (subscript op))))
             ;; Update syntactic features.
-            (setf (synfeats result)
-                  (compose-synfeats! op arg))
-            result))
-         ;; Operator is non-atomic type with domain exponent n>1
-         ((and (semtype-p op) (semtype-equal? (domain op) arg :ignore-exp T))
-          (let ((result (copy-semtype op)))
-            (setf (ex (domain result)) (- (ex (domain result)) 1))
+            (set-synfeats result (compose-synfeats! op arg))
             result)))))
     ; Update type params before returning, if not optional. All type params are
     ; assumed to be in non-optional types.
