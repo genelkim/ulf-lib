@@ -40,6 +40,7 @@
   :components ((:file "test/package")
                (:file "test/composition")
                (:file "test/semtype")
+               (:file "test/syntactic-features")
                (:file "test/ttt-phrasal-patterns"))
   :perform (test-op (o c) (symbol-call :ulf-lib/tests :run)))
 

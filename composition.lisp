@@ -47,7 +47,9 @@
 ;; exceptions per synfeat.
 ;; type-params are propagated from both.
 (declaim (ftype (function (semtype) fixnum) ex))
-(defun apply-operator! (raw-op raw-arg &key (recurse-fn #'apply-operator!))
+(defun apply-operator! (raw-op raw-arg
+                        &key (recurse-fn #'apply-operator!)
+                             ignore-synfeats)
   (let*
     ((new-params (append (type-params raw-op) (type-params raw-arg)))
      (op (unroll-exponent-step raw-op))
@@ -81,7 +83,8 @@
               (set-suffix result
                              (merge-suffixes (suffix (range op)) (suffix op))))
             ;; Update syntactic features.
-            (set-synfeats result (compose-synfeats! op arg))
+            (when (not ignore-synfeats)
+              (set-synfeats result (compose-synfeats! op arg)))
             result)))))
     ; Update type params before returning, if not optional. All type params are
     ; assumed to be in non-optional types.
@@ -91,17 +94,18 @@
 
 ;; Compose two types if possible and return the composed type. Also return the
 ;; order in which the types were composed.
-(declaim (ftype (function ((or semtype null) (or semtype null) &key (:op-apply-fn function))
+(declaim (ftype (function ((or semtype null) (or semtype null)
+                           &key (:op-apply-fn function) (:ignore-synfeats boolean))
                           (values (or semtype null) simple-string list))
                 compose-types!))
-(defun compose-types! (x y &key (op-apply-fn #'apply-operator!))
+(defun compose-types! (x y &key (op-apply-fn #'apply-operator!) ignore-synfeats)
   (if (or (not x) (not y))
     (values (or x y) "none" nil)
     (let (comp)
       (cond
-        ((setf comp (funcall op-apply-fn x y))
+        ((setf comp (funcall op-apply-fn x y :ignore-synfeats ignore-synfeats))
          (values comp "right" (list x y)))
-        ((setf comp (funcall op-apply-fn y x))
+        ((setf comp (funcall op-apply-fn y x :ignore-synfeats ignore-synfeats))
          (values comp "left" (list y x)))
         (t
           (values nil "none" nil))))))
@@ -211,7 +215,9 @@
                  (t (list (domain typ)))))
            types)))
 
-(defun extended-apply-operator! (op arg &key (recurse-fn #'extended-apply-operator!))
+(defun extended-apply-operator! (op arg
+                                 &key (recurse-fn #'extended-apply-operator!)
+                                      ignore-synfeats)
   "Compose a given operator and argument if possible. Assumption (for now): Arg
   has no exponent. If it does, it is ignored. The strict EL type compositions
   are extended to include ULF macros and structural relaxations."
@@ -423,7 +429,9 @@
     (t (apply-operator! op arg :recurse-fn recurse-fn))))
 
 
-(defun left-right-apply-operator! (op arg &key (recurse-fn #'left-right-apply-operator!))
+(defun left-right-apply-operator! (op arg
+                                   &key (recurse-fn #'left-right-apply-operator!)
+                                        ignore-synfeats)
   "A further relaxation of `extended-apply-operator!` which generalizes the
   type system to allow left-to-right composition even when there is infixing,
   inversions, and sentence modifiers."
@@ -466,11 +474,13 @@
     ;; relevant.
     (t (extended-apply-operator! op arg :recurse-fn recurse-fn))))
 
-(defun extended-compose-types! (type1 type2)
+(defun extended-compose-types! (type1 type2 &key ignore-synfeats)
   "Compose two types if possible and return the composed type. Also return the
   order in which the types were composed. The strict EL type compositions are
   extended to include ULF macros and structural relaxations."
-  (compose-types! type1 type2 :op-apply-fn #'extended-apply-operator!))
+  (compose-types! type1 type2
+                  :op-apply-fn #'extended-apply-operator!
+                  :ignore-synfeats ignore-synfeats))
 
 
 (defun extended-compose-type-string! (type1 type2)
@@ -489,10 +499,12 @@
   (multiple-value-list (extended-compose-type-string! type1 type2)))
 
 
-(defun left-right-compose-types! (type1 type2)
+(defun left-right-compose-types! (type1 type2 &key ignore-synfeats)
   "left-right version of compose-types!
   "
-  (compose-types! type1 type2 :op-apply-fn #'left-right-apply-operator!))
+  (compose-types! type1 type2
+                  :op-apply-fn #'left-right-apply-operator!
+                  :ignore-synfeats ignore-synfeats))
 
 
 (defun left-right-compose-type-string! (type1 type2)
