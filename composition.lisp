@@ -2,8 +2,8 @@
 
 (in-package :ulf-lib)
 
-(defun merge-subscripts (ss1 ss2)
-  "Merge the two subscripts, considering ss1 as the main subscript. If they are
+(defun merge-suffixes (ss1 ss2)
+  "Merge the two suffixes, considering ss1 as the main suffix. If they are
   contradictory, take the ss1 value."
   (let*
     ((ss1chars (if (null ss1) nil (coerce (symbol-name ss1) 'list)))
@@ -42,7 +42,7 @@
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
-;; Subscripts are propagated from op.
+;; suffixes are propagated from op.
 ;; Synfeats are propagated from op if => and arg if >> with
 ;; exceptions per synfeat.
 ;; type-params are propagated from both.
@@ -72,14 +72,14 @@
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p op)
           (when (and (semtype-equal? op arg) (> (ex op) 1))
-            (new-semtype (domain op) nil (- (ex op) 1) (subscript op))))
+            (new-semtype (domain op) nil (- (ex op) 1) (suffix op))))
          ;; Operator is a non-atomic type with domain exponent n=1
          ((and (semtype-p op) (semtype-equal? (domain op) arg) (= (ex (domain op)) 1))
           (let ((result (copy-semtype (range op))))
-            ;; Only add subscript when not atomic or (S=>2)
+            ;; Only add suffix when not atomic or (S=>2)
             (when (not (or (atomic-type-p result) (equal (semtype2str result) "(S=>2)")))
-              (set-subscript result
-                             (merge-subscripts (subscript (range op)) (subscript op))))
+              (set-suffix result
+                             (merge-suffixes (suffix (range op)) (suffix op))))
             ;; Update syntactic features.
             (set-synfeats result (compose-synfeats! op arg))
             result)))))
@@ -416,7 +416,7 @@
           (extended-compose-types! op (first (type-params arg))))
      (extended-compose-types! op (first (type-params arg))))
     ; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A}
-    ((and (member (subscript op) '(n a))
+    ((and (member (suffix op) '(n a))
           (atomic-type-p arg) (eql (domain arg) 'parg1))
      (copy-semtype op))
     ;; Fall back to EL compositional functionality.

@@ -21,16 +21,16 @@
 ;;    any other feature settings and results in a default entity (e.g. not a
 ;;    p-arg).
 ;;
-;;    At the top-level, all non-default subscripts must be specified, as if it
+;;    At the top-level, all non-default features must be specified, as if it
 ;;    were the consequent of truth. (T=>\phi).
 ;;
-;;    Basically, underspecification of subscripts is interpreted
+;;    Basically, underspecification of syntactic features is interpreted
 ;;      a) in the antecedent, as allowing anything;
 ;;      b) in the consequent of >>, as taking the antecedent value; and
 ;;      c) in the consequent of =>, as taking the parent values.
 ;;
 ;;    => := basic antecendent/consequent
-;;    >> := subscript-preserving antecedent/consequent
+;;    >> := argument feature-preserving antecedent/consequent
 ;;    
 ;;    Shorthand operator
 ;;    %> := synfeat modification (retains all other information and distributes
@@ -66,13 +66,10 @@
      :initform 1
      :accessor ex
      :type fixnum)
-   ; NB: previously 'subscript'
-   ;(suffix ; only n,v,a,p
-   ;  :initarg :suffix
-   (subscript ; only n,v,a,p
-     :initarg :subscript
+   (suffix ; only n,v,a,p
+     :initarg :suffix
      :initform nil
-     :accessor subscript)
+     :accessor suffix)
    ; Internal type parameters, needed for some macros to carry over information.
    (type-params
      :initarg :type-params
@@ -135,16 +132,16 @@
     ((null semtype) nil)
     (t (setf (type-params semtype) (append (type-params semtype) type-params)))))
 
-(defmethod set-subscript ((obj semtype) sub)
-  "Adds subscript to a semtype. Recurses into optional-type since it doesn't
-  directly carry subscripts. Ignored if called on an atomic type."
+(defmethod set-suffix ((obj semtype) suf)
+  "Adds suffix to a semtype. Recurses into optional-type since it doesn't
+  directly carry suffixes. Ignored if called on an atomic type."
   (cond
     ((optional-type-p obj)
-     (mapcar #'(lambda (child) (set-subscript child sub)) (types obj)))
+     (mapcar #'(lambda (child) (set-suffix child suf)) (types obj)))
     ((atomic-type-p obj)
-     (warn "Atomic semtypes cannot take subscripts."))
+     (warn "Atomic semtypes cannot take suffixes."))
     (t
-     (setf (subscript obj) sub))))
+     (setf (suffix obj) suf))))
 
 (defmethod set-synfeats ((obj semtype) sf)
   "Adds synfeats to a semtype, recursive into optional-type since it doesn't
@@ -188,7 +185,7 @@
 ;; Types with a variable for an exponent are expanded out into a chain of
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
-(defun new-semtype (dom ran exponent sub
+(defun new-semtype (dom ran exponent suf
                     &key options (synfeats *default-syntactic-features*)
                          type-params (conn '=>))
   ;; Fixnum and list are the only allowed number and sequence types,
@@ -205,8 +202,8 @@
     (setf dom (intern-symbols-recursive dom :ulf-lib)))
   (when (or (symbolp ran) (listp ran))
     (setf ran (intern-symbols-recursive ran :ulf-lib)))
-  (when (or (symbolp sub) (listp sub))
-    (setf sub (intern-symbols-recursive sub :ulf-lib)))
+  (when (or (symbolp suf) (listp suf))
+    (setf suf (intern-symbols-recursive suf :ulf-lib)))
   (setf dom (copy-semtype dom))
   (setf ran (copy-semtype ran))
   (setf options (mapcar #'copy-semtype options))
@@ -217,7 +214,7 @@
     ;; currently recursing to form a chain of optionals.
     ;; Base case for optional chain.
     ((and (not (numberp exponent)) (listp exponent) (= (length exponent) 1))
-     (new-semtype dom ran (car exponent) sub
+     (new-semtype dom ran (car exponent) suf
                   :options options
                   :synfeats synfeats
                   :type-params type-params
@@ -225,12 +222,12 @@
     ;; Recursive case for optional chain.
     ((and (not (numberp exponent)) (listp exponent))
      (new-semtype NIL NIL 1 NIL
-                  :options (list (new-semtype dom ran (car exponent) sub
+                  :options (list (new-semtype dom ran (car exponent) suf
                                               :options options
                                               :synfeats synfeats
                                               :type-params type-params
                                               :conn conn)
-                                 (new-semtype dom ran (cdr exponent) sub
+                                 (new-semtype dom ran (cdr exponent) suf
                                               :options options
                                               :synfeats synfeats
                                               :type-params type-params
@@ -240,7 +237,7 @@
     ((not (numberp exponent))  
      (new-semtype dom ran
                   (loop for exp-x from 0 upto *semtype-max-exponent* collect exp-x)
-                  sub
+                  suf
                   :options options
                   :synfeats synfeats
                   :type-params type-params
@@ -252,7 +249,7 @@
      (let ((result (make-instance 'optional-type
                                   :types options
                                   :ex exponent
-                                  :subscript sub
+                                  :suffix suf
                                   :synfeats synfeats)))
        (add-semtype-type-params result type-params)
        result))
@@ -261,7 +258,7 @@
      (make-instance 'atomic-type
                     :domain dom
                     :ex exponent
-                    :subscript sub
+                    :suffix suf
                     :synfeats synfeats
                     :type-params type-params
                     :connective conn))
@@ -270,11 +267,11 @@
     ;; composition functions.
     ((and (optional-type-p dom) (= (ex dom) 1))
      (make-instance 'optional-type
-                    :types (list (new-semtype (car (types dom)) ran 1 sub
+                    :types (list (new-semtype (car (types dom)) ran 1 suf
                                               :synfeats synfeats
                                               :type-params type-params
                                               :conn conn)
-                                 (new-semtype (cadr (types dom)) ran 1 sub
+                                 (new-semtype (cadr (types dom)) ran 1 suf
                                               :synfeats synfeats
                                               :type-params type-params
                                               :conn conn))))
@@ -285,15 +282,15 @@
                      :domain dom
                      :range ran
                      :ex exponent
-                     :subscript sub
+                     :suffix suf
                      :synfeats synfeats
                      :type-params type-params
                      :connective conn))
-     ; If the domain is NIL, return the range with subscript values set.
+     ; If the domain is NIL, return the range with suffix values set.
      (t
       (progn
         (setf (ex ran) exponent)
-        (setf (subscript ran) sub)
+        (setf (suffix ran) suf)
         (setf (synfeats ran) synfeats)
         ran))))
 
@@ -335,15 +332,15 @@
 ;; optional their intersection must not be empty.
 ;; If :ignore-exp is not NIL then exponents of the two types aren't checked
 ;; If :ignore-exp is 'r then ignore exponents recursively
-;; Tenses and subscripts are checked if both types have a specified
-;; tense/subscript.
-;; Tenses and subscripts on optionals are ignored.
+;; Tenses and suffixes are checked if both types have a specified
+;; tense/suffix.
+;; Tenses and suffixes on optionals are ignored.
 ;;
 ;; TODO(gene): see note below
 ;; Note: This function is more of a "compatibility checker" than a function to
 ;; check actual equality. I'll probably rename this to something better later.
 ;; For options, checks if there is a single compatible match.
-;; For subscripts, if there are subscripts, checks for equality otherwise doesn't care.
+;; For suffixes, if there are suffixes, checks for equality otherwise doesn't care.
 ;; For synfeats, call syntactic-features-match? with x as the pattern.
 ;; Basically, x is the general class and we check if y has an option that is a
 ;; subset of one of the x options.
@@ -371,10 +368,10 @@
       ;; No optionals
       (t
        (and
-         ;; Subscripts.
+         ;; Suffixes.
          ;; If both are specified, must match.
-         (if (and (subscript x) (subscript y))
-           (equal (subscript x) (subscript y))
+         (if (and (suffix x) (suffix y))
+           (equal (suffix x) (suffix y))
            t)
          ;; Syntactic features.
          (syntactic-features-match? (synfeats x) (synfeats y))
@@ -397,7 +394,7 @@
 ;; source semtype value.
 ;; TODO: use :null for default values everywhere
 (defun copy-semtype (x &key c-dom c-ran c-ex
-                       (c-subscript :null)
+                       (c-suffix :null)
                        (c-types :null)
                        (c-synfeats :null)
                        (c-type-params :null)
@@ -425,7 +422,7 @@
       ((nnull-backup (nnull backup)
          (if (not (eql :null nnull)) nnull (funcall backup x))))
       ;; Fill in not null slots.
-      (setf (subscript result) (nnull-backup c-subscript #'subscript))
+      (setf (suffix result) (nnull-backup c-suffix #'suffix))
       (setf (type-params result) (nnull-backup c-type-params #'type-params))
       (setf (connective result) (nnull-backup c-conn #'connective))
       (setf (synfeats result)
@@ -447,8 +444,8 @@
                     (cl-strings:join (mapcar #'semtype2str (type-params s)) :separator ",")))
           ;; Synfeats without the macro dispatch symbol.
           (synfeat-str (concatenate 'string
-                                    (if (subscript s)
-                                      (format nil "_~s" (subscript s))
+                                    (if (suffix s)
+                                      (format nil "_~s" (suffix s))
                                       "")
                                     (if (and (synfeats s) (not (empty? (synfeats s))))
                                       (format nil "%~a"
@@ -594,14 +591,15 @@
 ;; Convert a string into a semantic type.
 ;; Strings must be of the form ([domain]=>[range]) or a single character, where
 ;; [domain] and [range] are valid strings of the same form.
-;; Some single character subscripts are supported, denoted by a _ followed
-;; by the character. Single digit/character exponents are also supported
-;; denoted by a ^ followed by the digit/character. Exponents must occur after
-;; any subscripts.
+;; Some single character suffixes are supported, denoted by a _ followed by the
+;; character. Comma-separated syntactic features are supported after %. Single
+;; digit/character exponents are also supported denoted by a ^ followed by the
+;; digit/character. Exponents must occur after any suffixes and syntactic
+;; features.
 (defun str2semtype (s &key (recurse-fn #'str2semtype))
   (declare (type function recurse-fn))
   (let* ((subscript-regex (concatenate 'string
-                                       "(_([NAVP]))?"       ; POS
+                                       "(_([NAVP]))?"        ; POS
                                        "(%([^>\\^\\[]+))?")) ; synfeats
          (superscript-regex "(\\^([A-Z]|[2-9]))?")
          (type-param-regex "(\\[(.*)\\])?")
@@ -627,8 +625,8 @@
                                     "$"))
 
          ;; Compute match indices.
-         ;; Each subscript generates 2 matches and first one isn't included in labels.
-         (sub-idx 2)
+         ;; Each section generates 2 matches and first one isn't included in labels.
+         (suf-idx 2)
          (syn-idx 4)
          (exp-idx 6)
          (tp-idx 8)
@@ -650,7 +648,7 @@
          (if (eql '%> conn)
            ;; If connective is %> then we need to process the antecedent first
            ;; and apply the consequent synfeats accordingly.
-           ;; This will never have top-level exponents, subscripts, or synfeats of its own. 
+           ;; This will never have top-level exponents, suffixes, or synfeats of its own. 
            (process-out-synfeat-connective
              (funcall recurse-fn (first split-segments))        ; get antecedents
              (funcall synfeat-parse-fn (second split-segments)) ; consequent is just synfeats
@@ -660,7 +658,7 @@
            (new-semtype (funcall recurse-fn (first split-segments))
                         (funcall recurse-fn (second split-segments))
                         (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
-                        (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
+                        (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
                         :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
                         :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
                         :conn conn))))
@@ -671,7 +669,7 @@
               (options (split-opt-str (svref match 0))))
            (new-semtype NIL NIL
                         (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
-                        (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
+                        (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
                         :options (list (funcall recurse-fn (first options))
                                        (funcall recurse-fn (second options)))
                         :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
@@ -681,17 +679,16 @@
        (let ((match (nth-value 1 (cl-ppcre:scan-to-strings atomic-regex s))))
          (new-semtype (read-from-string (svref match 0)) NIL
                       (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
-                      (if (svref match sub-idx) (read-from-string (svref match sub-idx)) nil)
+                      (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
                       :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))))))))
 
 ;; Convert a string into a semantic type, extended to handle cases in ULF that
 ;; do not strictly follow EL compositions. Strings must be of the form
 ;; ([domain]=>[range]), a single character, or one of the designated special
 ;; symbols for selected ULF macros and phenomena. [domain] and [range] are
-;; valid strings of the same form. Some single character subscripts are
+;; valid strings of the same form. Some single character suffixes are
 ;; supported, denoted by a _ followed by the character. Single digit/character
 ;; exponents are also supported denoted by a ^ followed by the digit/character.
-;; Exponents must occur after any subscripts.
 (defun extended-str2semtype (s)
   (let* ((str (string-upcase s))
          (sym (intern str :ulf-lib)))
@@ -753,7 +750,7 @@
          ((and (atomic-type-p t1) (atomic-type-p t2))
           (every (acc-test t1 t2)
                  (list (list #'domain #'equal)
-                       (list #'subscript #'equal)
+                       (list #'suffix #'equal)
                        (list #'synfeats #'syntactic-features-equal?)
                        (list #'type-params #'set-no-option-equal))))
          ; Non-atomic (has domain and range)
@@ -761,7 +758,7 @@
           (every (acc-test t1 t2)
                  (list (list #'domain #'no-option-equal)
                        (list #'range #'no-option-equal)
-                       (list #'subscript #'equal)
+                       (list #'suffix #'equal)
                        (list #'synfeats #'syntactic-features-equal?)
                        (list #'type-params #'set-no-option-equal)
                        (list #'connective #'equal)))))))
