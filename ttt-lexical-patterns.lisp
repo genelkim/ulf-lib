@@ -25,46 +25,48 @@
                       (if (listp (cdr x))
                         (mapcar #'str2semtype (cdr x))
                         (str2semtype (cdr x)))))
-    '(("{S}\\.PRO" . "D")  ; pronouns
-      ("\\|{N}\\|" . "D")  ; names
-      ("\[\\d\|\\.\]\+" . "D")  ; numbers
-      ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
-      ("{S}\\.PS" . "((S=>2)>>((S=>2)>>(S=>2)))")
-      ;;; Either takes two tensed sentences to make a new tensed sentence or two
-      ;;; untensed sentence and makes a new untensed sentence.
-      ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
-      ("{S}\\.N" . "(D=>(S=>2))_n")
-      ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n")
-      ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}")
-      ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
-      ; Be careful while moving this around so that "be.v" is mapped correctly.
-      ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v")
-      ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v")
-      ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)")
-      ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)")
-      ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)>>(S=>2))")
-      ("PLUR" . "((D=>(S=>2))_n%!pl=>(D=>(S=>2))_n%pl)")
-      ("K" . "((D=>(S=>2))_n=>D)")
-      ("TO|KA" . "((D=>(S=>2))_v%!t=>D)")
-      ("KE" . "((S=>2)%!t=>D)")
-      ("THAT" . "((S=>2)%t=>D)")
-      ("WHETHER|ANS-TO" . "((S=>2)%t=>D)")
-      ("ADV-A" . "((D=>(S=>2))=>((D=>(S=>2))_v>>(D=>(S=>2))_v))")
-      ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)>>(S=>2)))")
-      ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
-      ("SET-OF" . "(D^n=>(D=>(D=>D)))")
-      ("NOT" . "((S=>2)>>(S=>2))")
-      ("=" . "(D=>(D=>(S=>2)))")
-      ("{S}\\.CC" . "((S=>2)^n>>(S=>2))")
-      ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
-      ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
-      ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
-      ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
-      ("{S}\\.AUX-S" . "((D=>(S=>2))_v%!t,!x>>(D=>(S=>2))_v%!t,x)")
-      ("{S}\\.AUX-V" . "((D=>(S=>2))_v%!t,!x>>(D=>(S=>2))_v%!t,x)")
-      ("{S}\\.P-ARG" . "PARG")
-      ("\\!" . "((S=>2)>>(S=>2))")
-      ("\\?" . "((S=>2)>>(S=>2))")
+    (append
+      '(("{S}\\.PRO" . "D")  ; pronouns
+        ("\\|{N}\\|" . "D")  ; names
+        ("\[\\d\|\\.\]\+" . "D")  ; numbers
+        ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
+        ("{S}\\.PS" . "((S=>2)>>((S=>2)>>(S=>2)))")
+        ;;; Either takes two tensed sentences to make a new tensed sentence or two
+        ;;; untensed sentence and makes a new untensed sentence.
+        ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
+        ("{S}\\.N" . "(D=>(S=>2))_n")
+        ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n")
+        ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}")
+        ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
+        ; Be careful while moving this around so that "be.v" is mapped correctly.
+        ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v")
+        ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v")
+        ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)")
+        ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)")
+        ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)>>(S=>2))")
+        ("PLUR" . "((D=>(S=>2))_n%!pl>>(D=>(S=>2))_n%pl)")
+        ("PROG" . "((D=>(S=>2))_v%!t,!pg>>(D=>(S=>2))_v%!t,pg)")
+        ("K" . "((D=>(S=>2))_n=>D)")
+        ("TO|KA" . "((D=>(S=>2))_v%!t=>D)")
+        ("KE" . "((S=>2)%!t=>D)")
+        ("THAT" . "((S=>2)%t=>D)")
+        ("WHETHER|ANS-TO" . "((S=>2)%t=>D)")
+        ("ADV-A" . "((D=>(S=>2))=>((D=>(S=>2))_v>>(D=>(S=>2))_v))")
+        ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)>>(S=>2)))")
+        ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
+        ("SET-OF" . "(D^n=>(D=>(D=>D)))")
+        ("NOT" . "((S=>2)>>(S=>2))")
+        ("=" . "(D=>(D=>(S=>2)))")
+        ("{S}\\.CC" . "((S=>2)^n>>(S=>2))")
+        ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
+        ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
+        ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
+        ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
+        ("{S}\\.AUX-S" . "((D=>(S=>2))_v%!t,!x>>(D=>(S=>2))_v%!t,x)")
+        ("{S}\\.AUX-V" . "((D=>(S=>2))_v%!t,!x>>(D=>(S=>2))_v%!t,x)")
+        ("{S}\\.P-ARG" . "PARG")
+        ("\\!" . "((S=>2)>>(S=>2))")
+        ("\\?" . "((S=>2)>>(S=>2))"))
       ;; TODO: Add an alias mechanism?
       ;; AUX    == ((D=>(S=>2))_V_!T,!X>>(D=>(S=>2))_V_!T,X)
       ;; TAUX   == ((D=>(S=>2))_V_!T,!X>>(D=>(S=>2))_V_T,X)
@@ -76,8 +78,23 @@
       ;;
       ;;
       ;;  {((D=>(S=>2))_V_!T=>(D=>(S=>2))_V_T)|((D=>(D=>(S=>2)))_V_!T=>(D=>(D=>(S=>2)))_V_!T)}
-      ("PRES|PAST|CF" . "{(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T%>T)|(((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)=>((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%T,X))}")
-      )))
+
+      (list
+        ; todo: use the cl-str package here.
+        (cons "PRES|PAST|CF"
+              (concatenate 'string
+                           "{"
+                           ;; verbs
+                           "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T%>T)"
+                           "|"
+                           "{"
+                           ;; auxiliaries
+                           "(((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)=>((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%T,X))"
+                           "|"
+                           ;; prog
+                           "(((D=>(S=>2))_v%!t,!pg>>(D=>(S=>2))_v%!t,pg)=>((D=>(S=>2))_v%!t,!pg>>(D=>(S=>2))_v%t,pg))"
+                           "}}"))))
+      ))
 
 ;; Ensures that the input symbol is in *package*.
 (defmacro in-cur-package ((x y) &body body)
