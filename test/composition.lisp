@@ -143,7 +143,7 @@
     "(D=>(S=>2))_V%X,!T"
     (string-from-compose-types 'do.aux-s 'run.v :ext 'extended))
   (assert-equality
-    #'semtype-equal?-str
+    #'semtype-match?-str ; only match since there's also the inverted semantic type
     "((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%T,X)"
     (string-from-compose-types 'past 'do.aux-s :ext 'extended))
   (assert-equality
@@ -312,26 +312,30 @@
                                      typestr)
                     (assert-equal "right" dir ulf-segment sent-mod)))))))
 
+;; Inverted auxiliaries.
 (define-test itaux
   (:tag :itaux :left-right)
   (assert-equality
     #'semtype-equal?-str
-    "ITAUX"
-    (string-from-compose-types '(past do.aux-s) 'him.pro :ext 'left-right))
+    "((D=>(S=>2))_V%!T,!X>>(S=>2)%T)"
+    (string-from-compose-types '(past do.aux-s) 'him.pro))
   ; TODO(gene): write a generalization of ulf-type? for left-right type.
   ; for now, we will just bypass it under the assumption that the test above
   ; this one passed.
   (assert-equality
     #'semtype-equal?-str
     "(S=>2)%T"
-    (left-right-compose-type-string! "ITAUX" (ulf-type-string? 'run.v)))
+    (string-from-compose-types '((past do.aux-s) he.pro) 'run.v))
   (assert-equal nil (string-from-compose-types
                       '(past do.aux-s) 'dog.n
                       :ext 'left-right))
-  (assert-equal nil (left-right-compose-type-string!
-                      "ITAUX" (ulf-type-string? '(pres run.v))))
-  (assert-equal nil (left-right-compose-type-string!
-                      "ITAUX" (ulf-type-string? 'him.pro)))
-  (assert-equal nil (left-right-compose-type-string!
-                      "ITAUX" (ulf-type-string? '((pres may.aux-s) see.v)))))
+  (assert-equal nil (string-from-compose-types
+                      '((past do.aux-s) he.pro)
+                      '(pres run.v)))
+  (assert-equal nil (string-from-compose-types
+                      '((past do.aux-s) he.pro)
+                      'him.pro))
+  (assert-equal nil (string-from-compose-types
+                      '((past do.aux-s) he.pro)
+                      '((pres may.aux-s) see.v))))
 
