@@ -93,35 +93,46 @@
   "Tests syntactic feature compositions that interact with tense."
   (:tag :synfeats :compose)
 
-  ;; Auxiliary
-  (assert-equality
-    #'semtype-match?-str
-    "(D=>(S=>2))_V%!T,X"
-    (string-from-compose-types 'do.aux-v 'go.v))
-  (assert-equality
-    #'semtype-match?-str
-    "(D=>(S=>2))_V%T,X"
-    (string-from-compose-types '(pres do.aux-v) 'go.v))
-  (assert-equal
-    nil
-    (string-from-compose-types 'do.aux-v '(pres go.v)))
-  (assert-equal
-    nil
-    (string-from-compose-types '(pres do.aux-v) '(pres go.v)))
+  (loop for (feat . ulf) in '((x . do.aux-v)
+                              (pg . prog)
+                              (pf . perf))
+        do (progn
+             ;; Auxiliary
+             (assert-equality
+               #'semtype-match?-str
+               (format nil "(D=>(S=>2))_V%!T,~s" feat)
+               (string-from-compose-types ulf 'go.v))
+             (assert-equality
+               #'semtype-match?-str
+               (format nil "(D=>(S=>2))_V%T,~s" feat)
+               (string-from-compose-types (list 'pres ulf) 'go.v))
+             (assert-equal
+               nil
+               (string-from-compose-types ulf '(pres go.v)))
+             (assert-equal
+               nil
+               (string-from-compose-types (list 'pres ulf) '(pres go.v))))))
 
-  ;; Progressive
-  (assert-equality
-    #'semtype-match?-str
-    "(D=>(S=>2))_V%!T,PG"
-    (string-from-compose-types 'prog 'go.v))
-  (assert-equality
-    #'semtype-match?-str
-    "(D=>(S=>2))_V%T,PG"
-    (string-from-compose-types '(pres prog) 'go.v))
-  (assert-equal
-    nil
-    (string-from-compose-types 'prog '(pres go.v)))
-  (assert-equal
-    nil
-    (string-from-compose-types '(pres prog) '(pres go.v))))
+(define-test aspectual-operators-composition
+  "Tests the combinations of various aspectual operators."
+  (:tag :synfeats :compose)
 
+  (assert-equality
+    #'semtype-match?-str
+    "(D=>(S=>2))_V%PF,PG"
+    (string-from-compose-types 'perf '(prog go.v)))
+  (assert-equality
+    #'semtype-match?-str
+    "(D=>(S=>2))_V%PG,X"
+    (string-from-compose-types 'may.aux-v '(prog go.v)))
+  (assert-equality
+    #'semtype-match?-str
+    "(D=>(S=>2))_V%PF,X"
+    (string-from-compose-types 'may.aux-v '(perf go.v)))
+  (assert-equality
+    #'semtype-match?-str
+    "(D=>(S=>2))_V%PG,PF,X"
+    (string-from-compose-types 'may.aux-v '(perf (prog go.v))))
+  (assert-equal nil (string-from-compose-types 'prog '(perf go.v)))
+  (assert-equal nil (string-from-compose-types 'prog '(do.aux-v go.v)))
+  (assert-equal nil (string-from-compose-types 'perf '(do.aux-v go.v))))
