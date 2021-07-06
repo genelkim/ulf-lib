@@ -455,25 +455,6 @@
     ((semtype-match? *sent-mod-semtype* op) arg)
     ;;; * + SENT-MOD >> *
     ((semtype-match? *sent-mod-semtype* arg) op)
-    ;;; TSENT + !/? -> TSENT
-    ; TODO(gene): this is currently subsumed by the rule above of * + SENT-MOD >> *. We should eventually distinguish these so that we don't allows punctuation to appear anywhere in that way the most sent-mod operators do.
-    ;;; Inverted TAUX (ITAUX)
-    ;;; 1. TAUX + TERM >> ITAUX
-    ;;; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
-    ; 1. TAUX + TERM >> ITAUX
-    ((and (atomic-type-p op) (eql (domain op) 'taux)
-          (semtype-match? *term-semtype* arg))
-     (new-semtype 'itaux nil 1 nil))
-    ; 2. ITAUX + (D=>(S=>2))_V [no T or X] >> (S=>2)_T
-    ((and (atomic-type-p op)
-          (eql (domain op) 'itaux)
-          (not (eql 't (feature-value (synfeats arg) 'tense)))
-          (null (feature-value (synfeats arg) 'auxiliary))
-          (semtype-match? *unary-verb-semtype* arg)
-          (not (semtype-match? *unary-tensed-verb-semtype* arg)))
-     (copy-semtype *tensed-sent-semtype*
-                   :c-type-params (type-params arg)
-                   :c-synfeats (add-feature-values (copy (synfeats arg)) '(t))))
     ;; Fall back to extended-apply-operator! when special cases are not
     ;; relevant.
     (t (extended-apply-operator! op arg :recurse-fn recurse-fn))))

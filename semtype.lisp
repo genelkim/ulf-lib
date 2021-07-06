@@ -697,7 +697,6 @@
       ((equal (char str 0) #\() (str2semtype str :recurse-fn #'extended-str2semtype))
       ;; Optional type.
       ((equal (char str 0) #\{) (str2semtype str :recurse-fn #'extended-str2semtype))
-      ((equal str "ITAUX") (new-semtype 'itaux nil 1 nil))
       ;; p-arg
       ((equal str "PARG") (new-semtype 'parg nil 1 nil))
       ;; Quotes.
