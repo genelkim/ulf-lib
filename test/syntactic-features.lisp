@@ -136,3 +136,14 @@
   (assert-equal nil (string-from-compose-types 'prog '(perf go.v)))
   (assert-equal nil (string-from-compose-types 'prog '(do.aux-v go.v)))
   (assert-equal nil (string-from-compose-types 'perf '(do.aux-v go.v))))
+
+(define-test passive-composition
+  "Tests for passive operator."
+  (:tag :synfeats :compose)
+  (assert-equality
+    #'semtype-match?-str
+    "({D|(D=>(S=>2))}^n=>(D=>(D=>(S=>2))))_v%pv"
+    (string-from-compose-types 'pasv 'go.v))
+  (assert-equal nil (string-from-compose-types 'pasv '(pasv go.v)))
+  (assert-equal nil (string-from-compose-types 'pasv '(see.v him.pro))))
+
