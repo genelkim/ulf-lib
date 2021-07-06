@@ -410,21 +410,25 @@
              (append (type-params op) (type-params arg)))
        term-st))
     ;;; PARG
-    ;;; 1. PARG + T => PARG1[T]
+    ;;; 1. PARG + T => PARG1[T] ; remove lexical
     ;;; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
     ;;; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A}
-    ; 1. PARG + T => PARG[T]
+    ; 1. PARG + T => PARG[T] ; remove lexical
     ((and (atomic-type-p op) (eql (domain op) 'parg))
-     (new-semtype 'parg1 nil 1 nil :type-params (list (copy-semtype arg))))
-    ; 2a. T1_V + PARG1[T2] => T1_V(T2) {application}
+     (let ((stored-type (copy-semtype arg)))
+       (add-feature-values (synfeats stored-type) '(!lex)) ; delexicalize
+       (new-semtype 'parg1 nil 1 nil :type-params (list stored-type))))
+    ; 2a. T1_V + PARG1[T2] => T1_V(T2) {application} ; delexicalized
     ((and (semtype-match? *general-verb-semtype* op)
           (atomic-type-p arg) (eql (domain arg) 'parg1)
           (extended-compose-types! op (first (type-params arg))))
      (extended-compose-types! op (first (type-params arg))))
-    ; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A}
+    ; 2b. T1_{N,A} + PARG1[T2] => T1_{N,A} ; delexicalized
     ((and (member (suffix op) '(n a))
           (atomic-type-p arg) (eql (domain arg) 'parg1))
-     (copy-semtype op))
+     (copy-semtype
+       op
+       :c-synfeats (add-feature-values (copy (synfeats op)) '(!lex))))
     ;; Fall back to EL compositional functionality.
     (t (apply-operator! op arg :recurse-fn recurse-fn))))
 

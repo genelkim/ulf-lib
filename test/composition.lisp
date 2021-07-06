@@ -63,7 +63,7 @@
   (assert-equal nil (string-from-compose-types 'past 'happy.a :ext 'extended))
   (assert-equal nil (string-from-compose-types 'cf 'man.n :ext 'extended))
   ; *+preds
-  (assert-equal "{+PREDS[N+[(D=>(S=>2))_N]]|(D=>(S=>2))_N}" (string-from-compose-types 'n+preds 'man.n :ext 'extended))
+  (assert-equal "{+PREDS[N+[(D=>(S=>2))_N%LEX]]|(D=>(S=>2))_N%LEX}" (string-from-compose-types 'n+preds 'man.n :ext 'extended))
   (assert-equal "{+PREDS[NP+[D]]|D}" (string-from-compose-types 'np+preds 'he.pro :ext 'extended))
   ; sub/rep
   (assert-equal "SUB1[D]" (string-from-compose-types 'sub 'he.pro :ext 'extended))
@@ -169,7 +169,7 @@
     (string-from-compose-types 'in.p-arg 'that.pro :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    (format nil "PARG1[~a]" (ulf-type-string? 'chicken.n))
+    "PARG1[(D=>(S=>2))_N%!LEX]"
     (string-from-compose-types 'as.p-arg 'chicken.n :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
@@ -181,11 +181,11 @@
     (string-from-compose-types 'dress.v '(as.p-arg chicken.n) :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "{(D=>(S=>2))_A|(D=>(D=>(S=>2)))_A}"
+    "{(D=>(S=>2))_A%!LEX|(D=>(D=>(S=>2)))_A%!LEX}"
     (string-from-compose-types 'liked.a '(by.p-arg (the.d audience.n)) :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "(D=>(S=>2))_N"
+    "(D=>(S=>2))_N%!LEX"
     (string-from-compose-types 'sale.n '(of.p-arg (his.d car.n)) :ext 'extended))
   (assert-equal nil (string-from-compose-types 'in.p '(in.p-arg that.pro)))
   (assert-equal nil (string-from-compose-types 'the.d '(of.p-arg (k force.n))))
@@ -196,8 +196,8 @@
 (define-test sentential-punctuation-compose
   "Tests for ! and ?."
   (:tag :sentential-punctuation-compose)
-  (assert-equal "((S=>2)>>(S=>2))" (ulf-type-string? '!))
-  (assert-equal "((S=>2)>>(S=>2))" (ulf-type-string? '?))
+  (assert-equal "((S=>2)>>(S=>2))%LEX" (ulf-type-string? '!))
+  (assert-equal "((S=>2)>>(S=>2))%LEX" (ulf-type-string? '?))
   (assert-equality
     #'semtype-equal?-str
     "(S=>2)"
@@ -269,10 +269,10 @@
 
 (define-test free-sent-mod
   (:tag :free-sent-mod :left-right)
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))" (ulf-type-string? 'not))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))" (ulf-type-string? 'not.adv-s))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))" (ulf-type-string? 'always.adv-f))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))" (ulf-type-string? 'today.adv-e))
+  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'not))
+  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'not.adv-s))
+  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'always.adv-f))
+  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'today.adv-e))
   (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
   (let ((ulf-segments
           '(he.pro

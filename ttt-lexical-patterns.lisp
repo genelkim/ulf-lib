@@ -36,44 +36,45 @@
                           (mapcar #'str2semtype (cdr x))
                           (str2semtype (cdr x)))))
       (append
-        '(("{S}\\.PRO" . "D")  ; pronouns
-          ("\\|{N}\\|" . "D")  ; names
-          ("\[\\d\|\\.\]\+" . "D")  ; numbers
-          ("{S}\\.P" . "(D=>(D=>(S=>2)))_p")
-          ("{S}\\.PS" . "((S=>2)>>((S=>2)>>(S=>2)))")
+        '(("{S}\\.PRO" . "D%lex")  ; pronouns
+          ("\\|{N}\\|" . "D%lex")  ; names
+          ("\[\\d\|\\.\]\+" . "D%lex")  ; numbers
+          ("{S}\\.P" . "(D=>(D=>(S=>2)))_p%lex")
+          ("{S}\\.PS" . "((S=>2)>>((S=>2)>>(S=>2)))%lex")
           ;;; Either takes two tensed sentences to make a new tensed sentence or two
           ;;; untensed sentence and makes a new untensed sentence.
           ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
-          ("{S}\\.N" . "(D=>(S=>2))_n")
-          ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n")
-          ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}")
+          ("{S}\\.N" . "(D=>(S=>2))_n%lex")
+          ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n%lex")
+          ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}%lex")
           ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
           ; Be careful while moving this around so that "be.v" is mapped correctly.
-          ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v")
-          ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v")
-          ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)")
-          ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)")
-          ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)>>(S=>2))")
+          ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v%lex")
+          ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v%lex")
+          ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
+          ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
+          ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)>>(S=>2))%lex")
           ("PLUR" . "((D=>(S=>2))_n%!pl>>(D=>(S=>2))_n%pl)")
           ("K" . "((D=>(S=>2))_n=>D)")
           ("TO|KA" . "((D=>(S=>2))_v%!t=>D)")
           ("KE" . "((S=>2)%!t=>D)")
-          ("THAT" . "((S=>2)%t=>D)")
-          ("WHETHER|ANS-TO" . "((S=>2)%t=>D)")
+          ("THAT" . "((S=>2)%t=>D)%lex")
+          ("WHETHER|ANS-TO" . "((S=>2)%t=>D)%lex")
           ("ADV-A" . "((D=>(S=>2))=>((D=>(S=>2))_v>>(D=>(S=>2))_v))")
           ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)>>(S=>2)))")
           ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
           ("SET-OF" . "(D^n=>(D=>(D=>D)))")
-          ("NOT" . "((S=>2)>>(S=>2))")
+          ("NOT" . "((S=>2)>>(S=>2))%lex")
           ("=" . "(D=>(D=>(S=>2)))")
-          ("{S}\\.CC" . "((S=>2)^n>>(S=>2))")
+          ("{S}\\.CC" . "((S=>2)^n>>(S=>2))%lex")
           ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
           ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
           ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
           ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
-          ("{S}\\.P-ARG" . "PARG")
-          ("\\!" . "((S=>2)>>(S=>2))")
-          ("\\?" . "((S=>2)>>(S=>2))"))
+          ("{S}\\.P-ARG" . "PARG%lex")
+          ("\\!|\\?" . "((S=>2)>>(S=>2))%lex")
+          ;; Only transitive or >arity verbs can be passivized.
+          ("PASV" . "(({D|(D=>(S=>2))}^n=>(D=>(D=>(S=>2))))_V%!pv,lex%>pv,lex)"))
 
         *auxiliaries-and-aspectual-operator-semtype-strs*))
       ;; AUX    == ((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)

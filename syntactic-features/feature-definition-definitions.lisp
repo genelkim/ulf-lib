@@ -40,7 +40,10 @@
       (base-result-pattern-combinator-generator *predicate-semtype*))
 (setf (fdefinition 'progressive-combinator-fn)
       (base-result-pattern-combinator-generator *predicate-semtype*))
-
+(defun lexical-combinator-fn (base opr arg csq &optional opr-semtype arg-semtype)
+  "We always lose lexicality unless specified in the type."
+  (declare (ignore base opr arg csq &optional opr-semtype arg-semtype))
+  nil)
 
 ;;;
 ;;; Feature Definitions.
@@ -95,7 +98,14 @@
       :name "PROGRESSIVE"
       :combinator-fn #'progressive-combinator-fn
       :possible-values '(pg !pg)
-      :default-value '!pg)))
+      :default-value '!pg)
+    ;; LEXICAL
+    (make-instance
+      'feature-defintion
+      :name "LEXICAL"
+      :combinator-fn #'lexical-combinator-fn
+      :possible-values '(lex !lex)
+      :default-value '!lex)))
 ;; TODO: p-arg, lexical, *h, qt-attr, 's, etc.
 ;;       maybe macro features should be different?
 
