@@ -49,7 +49,12 @@
           ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}%lex")
           ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
           ; Be careful while moving this around so that "be.v" is mapped correctly.
-          ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v%lex")
+          ; "be.v" can't take plural, perfect, progressive, passive, or
+          ; auxiliary featuring predicates.
+          ;   plurals: must be in a kind, (be.v (= (k (plur lawyer.n))))
+          ;   perfect, progressive, auxiliary: aspectual operators operate over verbs
+          ;   passive: 'be' is an empty auxiliary acting as part of the passive
+          ("BE\\.V" . "((D=>(S=>2))%!t,!pl,!pf,!pg,!pv,!x=>(D=>(S=>2)))_v%lex")
           ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v%lex")
           ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
           ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
@@ -91,7 +96,7 @@
                              :options
                              (append
                                ;; verbs.
-                               (list (str2semtype "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T%>T)"))
+                               (list (str2semtype "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T,LEX%>T)"))
                                ;; Auxiliaries and aspectual operators (prog/perf)
                                ;; Tense will take an aspectual operator and then
                                ;; return the same type except that the range is

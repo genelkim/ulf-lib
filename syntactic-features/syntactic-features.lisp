@@ -10,7 +10,6 @@
      :initarg :feature-map
      :accessor feature-map)))
 
-;; TODO: compile this from default feature values for each feature.
 (defparameter *default-syntactic-features*
   (make-instance 'syntactic-features
                  :feature-map nil))
@@ -210,4 +209,31 @@
     (update-feature-map with-combs
                         (remove-if #'(lambda (pair) (null (cdr pair)))
                                    (feature-map csq-feats)))))
+
+(defmethod feature-map-difference ((base-feats syntactic-features)
+                                   (diff-feats syntactic-features))
+  "Creates a new syntactic-features object which is the same as base-feats but
+  all entries with the keys in diff-feats removed (set to null)."
+  (let ((result (copy base-feats)))
+    (loop for key in (mapcar #'car (feature-map diff-feats))
+          if (assoc key (feature-map result))
+          do (setf (cdr (assoc key (feature-map result))) nil))
+    result))
+
+(defmethod feature-map-union ((one-feats syntactic-features)
+                              (two-feats syntactic-features))
+  "Creates a new syntactic-features object which adds two-feats entries to
+  one-feats. Which of the two are selected in the case of both being present is
+  undefined."
+  (let ((result (copy one-feats)))
+    (loop for (key . value) in (feature-map two-feats)
+          if (and (assoc key (feature-map result))
+                  (not (assoc key (feature-map result))))
+          do (setf (cdr (assoc key (feature-map result)))
+                   value)
+          else if (not (assoc key (feature-map result)))
+          do (setf (feature-map result)
+                   (cons (cons key value)
+                         (feature-map result))))
+    result))
 
