@@ -40,7 +40,7 @@
           ("\\|{N}\\|" . "D%lex")  ; names
           ("\[\\d\|\\.\]\+" . "D%lex")  ; numbers
           ("{S}\\.P" . "(D=>(D=>(S=>2)))_p%lex")
-          ("{S}\\.PS" . "((S=>2)>>((S=>2)>>(S=>2)))%lex")
+          ("{S}\\.PS" . "((S=>2)_v>>((S=>2)_v>>(S=>2)))%lex")
           ;;; Either takes two tensed sentences to make a new tensed sentence or two
           ;;; untensed sentence and makes a new untensed sentence.
           ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
@@ -58,26 +58,26 @@
           ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v%lex")
           ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
           ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
-          ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)>>(S=>2))%lex")
+          ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)_v>>(S=>2))%lex")
           ("PLUR" . "((D=>(S=>2))_n%!pl>>(D=>(S=>2))_n%pl)")
           ("K" . "((D=>(S=>2))_n=>D)")
           ("TO|KA" . "((D=>(S=>2))_v%!t=>D)")
-          ("KE" . "((S=>2)%!t=>D)")
-          ("THAT" . "((S=>2)%t=>D)%lex")
-          ("WHETHER|ANS-TO" . "((S=>2)%t=>D)%lex")
+          ("KE" . "((S=>2)_v%!t=>D)")
+          ("THAT" . "((S=>2)_v%t=>D)%lex")
+          ("WHETHER|ANS-TO" . "((S=>2)_v%t=>D)%lex")
           ("ADV-A" . "((D=>(S=>2))=>((D=>(S=>2))_v>>(D=>(S=>2))_v))")
           ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)>>(S=>2)))")
           ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
           ("SET-OF" . "(D^n=>(D=>(D=>D)))")
-          ("NOT" . "((S=>2)>>(S=>2))%lex")
+          ("NOT" . "((S=>2)_v>>(S=>2))%lex")
           ("=" . "(D=>(D=>(S=>2)))")
-          ("{S}\\.CC" . "((S=>2)^n>>(S=>2))%lex")
+          ("{S}\\.CC" . "((S=>2)_v^n>>(S=>2))%lex")
           ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
           ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
           ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
           ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
           ("{S}\\.P-ARG" . "PARG%lex")
-          ("\\!|\\?" . "((S=>2)>>(S=>2))%lex")
+          ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")
           ;; Only transitive or >arity verbs can be passivized.
           ("PASV" . "(({D|(D=>(S=>2))}^n=>(D=>(D=>(S=>2))))_V%!pv,lex%>pv,lex)"))
 
@@ -125,7 +125,7 @@
                                                (new-semtype
                                                  (str2semtype "D")
                                                  (new-semtype (copy-semtype (domain orig-asp))
-                                                              (str2semtype "(S=>2)%T")
+                                                              (str2semtype "(S=>2)_v%T")
                                                               1 nil
                                                               :conn '>>)
                                                  1 nil)

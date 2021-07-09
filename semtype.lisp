@@ -332,7 +332,7 @@
 ;; If :ignore-exp is 'r then ignore exponents recursively
 ;;
 ;; For options, checks if there is a single compatible match.
-;; For suffixes, if both have  suffix specification, checks for equality
+;; For suffixes, if both have suffix specification, checks for equality
 ;;   otherwise doesn't care.
 ;; For synfeats, call syntactic-features-match? with x as the pattern.
 (defun semtype-match? (raw-x raw-y &key ignore-exp)
@@ -566,7 +566,8 @@
     ((new-types
        ;; Flatten, overwrite synfeats, and create new type.
        (loop for st in (types (flatten-options base-semtype))
-             for copy-st = (copy-semtype st)
+             for copy-st = (copy-semtype
+                             st :c-synfeats (copy *default-syntactic-features*))
              for new-synfeat = (update-syntactic-features (synfeats copy-st)
                                                           new-synfeats)
              collect (new-semtype st copy-st 1 nil

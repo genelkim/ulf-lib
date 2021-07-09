@@ -2,20 +2,35 @@
 
 (in-package :ulf-lib)
 
-(defun merge-suffixes (ss1 ss2)
-  "Merge the two suffixes, considering ss1 as the main suffix. If they are
-  contradictory, take the ss1 value."
+(defun merge-suffixes (op arg)
+  "Compute the suffix for the result of running operator `op` on `arg`. Range
+  of `op` is the preferred. If unspecified, use the argument (or domain if that
+  is unspecified) for >> connective. Use the whole operator suffix for =>
+  connective."
   (let*
-    ((ss1chars (if (null ss1) nil (coerce (symbol-name ss1) 'list)))
-     (ss2chars (if (null ss2) nil (coerce (symbol-name ss2) 'list)))
+    ((ran-suffix (suffix (range op)))
+     (dom-suffix (suffix (domain op)))
+     (arg-suffix (suffix arg))
+     (opr-suffix (suffix op))
+
+     (ran-chars (if (null ran-suffix) nil (coerce (symbol-name ran-suffix) 'list)))
+     (dom-chars (if (null dom-suffix) nil (coerce (symbol-name dom-suffix) 'list)))
+     (arg-chars (if (null arg-suffix) nil (coerce (symbol-name arg-suffix) 'list)))
+     (opr-chars (if (null opr-suffix) nil (coerce (symbol-name opr-suffix) 'list)))
+
      (poses (coerce "NAVP" 'list))
+     (pos-find-fn #'(lambda (x) (member (the character x) poses)))
      (new-val
        (cond
-         ((intersection poses ss1chars)
-          (find-if #'(lambda (x) (member (the character x) poses)) ss1chars))
-         ((intersection poses ss2chars)
-          (find-if #'(lambda (x) (member (the character x) poses)) ss2chars))
-         (t nil)))
+         ((intersection poses ran-chars)
+          (find-if pos-find-fn ran-chars))
+         ((equal ">>" (symbol-name (connective op)))
+          (if (intersection poses arg-chars)
+            (find-if pos-find-fn arg-chars)
+            (find-if pos-find-fn dom-chars)))
+         ((equal "=>" (symbol-name (connective op)))
+          (find-if pos-find-fn opr-chars))))
+
      (filtered (remove-if #'null (list new-val))))
     (if (null filtered)
       nil
@@ -78,10 +93,11 @@
          ;; Operator is a non-atomic type with domain exponent n=1
          ((and (semtype-p op) (semtype-match? (domain op) arg) (= (ex (domain op)) 1))
           (let ((result (copy-semtype (range op))))
-            ;; Only add suffix when not atomic or (S=>2)
-            (when (not (or (atomic-type-p result) (equal (semtype2str result) "(S=>2)")))
-              (set-suffix result
-                             (merge-suffixes (suffix (range op)) (suffix op))))
+            ;; Only add suffix when not atomic (retained for sentences to
+            ;; recognize whether the sentence is grammatical (top-predicate is
+            ;; a verb).
+            (when (not (atomic-type-p result))
+              (set-suffix result (merge-suffixes op arg)))
             ;; Update syntactic features.
             (when (not ignore-synfeats)
               (set-synfeats result (compose-synfeats! op arg)))
@@ -207,7 +223,7 @@
   optional-types.
   "
   (apply #'append
-         (mapcar 
+         (mapcar
            #'(lambda (typ)
                (cond
                  ((optional-type-p typ)
@@ -504,4 +520,4 @@
   "List interface of left-right-compose-type-string!
   "
   (multiple-value-list (left-right-compose-type-string! type1 type2)))
-  
+
