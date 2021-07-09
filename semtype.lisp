@@ -45,7 +45,6 @@
 ;; 2. ! prefix for any feature for the negation
 ;;
 
-;; TODO Write a class for each syntactic feature which specifies how it propagates in function applications, with defaults written as above. Special propagation examples include: *h, which should default to empty, but propagate through everything (or just use the type param for this?) 
 ;; TODO Make sure *h and *p can have duplicates, or have counts.
 
 ;; Class representing a ULF semantic type
@@ -197,7 +196,6 @@
   ;; compiler note
   ;;  note: can't open-code test of unknown type SEMTYPE
   (declare (ftype (function (t) fixnum) ex))
-  ; TODO: add a parameter for the package.
   (when (or (symbolp dom) (listp dom))
     (setf dom (intern-symbols-recursive dom :ulf-lib)))
   (when (or (symbolp ran) (listp ran))
@@ -327,23 +325,16 @@
       (t
         st))))
 
-;; Check if two semantic types are equal. If one of the types is an optional
-;; type then return true if either of the two options match. If both types are
-;; optional their intersection must not be empty.
+
+;; Check if y matches with the semantic type pattern x. If one of the types is
+;; an optional type then return true if any option-pair matches.
 ;; If :ignore-exp is not NIL then exponents of the two types aren't checked
 ;; If :ignore-exp is 'r then ignore exponents recursively
-;; Tenses and suffixes are checked if both types have a specified
-;; tense/suffix.
-;; Tenses and suffixes on optionals are ignored.
 ;;
-;; TODO(gene): see note below
-;; Note: This function is more of a "compatibility checker" than a function to
-;; check actual equality. I'll probably rename this to something better later.
 ;; For options, checks if there is a single compatible match.
-;; For suffixes, if there are suffixes, checks for equality otherwise doesn't care.
+;; For suffixes, if both have  suffix specification, checks for equality
+;;   otherwise doesn't care.
 ;; For synfeats, call syntactic-features-match? with x as the pattern.
-;; Basically, x is the general class and we check if y has an option that is a
-;; subset of one of the x options.
 (defun semtype-match? (raw-x raw-y &key ignore-exp)
   (declare (ftype (function (t) fixnum) ex))
   ;; Expand out one level of exponents if relevant.
@@ -392,7 +383,6 @@
 ;; Keyword options where nil is a specific value (e.g. false) a keyword symbol
 ;; :null is used to indicate no value provided, which defaults to using the
 ;; source semtype value.
-;; TODO: use :null for default values everywhere
 (defun copy-semtype (x &key c-dom c-ran c-ex
                        (c-suffix :null)
                        (c-types :null)
