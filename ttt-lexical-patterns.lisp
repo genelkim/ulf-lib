@@ -54,14 +54,14 @@
           ;   plurals: must be in a kind, (be.v (= (k (plur lawyer.n))))
           ;   perfect, progressive, auxiliary: aspectual operators operate over verbs
           ;   passive: 'be' is an empty auxiliary acting as part of the passive
-          ("BE\\.V" . "((D=>(S=>2))%!t,!pl,!pf,!pg,!pv,!x=>(D=>(S=>2)))_v%lex")
-          ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v%lex")
+          ("BE\\.V" . "({(D=>(S=>2))_A|(D=>(S=>2))_P}=>(D=>(S=>2)))_v%lex")
+          ("{S}\\.V" . "({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_v%lex")
           ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
           ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
           ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)_v>>(S=>2))%lex")
           ("PLUR" . "((D=>(S=>2))_n%!pl>>(D=>(S=>2))_n%pl)")
           ("K" . "((D=>(S=>2))_n=>D)")
-          ("TO|KA" . "((D=>(S=>2))_v%!t=>D)")
+          ("TO|KA" . "((D=>(S=>2))_v%!t,!x=>D)")
           ("KE" . "((S=>2)_v%!t=>D)")
           ("THAT" . "((S=>2)_v%t=>D)%lex")
           ("WHETHER|ANS-TO" . "((S=>2)_v%t=>D)%lex")
@@ -70,8 +70,8 @@
           ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
           ("SET-OF" . "(D^n=>(D=>(D=>D)))")
           ("NOT" . "((S=>2)_v>>(S=>2))%lex")
-          ("=" . "(D=>(D=>(S=>2)))")
-          ("{S}\\.CC" . "((S=>2)_v^n>>(S=>2))%lex")
+          ("=" . "{(D=>(D=>(S=>2)))_a|(D=>(D=>(S=>2)))_p}")
+          ("{S}\\.CC" . "((S=>2)_v^n>>((S=>2)_v=>((S=>2)_v=>(S=>2))))%lex")
           ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
           ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
           ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
@@ -79,7 +79,7 @@
           ("{S}\\.P-ARG" . "PARG%lex")
           ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")
           ;; Only transitive or >arity verbs can be passivized.
-          ("PASV" . "(({D|(D=>(S=>2))}^n=>(D=>(D=>(S=>2))))_V%!pv,lex%>pv,lex)"))
+          ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(D=>(S=>2))))_V%!pv,lex%>pv,lex)"))
 
         *auxiliaries-and-aspectual-operator-semtype-strs*))
       ;; AUX    == ((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)
@@ -96,7 +96,7 @@
                              :options
                              (append
                                ;; verbs.
-                               (list (str2semtype "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T,LEX%>T)"))
+                               (list (str2semtype "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_V%!T,LEX%>T)"))
                                ;; Auxiliaries and aspectual operators (prog/perf)
                                ;; Tense will take an aspectual operator and then
                                ;; return the same type except that the range is
