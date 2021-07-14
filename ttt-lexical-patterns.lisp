@@ -63,8 +63,10 @@
           ("K" . "((D=>(S=>2))_n=>D)")
           ("TO|KA" . "((D=>(S=>2))_v%!t,!x=>D)")
           ("KE" . "((S=>2)_v%!t=>D)")
-          ("THAT" . "((S=>2)_v%t=>D)%lex")
-          ("WHETHER|ANS-TO" . "((S=>2)_v%t=>D)%lex")
+          ("THAT|THT" . "((S=>2)_v%t=>D)%lex")
+          ("WHETHER" . "((S=>2)_v%t=>D)%lex")
+          ;; TODO: add feature for wh-word count.
+          ("ANS-TO" . "((S=>2)_v%t=>D)%lex")
           ("ADV-A" . "((D=>(S=>2))=>((D=>(S=>2))_v>>(D=>(S=>2))_v))")
           ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)>>(S=>2)))")
           ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
