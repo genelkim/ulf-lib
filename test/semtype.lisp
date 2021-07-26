@@ -74,12 +74,12 @@
   "Testing the basics of the semtype-equal? function."
   (:tag :semtype)
   (assert-equality #'semtype-equal?-str "D" "D")
-  (assert-equality #'semtype-match?-str "(D=>D)" "(D=>D)")
-  (assert-equality #'semtype-match?-str "(D=>D)_V" "(D=>D)_V")
-  (assert-true (not (semtype-match?-str "(D=>D)" "(D=>D)_V")))
+  (assert-equality #'semtype-equal?-str "(D=>D)" "(D=>D)")
+  (assert-equality #'semtype-equal?-str "(D=>D)_V" "(D=>D)_V")
+  (assert-true (not (semtype-equal?-str "(D=>D)" "(D=>D)_V")))
 
   ;; Non-symmetric wrt. syntactic features.
-  (assert-equality #'semtype-match?-str "(D=>D)%T" "(D=>D)%T")
-  (assert-true (not (semtype-match?-str "(D=>D)" "(D=>D)%T,X")))
-  (assert-true (not (semtype-match?-str "(D=>D)%T,X" "(D=>D)"))))
+  (assert-equality #'semtype-equal?-str "(D=>D)%T" "(D=>D)%T")
+  (assert-true (not (semtype-equal?-str "(D=>D)" "(D=>D)%T,X")))
+  (assert-true (not (semtype-equal?-str "(D=>D)%T,X" "(D=>D)"))))
 
