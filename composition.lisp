@@ -233,10 +233,9 @@
     ;;; Stops when it (+preds) is used as the T (a variant of the unary noun).
     ; n+preds + N_n >> {+preds[n+[N_n]]|N_n}
     ((and (atomic-type-p opr) (eql (domain opr) 'n+preds))
-     ;; TODO(gene): probably need semtype-sufficent? which doesn't check exact
-     ;; equality, but whether an argument is sufficient for the slot type. For
-     ;; example (D=>(S=>2))_n is not equal to (D=>(S=>2)), but it is a
-     ;; sufficient argument.
+     ;; semtype-match? doesn't check exact equality, but whether an argument is
+     ;; sufficient for the slot type. For example (D=>(S=>2))_n is not equal to
+     ;; (D=>(S=>2)), but it is a sufficient argument.
      (when (semtype-match? *unary-noun-semtype* arg :ignore-exp t)
        (let* ((n+-semtype (new-semtype 'n+ nil 1 nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list n+-semtype))))

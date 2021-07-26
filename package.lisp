@@ -145,8 +145,6 @@
     :replace-ap-head
 
     ;; type symbols (in ttt-phrasal-patterns.lisp)
-    ;; TODO: write util function for printing while ignoring the symbol
-    ;; namespace so that we don't need to export all this...
     :noun
     :adj
     :adv-a
