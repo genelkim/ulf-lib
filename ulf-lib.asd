@@ -6,11 +6,15 @@
   :description "A library for basic interfacing and manipulations of Episodic logic, unscoped logical formulas (ULFs)."
   :author "Gene Louis Kim <gkim21@cs.rochester.edu>"
   :license "MIT"
-  :depends-on (:ttt :cl-strings :cl-ppcre :gute)
+  :depends-on (:ttt :str :cl-ppcre :gute)
   :components ((:file "package")
                (:file "util")
                (:file "suffix")
+               (:file "syntactic-features/feature-definition-declarations")
+               (:file "syntactic-features/syntactic-features")
+               (:file "syntactic-features/reader")
                (:file "semtype")
+               (:file "syntactic-features/feature-definition-definitions")
                (:file "ttt-lexical-patterns")
                (:file "ttt-phrasal-patterns")
                (:file "gen-phrasal-patterns")
@@ -35,6 +39,8 @@
   :depends-on (:ulf-lib :lisp-unit :gute)
   :components ((:file "test/package")
                (:file "test/composition")
+               (:file "test/semtype")
+               (:file "test/syntactic-features")
                (:file "test/ttt-phrasal-patterns"))
   :perform (test-op (o c) (symbol-call :ulf-lib/tests :run)))
 

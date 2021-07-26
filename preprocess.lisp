@@ -11,7 +11,7 @@
 ;; that.
 ;;  (unescape-backslashes "(\\" there.pro \\")" -> "(\" there.pro \")"
 (defun unescape-backslashes (ulfstr)
-  (cl-strings:replace-all ulfstr "\\\\" "\\"))
+  (str:replace-all "\\\\" "\\" ulfstr))
 
 ;; Performs the expected name preprocessing of adding a space beforehand. This
 ;; allows us to still be able to identify names that only include capitalized
@@ -87,9 +87,9 @@
            ;; If we read the whole thing, we're done, return all of acc, str,
            ;; and left parens with space separation
            ((or (>= endidx (length str)) (equal "" (trim str)))
-            (trim (cl-strings:join (cons (cl-strings:repeat "(" lpcount)
-                                         (reverse (cons str acc)))
-                                   :separator " ")))
+            (trim (str:join " "
+                            (cons (str:repeat lpcount "(")
+                                  (reverse (cons str acc))))))
            ;; If we stopped somewhere so include the current segment into acc
            ;; and recurse into the rest of the string.
            (t (helper (subseq str endidx)
