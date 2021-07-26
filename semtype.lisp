@@ -437,7 +437,7 @@
       (return-from semtype2str nil))
     (let ((type-params-str
             (format nil "[~a]"
-                    (cl-strings:join (mapcar #'semtype2str (type-params s)) :separator ",")))
+                    (str:join "," (mapcar #'semtype2str (type-params s)))))
           ;; Synfeats without the macro dispatch symbol.
           (synfeat-str (concatenate 'string
                                     (if (suffix s)
