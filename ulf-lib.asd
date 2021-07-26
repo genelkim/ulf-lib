@@ -6,7 +6,7 @@
   :description "A library for basic interfacing and manipulations of Episodic logic, unscoped logical formulas (ULFs)."
   :author "Gene Louis Kim <gkim21@cs.rochester.edu>"
   :license "MIT"
-  :depends-on (:ttt :cl-strings :cl-ppcre :gute)
+  :depends-on (:ttt :str :cl-ppcre :gute)
   :components ((:file "package")
                (:file "util")
                (:file "suffix")

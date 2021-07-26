@@ -155,7 +155,7 @@
     (in-ulf-lib (inx x)
       (multiple-value-bind (word suffix) (split-by-suffix x)
         (declare (ignore suffix)) ; suffix check handled in lex-noun? below.
-        (let ((wchars (the list (cl-strings:chars (atom2str word)))))
+        (let ((wchars (coerce (atom2str word) 'list)))
           (and (lex-noun? inx)
                (> (length wchars) 3)
                (equal '(#\- #\O #\F) (last wchars 3))))))))
