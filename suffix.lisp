@@ -36,7 +36,6 @@
   (let* ((split (str:split "." s))
          (base-ret (str:join
                      "."
-                     ;; TODO: use cl-str for this below
                      (subseq (the list split)
                              0
                              (max 1 (1- (length (the list split)))))))

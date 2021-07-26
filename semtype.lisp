@@ -439,16 +439,16 @@
             (format nil "[~a]"
                     (str:join "," (mapcar #'semtype2str (type-params s)))))
           ;; Synfeats without the macro dispatch symbol.
-          (synfeat-str (concatenate 'string
-                                    (if (suffix s)
-                                      (format nil "_~s" (suffix s))
-                                      "")
-                                    (if (and (synfeats s) (not (empty? (synfeats s))))
-                                      (format nil "%~a"
-                                              (let ((full-synfeat-str (to-string (synfeats s))))
-                                                ;; TODO: use cl-str package to make this nicer
-                                                (subseq full-synfeat-str 2 (1- (length full-synfeat-str)))))
-                                      "")))
+          (synfeat-str (str:concat
+                         (if (suffix s)
+                             (format nil "_~s" (suffix s))
+                             "")
+                         (if (and (synfeats s) (not (empty? (synfeats s))))
+                             (format nil "%~a"
+                                     ;; Remove #{ and } from syntactic features.
+                                     (str:substring
+                                       2 -1 (to-string (synfeats s))))
+                             "")))
           (exponents
             (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s))))
           base)
