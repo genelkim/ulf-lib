@@ -39,16 +39,20 @@
                      ;; TODO: use cl-str for this below
                      (subseq (the list split)
                              0
-                             (max 1 (1- (length (the list split))))))))
+                             (max 1 (1- (length (the list split)))))))
+         (suffix-str (car (last (coerce split 'list)))))
     (cond
       ;; If there's a space in the suffix, then don't strip.
       ((some #'(lambda (x)
                  (member (the character x) gute::*trim-whitespace-chars*))
-             (car (last (coerce split 'list))))
+             suffix-str)
        s)
       ;; If it's a name, but there is a split, add back the pipe at the end.
       ((and (is-strict-name? (read-from-string s)) (> (length (the list split)) 1))
        (concatenate 'string base-ret "|"))
+      ;; If the suffix is completely numerical, then don't strip.
+      ((numberp (read-from-string s))
+       s)
       (t base-ret))))
 
 ;; Takes a word symbol and a suffix and merges them together.
