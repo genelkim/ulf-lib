@@ -707,7 +707,6 @@
       ;; Non-special atomic type.
       (t (str2semtype s :recurse-fn #'extended-str2semtype)))))
 
-; TODO(gene): add tests for this
 (defun semtype-equal? (s1 s2)
   "Determines whether two semtypes are equivalent. For optional types, order
   doesn't matter and allows flattening of options."
