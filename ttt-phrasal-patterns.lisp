@@ -236,7 +236,7 @@
       ((? sent-mod?) sent? (+ sent? sent-mod?))    ; sentences bracketed together (for semi-colons for example)
       (sent-mod? sent?)
       lex-x?
-      ;; Term substitution, (TODO: generalize all the sub handling in this to apply the sub and then analyze)
+      ;; Term substitution
       (sub term? sent?)
       ))
 
@@ -275,7 +275,7 @@
       (gr _!)
       ;; Implicit sentence marked by single extension.
       lex-sent?
-      ;; Term substitution, (TODO: generalize all the sub handling in this to apply the sub and then analyze)
+      ;; Term substitution
       (sub term? tensed-sent?)
       ))
 
@@ -380,7 +380,7 @@
 (defun contains-relativizer (x)
   (in-ulf-lib (x y)
              (hidden-match-expr '(^* lex-rel?) y)))
-(defun contains-relativizer? (x) (contains-relativizer x)) ;  TODO merge with above.
+(defun contains-relativizer? (x) (contains-relativizer x))
 
 ;; A relativized sentence is a tensed sentence with a relativizer in it.
 (defun relativized-sent? (x)
