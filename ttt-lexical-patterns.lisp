@@ -266,28 +266,33 @@
       (lex-name-prep? x)))
 
 
-;; TODO: merge with lex-name? in ulf-lib.
-;; Returns t if s is strictly a ULF name, e.g. |John|, |Mary|, etc.
 ;; Returns false on name-like predicates (e.g. |Green River|.n).
 ;; Can take a symbol or a string.
-;; TODO: separate into separate functions for symbol and string since the ULF can contain strings!
 (defun is-strict-name? (x)
+  ;; Return nil if not an atom or a string.
+  (when (not (or (atom x) (stringp x)))
+    (return-from is-strict-name? nil))
   (in-intern (x s *package*)
     (let* ((sstr (if (not (stringp s)) (atom2str s) s))
            (chars (coerce sstr 'list)))
-      (and (eql #\| (nth 0 chars))
+      (and (> (length chars) 1)
+           (eql #\| (nth 0 chars))
            (eql #\| (nth (1- (length chars)) chars))))))
 
 ;; Matches a regular name.
 (defun lex-name? (x)
-  (in-intern (x y *package*)
-    (in-intern (x z :ulf-lib)
-      (and
-        (re:all-matches "^\\|\[\^\\|\]\+\\|$"
-                           (format nil "~s" y))
-        (not (lex-name-pred? y))
-        ;; Special handling of quotes '\" == '|"|.
-        (not (eq '\" z))))))
+  (is-strict-name? x))
+; NB: Old version before merging with is-strict-name?. Keep here for a while in
+; case we need to revert back. Remove in 6-months if no issues show up (today,
+; 2021-07-26).
+;  (in-intern (x y *package*)
+;    (in-intern (x z :ulf-lib)
+;      (and
+;        (re:all-matches "^\\|\[\^\\|\]\+\\|$"
+;                           (format nil "~s" y))
+;        (not (lex-name-pred? y))
+;        ;; Special handling of quotes '\" == '|"|.
+;        (not (eq '\" z))))))
 
 ; Adverbs
 (defun lex-adv-a? (x)
