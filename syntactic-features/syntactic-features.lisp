@@ -10,7 +10,6 @@
      :initarg :feature-map
      :accessor feature-map)))
 
-;; TODO: compile this from default feature values for each feature.
 (defparameter *default-syntactic-features*
   (make-instance 'syntactic-features
                  :feature-map nil))
@@ -69,42 +68,33 @@
     'syntactic-features
     :feature-map (copy-tree (feature-map obj))))
 
-(defun syntactic-features-equal? (x y)
+(defmethod syntactic-features-equal? ((x syntactic-features)
+                                      (y syntactic-features))
   "Checks whether the two syntactic-features class instances are the same. This
   is only true if the feature map is identical."
-  (cond
-    ;; TODO: see if we can remove these top-2 conditions and make this function a method.
-    ((and (null x) (null y)) t)
-    ((or (null x) (null y)) nil)
-    ;; TODO: add option to allow default value discrepancies
-    (t
-      (flet ((element-sort (a b) (string< (cdr a) (cdr b))))
-        (equal (sort (feature-map x) #'element-sort)
-               (sort (feature-map y) #'element-sort))))))
+  (flet ((element-sort (a b) (string< (cdr a) (cdr b))))
+    (equal (sort (feature-map x) #'element-sort)
+           (sort (feature-map y) #'element-sort))))
 
-(defun syntactic-features-match? (patt inst)
+(defmethod syntactic-features-match? ((patt syntactic-features)
+                                      (inst syntactic-features))
   "Checks whether the syntactic features instance `inst` fulfills the
   syntactice features pattern `patt`. The instance assumes default values for
   unspecified slots, whereas unspecified slots in the pattern are assumed to
   allow any value."
-  (cond
-    ;; TODO: see if we can remove these top-2 conditions and make this function a method.
-    ((and (null patt) (null inst)) t)
-    ((or (null patt) (null inst)) nil)
-    (t
-      ;; For each feature specification in `patt` check fulfillment by `inst`.
-      (loop for (feat-name . patt-feat-val) in (feature-map patt)
-            if (and patt-feat-val
-                    ;; `patt` doesn't match `inst`
+  ;; For each feature specification in `patt` check fulfillment by `inst`.
+  (loop for (feat-name . patt-feat-val) in (feature-map patt)
+        if (and patt-feat-val
+                ;; `patt` doesn't match `inst`
+                (not (eql patt-feat-val
+                          (feature-value inst feat-name)))
+                ;; `patt` doesn't match default or `inst` is specified.
+                (or (feature-value inst feat-name)
                     (not (eql patt-feat-val
-                              (feature-value inst feat-name)))
-                    ;; `patt` doesn't match default or `inst` is specified.
-                    (or (feature-value inst feat-name)
-                        (not (eql patt-feat-val
-                                  (default-syntactic-feature-value feat-name)))))
-            do (return-from syntactic-features-match? nil))
-      ;; Everything matched.
-      t)))
+                              (default-syntactic-feature-value feat-name)))))
+        do (return-from syntactic-features-match? nil))
+  ;; Everything matched.
+  t)
 
 (defmethod feature-value ((obj syntactic-features) element)
   "Finds the feature value for the given feature name. The name can be a string
