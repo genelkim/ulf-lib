@@ -61,14 +61,14 @@
           (let ((a (funcall recurse-fn (first (types opr)) arg))
                 (b (funcall recurse-fn (second (types opr)) arg)))
             (if (and a b)
-              (new-semtype nil nil 1 nil :options (list a b))
+              (new-optional-semtype (list a b))
               (or a b))))
          ((optional-type-p arg)
           ; Argument is an optional type
           (let ((a (funcall recurse-fn opr (first (types arg))))
                 (b (funcall recurse-fn opr (second (types arg)))))
             (if (and a b)
-              (new-semtype nil nil 1 nil :options (list a b)) ; TODO: add a function new-optional-semtype
+              (new-optional-semtype (list a b))
               (or a b))))
          ; Operator is not optional and atomic operator of the form A^n with n>1
          ((atomic-type-p opr)
@@ -241,7 +241,7 @@
        (let* ((n+-semtype (new-semtype 'n+ nil 1 nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list n+-semtype))))
          ;;Optional semtype of either continuing to act as +preds, or as the internal noun.
-         (new-semtype nil nil 1 nil :options (list +preds-semtype arg)))))
+         (new-optional-semtype (list +preds-semtype arg)))))
     ;;; NP+PREDS
     ;;; 1. np+preds + D >> {+preds[n+[D]]|D}
     ;;; 2. +preds[n+[T]] + N >> {+preds[n+[T]]|T}
@@ -252,7 +252,7 @@
        (let* ((np+-semtype (new-semtype 'np+ nil 1 nil :type-params (list arg)))
               (+preds-semtype (new-semtype '+preds nil 1 nil :type-params (list np+-semtype))))
          ;; Optional semtype of either continuing to act as +preds, or as the internal noun.
-         (new-semtype nil nil 1 nil :options (list +preds-semtype arg)))))
+         (new-optional-semtype (list +preds-semtype arg)))))
     ; +preds[n+[T]] + N >> {+preds[n+[T]]|T}(N+PREDS&NP+PREDS)
     ((and (atomic-type-p opr) (eql (domain opr) '+preds))
      (when (semtype-match? *unary-pred-semtype* arg :ignore-exp t)
@@ -277,7 +277,7 @@
          (setf updated-+preds-semtype (copy-semtype opr))
          (setf (type-params updated-+preds-semtype)
                (append (type-params updated-+preds-semtype) new-params))
-         (new-semtype nil nil 1 nil :options (list updated-+preds-semtype updated-inner-semtype)))))
+         (new-optional-semtype (list updated-+preds-semtype updated-inner-semtype)))))
     ;;; QT-ATTR
     ;;; The whole process of this is as follows
     ;;; Type(*qt): D[*qt],   Type(qt-attr): qt-attr

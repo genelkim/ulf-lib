@@ -87,45 +87,44 @@
       (list
         (cons "PRES|PAST|CF"
               (binarize-flat-options
-                (new-semtype nil nil 1 nil
-                             :options
-                             (append
-                               ;; verbs.
-                               (list (str2semtype "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T%>T)"))
-                               ;; Auxiliaries and aspectual operators (prog/perf)
-                               ;; Tense will take an aspectual operator and then
-                               ;; return the same type except that the range is
-                               ;; also tensed.
-                               (mapcar #'(lambda (cell)
-                                           (let* ((semtype (str2semtype (cdr cell)))
-                                                  (consequent (copy-semtype semtype)))
-                                             ;; Add tense to range of the consequent.
-                                             (add-semtype-tense (range consequent) 't)
-                                             (new-semtype semtype consequent 1 nil)))
-                                       *auxiliaries-and-aspectual-operator-semtype-strs*)
-                               ;; Auxiliaries and aspectual operators can be
-                               ;; inverted when tensed, e.g.
-                               ;;   (((past do.aux-s) you.pro (know.v {ref}.pro)) ?)
-                               ;;
-                               ;; Inverted type:
-                               ;;   (D=>(ANT>>(S=>2)%T))
-                               ;;   where ANT is the antecedent of the original
-                               ;;   auxiliary. Basically the subject argument
-                               ;;   was moved out before the verb.
-                               (mapcar #'(lambda (cell)
-                                           (let ((orig-asp (str2semtype (cdr cell))))
-                                             (new-semtype
-                                               orig-asp
-                                               ;; Construct resulting inverted type.
-                                               (new-semtype
-                                                 (str2semtype "D")
-                                                 (new-semtype (copy-semtype (domain orig-asp))
-                                                              (str2semtype "(S=>2)%T")
-                                                              1 nil
-                                                              :conn '>>)
-                                                 1 nil)
-                                               1 nil)))
-                                       *auxiliaries-and-aspectual-operator-semtype-strs*))))))))
+                (new-optional-semtype
+                  (append
+                    ;; verbs.
+                    (list (str2semtype "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T%>T)"))
+                    ;; Auxiliaries and aspectual operators (prog/perf)
+                    ;; Tense will take an aspectual operator and then
+                    ;; return the same type except that the range is
+                    ;; also tensed.
+                    (mapcar #'(lambda (cell)
+                                (let* ((semtype (str2semtype (cdr cell)))
+                                       (consequent (copy-semtype semtype)))
+                                  ;; Add tense to range of the consequent.
+                                  (add-semtype-tense (range consequent) 't)
+                                  (new-semtype semtype consequent 1 nil)))
+                            *auxiliaries-and-aspectual-operator-semtype-strs*)
+                    ;; Auxiliaries and aspectual operators can be
+                    ;; inverted when tensed, e.g.
+                    ;;   (((past do.aux-s) you.pro (know.v {ref}.pro)) ?)
+                    ;;
+                    ;; Inverted type:
+                    ;;   (D=>(ANT>>(S=>2)%T))
+                    ;;   where ANT is the antecedent of the original
+                    ;;   auxiliary. Basically the subject argument
+                    ;;   was moved out before the verb.
+                    (mapcar #'(lambda (cell)
+                                (let ((orig-asp (str2semtype (cdr cell))))
+                                  (new-semtype
+                                    orig-asp
+                                    ;; Construct resulting inverted type.
+                                    (new-semtype
+                                      (str2semtype "D")
+                                      (new-semtype (copy-semtype (domain orig-asp))
+                                                   (str2semtype "(S=>2)%T")
+                                                   1 nil
+                                                   :conn '>>)
+                                      1 nil)
+                                    1 nil)))
+                            *auxiliaries-and-aspectual-operator-semtype-strs*))))))))
 
 
 ;; Ensures that the input symbol is in *package*.

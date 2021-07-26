@@ -221,17 +221,17 @@
                   :conn conn))
     ;; Recursive case for optional chain.
     ((and (not (numberp exponent)) (listp exponent))
-     (new-semtype NIL NIL 1 NIL
-                  :options (list (new-semtype dom ran (car exponent) suf
-                                              :options options
-                                              :synfeats synfeats
-                                              :type-params type-params
-                                              :conn conn)
-                                 (new-semtype dom ran (cdr exponent) suf
-                                              :options options
-                                              :synfeats synfeats
-                                              :type-params type-params
-                                              :conn conn))))
+     (new-optional-semtype
+       (list (new-semtype dom ran (car exponent) suf
+                          :options options
+                          :synfeats synfeats
+                          :type-params type-params
+                          :conn conn)
+             (new-semtype dom ran (cdr exponent) suf
+                          :options options
+                          :synfeats synfeats
+                          :type-params type-params
+                          :conn conn))))
     ;; If the exponent is not a number or a list, treat it as a variable and
     ;; start recursion to form a chain of optionals
     ((not (numberp exponent))  
@@ -293,6 +293,15 @@
         (setf (suffix ran) suf)
         (setf (synfeats ran) synfeats)
         ran))))
+
+(defun new-optional-semtype (options)
+  "Makes a new optional semtype.
+
+  Optional semtypes have no domain, range, exponent, suffix, type parameters,
+  or suffix. These all must be propagated into the individual options.
+  Externally, optional types may have exponents, but in interpretaiton into the
+  internal classes, we expand those exponents out into option realizations."
+  (new-semtype nil nil 1 nil :options options))
 
 (defun unroll-exponent-step (st)
   "Undoes a single step of exponent compression. If `st` has an exponent
@@ -584,7 +593,7 @@
                                   :conn '>>)))
      flat-type)
     ;; Merge and binarize.
-    (setf flat-type (new-semtype nil nil 1 nil :options new-types))
+    (setf flat-type (new-optional-semtype new-types))
     (binarize-flat-options flat-type)))
 
 
@@ -793,7 +802,7 @@
      (cond
        ((= 1 (length new-options)) (first new-options))
        ; Build the optional semtype with these options and return.
-       (t (new-semtype nil nil 1 nil :options new-options)))))
+       (t (new-optional-semtype new-options)))))
 
 (defun flatten-options (raw-s)
   "Flattens a semtype so that all options and concrete exponents are
@@ -816,10 +825,10 @@
                                                            #'flatten-options)
                                                   (types s)))))
          (if new-options
-           (new-semtype nil nil 1 nil :options new-options))))
+           (new-optional-semtype new-options))))
       ;; Atomic type, return a copy of it wrapped in an optional type.
       ((atomic-type-p s)
-       (new-semtype nil nil 1 nil :options (list (copy-semtype s))))
+       (new-optional-semtype (list (copy-semtype s))))
       ;; Non-atomic, non-optional type, recurse into the domain and range and generate an optional
       ;; type of all combinations of the recursed types.
       (t (let ((flat-dom (flatten-options (domain s)))
@@ -837,7 +846,7 @@
                                         collect (copy-semtype s :c-dom cur-dom
                                                               :c-ran cur-ran))))))
            (if new-options
-             (new-semtype nil nil 1 nil :options new-options)))))))
+             (new-optional-semtype new-options)))))))
 
 (defun binarize-flat-options (s)
   "Takes a flat option type and makes it a right-leaning binary tree of options."
@@ -845,10 +854,8 @@
     ((helper (options)
        (declare (type list options))
        (cond
-         ((< (length options) 3)
-          (new-semtype nil nil 1 nil :options options))
-         (t (new-semtype nil nil 1 nil
-                         :options (list (first options)
+         ((< (length options) 3) (new-optional-semtype options))
+         (t (new-optional-semtype (list (first options)
                                         (helper (rest options))))))))
     ; Top-level call.
     (helper (types s))))

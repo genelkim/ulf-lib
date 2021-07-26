@@ -28,8 +28,8 @@
 ;; Simple combinator functions. 
 (setf (fdefinition 'tense-combinator-fn)
       (base-result-pattern-combinator-generator
-        (new-semtype nil nil 1 nil :options (list *sentence-semtype*
-                                                  *predicate-semtype*))))
+        (new-optional-semtype (list *sentence-semtype*
+                                    *predicate-semtype*))))
 (setf (fdefinition 'auxiliary-combinator-fn)
       (base-result-pattern-combinator-generator *predicate-semtype*))
 (setf (fdefinition 'plurality-combinator-fn)
