@@ -635,8 +635,7 @@
     
     (setf s (string-upcase s))
     (cond
-      ; TODO: update these comments
-      ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
+      ; NON ATOMIC ([domain][connective][range])_[ut]#[synfeats]^n\[[type1],[type2],..\]
       ((equal (char s 0) #\()
        (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings non-atom-regex s)))
               (split-segments (split-semtype-str (svref match 0)))
