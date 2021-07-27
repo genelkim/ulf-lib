@@ -354,3 +354,8 @@
   (assert-equal "{((D=>(S=>2))_N=>D)%LEX|((D=>(S=>2))_P=>D)%LEX}"
                 (ulf-type-string? 'a.d)))
 
+(define-test ulf-type-string?-named-predicates
+  (:tag :ulf-type-string?)
+  (assert-equal "{(D=>(S=>2))_A%LEX|(D=>(D=>(S=>2)))_A%LEX}" (ulf-type-string? '19.a))
+  (assert-equal "(D=>(S=>2))_N%LEX" (ulf-type-string? '|Man|.n)))
+
