@@ -98,16 +98,16 @@
                           (values (or semtype null) simple-string list))
                 compose-types!))
 (defun compose-types! (x y &key (opr-apply-fn #'apply-operator!) ignore-synfeats)
-  (if (or (not x) (not y))
-    (values (or x y) "none" nil)
-    (let (comp)
-      (cond
-        ((setf comp (funcall opr-apply-fn x y :ignore-synfeats ignore-synfeats))
-         (values comp "right" (list x y)))
-        ((setf comp (funcall opr-apply-fn y x :ignore-synfeats ignore-synfeats))
-         (values comp "left" (list y x)))
-        (t
-          (values nil "none" nil))))))
+  (let (comp)
+    (cond
+      ((or (not x) (not y))
+       (values nil "none" nil))
+      ((setf comp (funcall opr-apply-fn x y :ignore-synfeats ignore-synfeats))
+       (values comp "right" (list x y)))
+      ((setf comp (funcall opr-apply-fn y x :ignore-synfeats ignore-synfeats))
+       (values comp "left" (list y x)))
+      (t
+       (values nil "none" nil)))))
 
 ;; Given two atomic ULFs, return the type formed after composing (if possible)
 (defun compose-atomic-ulfs! (a b)
