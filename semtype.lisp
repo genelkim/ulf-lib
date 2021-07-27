@@ -107,13 +107,13 @@
 
 (defmethod print-object ((obj semtype) out)
   "Prints out semtype in #<SEMTYPE [string]> where [string] can be read in
-  using str2semtype or extended-str2semtype."
+   using str2semtype or extended-str2semtype."
   (print-unreadable-object (obj out :type t)
     (format out (semtype2str obj))))
 
 (defun add-semtype-tense (semtype tense)
   "Adds tense to a semtype. Recurses into optional-type, since it shouldn't
-  directly carry tense."
+   directly carry tense."
   (cond
     ((optional-type-p semtype)
      (mapcar #'(lambda (st) (add-semtype-tense st tense)) (types semtype)))
@@ -124,7 +124,7 @@
 
 (defun add-semtype-type-params (semtype type-params)
   "Adds type-params to a semtype. Recurses into optional-type, since it
-  shouldn't directly carry type-params."
+   shouldn't directly carry type-params."
   (cond
     ((optional-type-p semtype)
      (mapcar #'(lambda (st) (add-semtype-type-params st type-params)) (types semtype)))
@@ -133,7 +133,7 @@
 
 (defmethod set-suffix ((obj semtype) suf)
   "Adds suffix to a semtype. Recurses into optional-type since it doesn't
-  directly carry suffixes. Ignored if called on an atomic type."
+   directly carry suffixes. Ignored if called on an atomic type."
   (cond
     ((optional-type-p obj)
      (mapcar #'(lambda (child) (set-suffix child suf)) (types obj)))
@@ -144,7 +144,7 @@
 
 (defmethod set-synfeats ((obj semtype) sf)
   "Adds synfeats to a semtype, recursive into optional-type since it doesn't
-  directly carry synfeats."
+   directly carry synfeats."
   (cond
     ((optional-type-p obj)
      (mapcar #'(lambda (child) (set-synfeats child (copy sf))) (types obj)))
@@ -153,7 +153,7 @@
 
 (defun set-semtype-type-params (semtype type-params)
   "Like add-semtype-type-params, but overwrites, rather than appending to existing
-  type params."
+   type params."
   (cond
     ((optional-type-p semtype)
      (mapcar #'(lambda (st) (set-semtype-type-params st type-params)) (types semtype)))
@@ -166,7 +166,7 @@
 (declaim (ftype (function (t) list) get-semtype-type-params))
 (defun get-semtype-type-params (semtype)
   "Gets the type-params from a semtype. Recurses into optional-type, but only in
-  one branch since all final branches should have the same type-params."
+   one branch since all final branches should have the same type-params."
   ;; Locally declare specific function type of generic function.
   (declare (ftype (function (t) list) types type-params))
   (cond
@@ -185,8 +185,8 @@
 ;; optionals where the variable value lies between 0 and 6. For example, A^n would
 ;; become {A^0|{A^1|{A^2|...}}}.
 (defun new-semtype (dom ran exponent suf
-                    &key options (synfeats *default-syntactic-features*)
-                         type-params (conn '=>))
+                        &key options (synfeats *default-syntactic-features*)
+                        type-params (conn '=>))
   ;; Fixnum and list are the only allowed number and sequence types,
   ;; respectively for exponent.
   (declare (type (or fixnum list (not (or number sequence)))
@@ -219,17 +219,17 @@
                   :conn conn))
     ;; Recursive case for optional chain.
     ((and (not (numberp exponent)) (listp exponent))
-     (new-semtype NIL NIL 1 NIL
-                  :options (list (new-semtype dom ran (car exponent) suf
-                                              :options options
-                                              :synfeats synfeats
-                                              :type-params type-params
-                                              :conn conn)
-                                 (new-semtype dom ran (cdr exponent) suf
-                                              :options options
-                                              :synfeats synfeats
-                                              :type-params type-params
-                                              :conn conn))))
+     (new-optional-semtype
+       (list (new-semtype dom ran (car exponent) suf
+                          :options options
+                          :synfeats synfeats
+                          :type-params type-params
+                          :conn conn)
+             (new-semtype dom ran (cdr exponent) suf
+                          :options options
+                          :synfeats synfeats
+                          :type-params type-params
+                          :conn conn))))
     ;; If the exponent is not a number or a list, treat it as a variable and
     ;; start recursion to form a chain of optionals
     ((not (numberp exponent))  
@@ -244,13 +244,13 @@
     ((= exponent 0) nil)
     ;; Create non-0 exponent optional type
     (options    
-     (let ((result (make-instance 'optional-type
-                                  :types options
-                                  :ex exponent
-                                  :suffix suf
-                                  :synfeats synfeats)))
-       (add-semtype-type-params result type-params)
-       result))
+      (let ((result (make-instance 'optional-type
+                                   :types options
+                                   :ex exponent
+                                   :suffix suf
+                                   :synfeats synfeats)))
+        (add-semtype-type-params result type-params)
+        result))
     ;; If the type isn't an optional and range is NIL; the type is atomic.
     ((null ran)
      (make-instance 'atomic-type
@@ -273,8 +273,8 @@
                                               :synfeats synfeats
                                               :type-params type-params
                                               :conn conn))))
-     ; The domain is not optional
-     (dom
+    ; The domain is not optional
+    (dom
       ; Create new semtype
       (make-instance 'semtype
                      :domain dom
@@ -284,23 +284,32 @@
                      :synfeats synfeats
                      :type-params type-params
                      :connective conn))
-     ; If the domain is NIL, return the range with suffix values set.
-     (t
+    ; If the domain is NIL, return the range with suffix values set.
+    (t
       (progn
         (setf (ex ran) exponent)
         (setf (suffix ran) suf)
         (setf (synfeats ran) synfeats)
         ran))))
 
+(defun new-optional-semtype (options)
+  "Makes a new optional semtype.
+
+   Optional semtypes have no domain, range, exponent, suffix, type parameters,
+   or suffix. These all must be propagated into the individual options.
+   Externally, optional types may have exponents, but in interpretaiton into the
+   internal classes, we expand those exponents out into option realizations."
+  (new-semtype nil nil 1 nil :options options))
+
 (defun unroll-exponent-step (st)
   "Undoes a single step of exponent compression. If `st` has an exponent
-  >1 or its domain has an exponent >1, this function generates a equivalent
-  semtype where the expoenent is decremented and a new domain is introduced.
+   >1 or its domain has an exponent >1, this function generates a equivalent
+   semtype where the expoenent is decremented and a new domain is introduced.
 
-  Examples:
-    A           ----> A
-    A^4         ----> (A=>A^3)
-    (A^3=>B^2)  ----> (A=>(A^2=>B^2))"
+   Examples:
+   A           ----> A
+   A^4         ----> (A=>A^3)
+   (A^3=>B^2)  ----> (A=>(A^2=>B^2))"
   (let (new-dom new-ran)
     (cond
       ;; Top-level exponent >1.
@@ -323,18 +332,17 @@
                           1 nil))
        (copy-semtype st :c-dom new-dom :c-ran new-ran :c-conn '=>))
       (t
-        st))))
-
+       st))))
 
 ;; Check if y matches with the semantic type pattern x. If one of the types is
 ;; an optional type then return true if any option-pair matches.
-;; If :ignore-exp is not NIL then exponents of the two types aren't checked
-;; If :ignore-exp is 'r then ignore exponents recursively
 ;;
 ;; For options, checks if there is a single compatible match.
 ;; For suffixes, if both have suffix specification, checks for equality
 ;;   otherwise doesn't care.
 ;; For synfeats, call syntactic-features-match? with x as the pattern.
+;; If :ignore-exp is not NIL then exponents of the two types aren't checked
+;; If :ignore-exp is 'r then ignore exponents recursively
 (defun semtype-match? (raw-x raw-y &key ignore-exp)
   (declare (ftype (function (t) fixnum) ex))
   ;; Expand out one level of exponents if relevant.
@@ -362,21 +370,21 @@
          ;; Suffixes.
          ;; If both are specified, must match.
          (if (and (suffix x) (suffix y))
-           (equal (suffix x) (suffix y))
-           t)
+             (equal (suffix x) (suffix y))
+             t)
          ;; Syntactic features.
          (syntactic-features-match? (synfeats x) (synfeats y))
          (if (or (atomic-type-p x) (atomic-type-p y))
-           ;; If atomic, both must be and match domain values.
-           (and (atomic-type-p x)
-                (atomic-type-p y)
-                (equal (domain x) (domain y)))
-           ;; If not atomic, domain, range, and connective must match.
-           (and (semtype-match? (domain x) (domain y)
-                                :ignore-exp ignore-exp)
-                (semtype-match? (range x) (range y)
-                                :ignore-exp ignore-exp)
-                (equal (connective x) (connective y)))))))))
+             ;; If atomic, both must be and match domain values.
+             (and (atomic-type-p x)
+                  (atomic-type-p y)
+                  (equal (domain x) (domain y)))
+             ;; If not atomic, domain, range, and connective must match.
+             (and (semtype-match? (domain x) (domain y)
+                                  :ignore-exp ignore-exp)
+                  (semtype-match? (range x) (range y)
+                                  :ignore-exp ignore-exp)
+                  (equal (connective x) (connective y)))))))))
 
 ;; Make a new semtype identical to the given type
 ;; Key word options allow overwriting specific fields if appropriate.
@@ -398,9 +406,9 @@
             ((optional-type-p x)
              (make-instance 'optional-type
                             :types (if (not (eql :null c-types))
-                                     c-types
-                                     (list (copy-semtype (first (types x)))
-                                           (copy-semtype (second (types x)))))
+                                       c-types
+                                       (list (copy-semtype (first (types x)))
+                                             (copy-semtype (second (types x)))))
                             :ex (if c-ex c-ex (ex x))))
             ((semtype-p x)
              (make-instance 'semtype
@@ -419,8 +427,8 @@
             ;; Need to copy synfeats object.
             (nnull-backup c-synfeats #'(lambda (st)
                                          (if (synfeats st)
-                                           (copy (synfeats st))
-                                           nil))))
+                                             (copy (synfeats st))
+                                             nil))))
       result)))
 
 ;; Convert a semtype to a string. The string it returns can be read back into a
@@ -431,18 +439,18 @@
       (return-from semtype2str nil))
     (let ((type-params-str
             (format nil "[~a]"
-                    (cl-strings:join (mapcar #'semtype2str (type-params s)) :separator ",")))
+                    (str:join "," (mapcar #'semtype2str (type-params s)))))
           ;; Synfeats without the macro dispatch symbol.
-          (synfeat-str (concatenate 'string
-                                    (if (suffix s)
-                                      (format nil "_~s" (suffix s))
-                                      "")
-                                    (if (and (synfeats s) (not (empty? (synfeats s))))
-                                      (format nil "%~a"
-                                              (let ((full-synfeat-str (to-string (synfeats s))))
-                                                ;; TODO: use cl-str package to make this nicer
-                                                (subseq full-synfeat-str 2 (1- (length full-synfeat-str)))))
-                                      "")))
+          (synfeat-str (str:concat
+                         (if (suffix s)
+                             (format nil "_~s" (suffix s))
+                             "")
+                         (if (and (synfeats s) (not (empty? (synfeats s))))
+                             (format nil "%~a"
+                                     ;; Remove #{ and } from syntactic features.
+                                     (str:substring
+                                       2 -1 (to-string (synfeats s))))
+                             "")))
           (exponents
             (if (= (the fixnum (ex s)) 1) "" (format nil "^~a" (ex s))))
           base)
@@ -470,8 +478,8 @@
                        exponents))
               (t nil)))
       (if (equal type-params-str "[]")
-        base
-        (format nil "~a~a" base type-params-str)))))
+          base
+          (format nil "~a~a" base type-params-str)))))
 
 ;; Split a string of the form ([domain]=>[range]) or ([domain]>>[range]) into
 ;; [domain], [range], [connective]. Helper for str2semtype.
@@ -512,8 +520,8 @@
 
 (defun split-type-param-str (tpstr)
   "Splits a type param list string into the individual type strings.
-  These are comma separated, but since the types are recursively defined, only
-  split on commas that are at the top-level square bracketing."
+   These are comma separated, but since the types are recursively defined, only
+   split on commas that are at the top-level square bracketing."
   (declare (type (or simple-string null) tpstr))
   (when (null tpstr)
     (return-from split-type-param-str nil))
@@ -545,14 +553,14 @@
 
 (defun process-out-synfeat-connective (base-semtype new-synfeats type-params)
   "Processes out the special synfeat connective, %>, which assumes that the
-  antecedent and consequent semantic types match except for the explicit
-  synfeat changes listed in the consequent of %>.
+   antecedent and consequent semantic types match except for the explicit
+   synfeat changes listed in the consequent of %>.
 
-  We simply convert A%>S into {a1>>a1%S|{a2>>a2%S|{...}}} for the a1, a2, ...
-  flattened versions of A. This ensures that after applying this rule, the
-  semantic type in fact stays the same even if the original semantic type had a
-  bunch of alternatives. We don't want all alternatives to be possible in the
-  consequent for each of the antecedent alternatives."
+   We simply convert A%>S into {a1>>a1%S|{a2>>a2%S|{...}}} for the a1, a2, ...
+   flattened versions of A. This ensures that after applying this rule, the
+   semantic type in fact stays the same even if the original semantic type had a
+   bunch of alternatives. We don't want all alternatives to be possible in the
+   consequent for each of the antecedent alternatives."
   ;; Steps
   ;; 1. Flatten out the options
   ;; For each option
@@ -575,7 +583,7 @@
                                   :conn '>>)))
      flat-type)
     ;; Merge and binarize.
-    (setf flat-type (new-semtype nil nil 1 nil :options new-types))
+    (setf flat-type (new-optional-semtype new-types))
     (binarize-flat-options flat-type)))
 
 
@@ -627,44 +635,43 @@
                                                (format nil "#{~a}" str))))
                                  (disable-ulf-type-syntax)
                                  result))))
-    
+
     (setf s (string-upcase s))
     (cond
-      ; TODO: update these comments
-      ; NON ATOMIC ([domain]=>[range])_[ut|navp]^n\[[type1],[type2],..\]
+      ; NON ATOMIC ([domain][connective][range])_[ut]#[synfeats]^n\[[type1],[type2],..\]
       ((equal (char s 0) #\()
        (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings non-atom-regex s)))
               (split-segments (split-semtype-str (svref match 0)))
               (conn (intern (third split-segments) :ulf-lib)))
          (if (eql '%> conn)
-           ;; If connective is %> then we need to process the antecedent first
-           ;; and apply the consequent synfeats accordingly.
-           ;; This will never have top-level exponents, suffixes, or synfeats of its own. 
-           (process-out-synfeat-connective
-             (funcall recurse-fn (first split-segments))        ; get antecedents
-             (funcall synfeat-parse-fn (second split-segments)) ; consequent is just synfeats
-             (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))) ; type params
+             ;; If connective is %> then we need to process the antecedent first
+             ;; and apply the consequent synfeats accordingly.
+             ;; This will never have top-level exponents, suffixes, or synfeats of its own. 
+             (process-out-synfeat-connective
+               (funcall recurse-fn (first split-segments))        ; get antecedents
+               (funcall synfeat-parse-fn (second split-segments)) ; consequent is just synfeats
+               (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))) ; type params
 
-           ;; For other connectives, simply find the components in the string.
-           (new-semtype (funcall recurse-fn (first split-segments))
-                        (funcall recurse-fn (second split-segments))
-                        (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
-                        (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
-                        :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
-                        :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
-                        :conn conn))))
+             ;; For other connectives, simply find the components in the string.
+             (new-semtype (funcall recurse-fn (first split-segments))
+                          (funcall recurse-fn (second split-segments))
+                          (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
+                          (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
+                          :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
+                          :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx)))
+                          :conn conn))))
 
       ; OPTIONAL {A|B}[[type1],[type2],..\]
       ((equal (char s 0) #\{)
        (let* ((match (nth-value 1 (cl-ppcre:scan-to-strings optional-regex s)))
               (options (split-opt-str (svref match 0))))
-           (new-semtype NIL NIL
-                        (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
-                        (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
-                        :options (list (funcall recurse-fn (first options))
-                                       (funcall recurse-fn (second options)))
-                        :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
-                        :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx))))))
+         (new-semtype NIL NIL
+                      (if (svref match exp-idx) (read-from-string (svref match exp-idx)) 1)
+                      (if (svref match suf-idx) (read-from-string (svref match suf-idx)) nil)
+                      :options (list (funcall recurse-fn (first options))
+                                     (funcall recurse-fn (second options)))
+                      :synfeats (funcall synfeat-parse-fn (svref match syn-idx))
+                      :type-params (mapcar recurse-fn (split-type-param-str (svref match tp-idx))))))
       ; ATOMIC
       (t
        (let ((match (nth-value 1 (cl-ppcre:scan-to-strings atomic-regex s))))
@@ -702,10 +709,9 @@
       ;; Non-special atomic type.
       (t (str2semtype s :recurse-fn #'extended-str2semtype)))))
 
-; TODO(gene): add tests for this
 (defun semtype-equal? (s1 s2)
   "Determines whether two semtypes are equivalent. For optional types, order
-  doesn't matter and allows flattening of options."
+   doesn't matter and allows flattening of options."
   (labels
     (; Runs a list of accessor-test pair for computing equality on specific
      ; components of two elements.
@@ -727,36 +733,36 @@
        ;; Pull out exponents.
        (let ((t1 (unroll-exponent-step raw-t1))
              (t2 (unroll-exponent-step raw-t2)))
-       (cond
-         ((or (optional-type-p t1) (optional-type-p t2))
-          (error "No optional types allowed in no-option-equal"))
-         ;; Base cases.
-         ;; One of the arguments are atomic.
-         ((or (and (atomic-type-p t1) (not (atomic-type-p t2)))
-              (and (not (atomic-type-p t1)) (atomic-type-p t2)))
-          nil)
-         ; Atomic (only has domain)
-         ((and (atomic-type-p t1) (atomic-type-p t2))
-          (every (acc-test t1 t2)
-                 (list (list #'domain #'equal)
-                       (list #'suffix #'equal)
-                       (list #'synfeats #'syntactic-features-equal?)
-                       (list #'type-params #'set-no-option-equal))))
-         ; Non-atomic (has domain and range)
-         (t
-          (every (acc-test t1 t2)
-                 (list (list #'domain #'no-option-equal)
-                       (list #'range #'no-option-equal)
-                       (list #'suffix #'equal)
-                       (list #'synfeats #'syntactic-features-equal?)
-                       (list #'type-params #'set-no-option-equal)
-                       (list #'connective #'equal)))))))
+         (cond
+           ((or (optional-type-p t1) (optional-type-p t2))
+            (error "No optional types allowed in no-option-equal"))
+           ;; Base cases.
+           ;; One of the arguments are atomic.
+           ((or (and (atomic-type-p t1) (not (atomic-type-p t2)))
+                (and (not (atomic-type-p t1)) (atomic-type-p t2)))
+            nil)
+           ; Atomic (only has domain)
+           ((and (atomic-type-p t1) (atomic-type-p t2))
+            (every (acc-test t1 t2)
+                   (list (list #'domain #'equal)
+                         (list #'suffix #'equal)
+                         (list #'synfeats #'syntactic-features-equal?)
+                         (list #'type-params #'set-no-option-equal))))
+           ; Non-atomic (has domain and range)
+           (t
+            (every (acc-test t1 t2)
+                   (list (list #'domain #'no-option-equal)
+                         (list #'range #'no-option-equal)
+                         (list #'suffix #'equal)
+                         (list #'synfeats #'syntactic-features-equal?)
+                         (list #'type-params #'set-no-option-equal)
+                         (list #'connective #'equal)))))))
      ) ; end of label definitions.
     ;; Use t instead of semtype for argument check because of the following
     ;; compiler note
     ;;  note: can't open-code test of unknown type SEMTYPE
     (declare (ftype (function (t t) function)
-                    acc-test))
+               acc-test))
     ; labels body
     ; If we get to an atomic label, just check the labels.
     (let ((flat-s1 (remove-duplicates (types (flatten-options s1))
@@ -770,47 +776,47 @@
 
 (defun flatten-type-params (s)
   "Flattens the type-params of the given semtype. This function is co-recursive
-  with flatten-options which flattens the main options."
+   with flatten-options which flattens the main options."
   (let*
-     (; Expand out each type-param into its list of possibilities.
-      (type-param-choice-lst
-        (mapcar (compose #'types #'flatten-options)
-                (type-params s)))
-      ; Build an option list with every combination of type-param choices
-      (type-param-choices (cartesian-product type-param-choice-lst))
-      (new-options (mapcar #'(lambda (tp-choice)
-                               (copy-semtype s :c-type-params tp-choice))
-                           type-param-choices)))
-     (cond
-       ((= 1 (length new-options)) (first new-options))
-       ; Build the optional semtype with these options and return.
-       (t (new-semtype nil nil 1 nil :options new-options)))))
+    (; Expand out each type-param into its list of possibilities.
+     (type-param-choice-lst
+       (mapcar (compose #'types #'flatten-options)
+               (type-params s)))
+     ; Build an option list with every combination of type-param choices
+     (type-param-choices (cartesian-product type-param-choice-lst))
+     (new-options (mapcar #'(lambda (tp-choice)
+                              (copy-semtype s :c-type-params tp-choice))
+                          type-param-choices)))
+    (cond
+      ((= 1 (length new-options)) (first new-options))
+      ; Build the optional semtype with these options and return.
+      (t (new-optional-semtype new-options)))))
 
 (defun flatten-options (raw-s)
   "Flattens a semtype so that all options and concrete exponents are
-  represented with a single top-level option type. In a sense, this is
-  un-factorizing the semtype. This will always return an optional type even if
-  there is only one option. Will return nil if there's a 0 exponent."
+   represented with a single top-level option type. In a sense, this is
+   un-factorizing the semtype. This will always return an optional type even if
+   there is only one option. Will return nil if there's a 0 exponent."
   ; Remove top-level and domain-level exponent.
   (let ((s (unroll-exponent-step raw-s)))
     ; Flatten the type-params if necessary.
     (setf s (if (type-params s)
-              (flatten-type-params s)
-              s))
+                (flatten-type-params s)
+                s))
     (cond
       ;; Concrete =0 exponent type, return nil.
       ((= 0 (ex s)) nil)
-      
+
       ;; Optional type, recurse on all and flatten into a single optional type.
       ((optional-type-p s)
        (let ((new-options (apply #'append (mapcar (compose #'(lambda (opt) (if opt (types opt) nil))
                                                            #'flatten-options)
                                                   (types s)))))
          (if new-options
-           (new-semtype nil nil 1 nil :options new-options))))
+             (new-optional-semtype new-options))))
       ;; Atomic type, return a copy of it wrapped in an optional type.
       ((atomic-type-p s)
-       (new-semtype nil nil 1 nil :options (list (copy-semtype s))))
+       (new-optional-semtype (list (copy-semtype s))))
       ;; Non-atomic, non-optional type, recurse into the domain and range and generate an optional
       ;; type of all combinations of the recursed types.
       (t (let ((flat-dom (flatten-options (domain s)))
@@ -821,14 +827,14 @@
                    ((null flat-dom) flat-ran)
                    ((null flat-ran) flat-dom)
                    (t
-                     (assert (optional-type-p flat-dom))
-                     (assert (optional-type-p flat-ran))
-                     (loop for cur-dom in (types flat-dom)
-                           append (loop for cur-ran in (types flat-ran)
-                                        collect (copy-semtype s :c-dom cur-dom
-                                                              :c-ran cur-ran))))))
+                    (assert (optional-type-p flat-dom))
+                    (assert (optional-type-p flat-ran))
+                    (loop for cur-dom in (types flat-dom)
+                          append (loop for cur-ran in (types flat-ran)
+                                       collect (copy-semtype s :c-dom cur-dom
+                                                             :c-ran cur-ran))))))
            (if new-options
-             (new-semtype nil nil 1 nil :options new-options)))))))
+               (new-optional-semtype new-options)))))))
 
 (defun binarize-flat-options (s)
   "Takes a flat option type and makes it a right-leaning binary tree of options."
@@ -836,10 +842,8 @@
     ((helper (options)
        (declare (type list options))
        (cond
-         ((< (length options) 3)
-          (new-semtype nil nil 1 nil :options options))
-         (t (new-semtype nil nil 1 nil
-                         :options (list (first options)
+         ((< (length options) 3) (new-optional-semtype options))
+         (t (new-optional-semtype (list (first options)
                                         (helper (rest options))))))))
     ; Top-level call.
     (helper (types s))))

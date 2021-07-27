@@ -1,8 +1,6 @@
 
 (in-package :ulf-lib)
 
-;; TODO: clean up the interning in these functions.
-
 (defun marked-conjugated-vp-head? (inx)
   (in-intern (inx x :ulf-lib)
     (or (and (symbolp x)

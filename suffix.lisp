@@ -4,7 +4,7 @@
 
 ;; Takes a symbol and returns whether the symbol has a .-delimited suffix.
 (defun has-suffix? (s)
-  (> (length (the list (cl-strings:split (format nil "~s" s) ".")))
+  (> (length (the list (str:split "." (format nil "~s" s))))
      1))
 
 ;; Splits the symbol at the last "." and returns the two values.
@@ -33,21 +33,25 @@
 ;; last period is stripped off.
 (declaim (ftype (function (string) string) strip-suffix))
 (defun strip-suffix (s)
-  (let* ((split (cl-strings:split s "."))
-         (base-ret (cl-strings:join
+  (let* ((split (str:split "." s))
+         (base-ret (str:join
+                     "."
                      (subseq (the list split)
                              0
-                             (max 1 (1- (length (the list split)))))
-                     :separator ".")))
+                             (max 1 (1- (length (the list split)))))))
+         (suffix-str (car (last (coerce split 'list)))))
     (cond
       ;; If there's a space in the suffix, then don't strip.
       ((some #'(lambda (x)
                  (member (the character x) gute::*trim-whitespace-chars*))
-             (car (last (coerce split 'list))))
+             suffix-str)
        s)
       ;; If it's a name, but there is a split, add back the pipe at the end.
       ((and (is-strict-name? (read-from-string s)) (> (length (the list split)) 1))
        (concatenate 'string base-ret "|"))
+      ;; If the suffix is completely numerical, then don't strip.
+      ((numberp (read-from-string s))
+       s)
       (t base-ret))))
 
 ;; Takes a word symbol and a suffix and merges them together.

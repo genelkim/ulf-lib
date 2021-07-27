@@ -9,6 +9,11 @@
     (ulf-lib::extended-str2semtype str1)
     (ulf-lib::extended-str2semtype str2)))
 
+(defun semtype-equal?-str (str1 str2)
+  (ulf-lib::semtype-equal?
+    (ulf-lib::extended-str2semtype str1)
+    (ulf-lib::extended-str2semtype str2)))
+
 (define-test basic-semtype-match?
   "Testing the basics of semtype-match? function."
   (:tag :semtype)
@@ -62,4 +67,19 @@
   (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "(D=>S)")
   (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "S")
   (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "(D=>(D=>(D=>(D=>S))))"))
+
+
+;; TODO: more extensive semtype-equal? tests.
+(define-test basic-semtype-equal?
+  "Testing the basics of the semtype-equal? function."
+  (:tag :semtype)
+  (assert-equality #'semtype-equal?-str "D" "D")
+  (assert-equality #'semtype-equal?-str "(D=>D)" "(D=>D)")
+  (assert-equality #'semtype-equal?-str "(D=>D)_V" "(D=>D)_V")
+  (assert-true (not (semtype-equal?-str "(D=>D)" "(D=>D)_V")))
+
+  ;; Non-symmetric wrt. syntactic features.
+  (assert-equality #'semtype-equal?-str "(D=>D)%T" "(D=>D)%T")
+  (assert-true (not (semtype-equal?-str "(D=>D)" "(D=>D)%T,X")))
+  (assert-true (not (semtype-equal?-str "(D=>D)%T,X" "(D=>D)"))))
 

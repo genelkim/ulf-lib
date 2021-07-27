@@ -11,7 +11,6 @@
 (defconstant +comma+ #\,)
 (defconstant +colon+ #\:)
 
-;; TODO: use named-readtables for read table management https://common-lisp.net/project/named-readtables/
 (defvar *previous-readtables* nil)
 
 (defmacro enable-ulf-type-syntax ()
