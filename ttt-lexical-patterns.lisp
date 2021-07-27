@@ -46,7 +46,7 @@
           ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
           ("{S}\\.N" . "(D=>(S=>2))_n%lex")
           ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n%lex")
-          ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}%lex")
+          ("{S}\\.A" . "{(D=>(S=>2))_a%lex|(D=>(D=>(S=>2)))_a%lex}")
           ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
           ; Be careful while moving this around so that "be.v" is mapped correctly.
           ; "be.v" can't take plural, perfect, progressive, passive, or
@@ -426,8 +426,16 @@
 
 ;; Returns a string containing the semantic type of a given atomic ULF expression.
 (defun atom-semtype? (expr)
-  (cdr (assoc (atom2str expr) *semtypes*
-              :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
+  (let ((lookup-expr (cond
+                       ;; For named predicates, use placeholder since current
+                       ;; regex patterns can't handle them.
+                       ((lex-name-prep? expr) 'prep.p)
+                       ((lex-name-adj? expr) 'adj.a)
+                       ((lex-name-det? expr) 'det.d)
+                       ((lex-name-noun? expr) 'noun.n)
+                       (t expr))))
+    (cdr (assoc (atom2str lookup-expr) *semtypes*
+                :test (lambda (x y) (string-equal (scan-to-strings y x) x))))))
 
 ;; TODO: move this into a separate util.lisp file where we'll put other utility
 ;; processing functions.
