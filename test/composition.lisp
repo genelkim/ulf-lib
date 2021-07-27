@@ -339,3 +339,18 @@
                       '((past do.aux-s) he.pro)
                       '((pres may.aux-s) see.v))))
 
+(define-test ulf-type-string?-basic
+  (:tag :ulf-type-string?)
+  
+  (assert-equal "D" (ulf-type-string?
+                      '(the.d (n+preds man.n (under.p (the.d bridge.n))))))
+  (assert-equal "D" (ulf-type-string?  '(the.d ((mod-n big.a) man.n))))
+  (assert-equal "D" (ulf-type-string? '(a.d ((mod-n melting.n) pot.n))))
+  (assert-equal "D" (ulf-type-string? '(that (|Mary| (past run.v)))))
+  (assert-equal "{+PREDS[NP+[D]]|D}"
+                (ulf-type-string? '(np+preds |John| (on.p (the.d bridge.n)))))
+  (assert-equal nil (ulf-type-string? '(the.d (big.a man.n))))
+  (assert-equal nil (ulf-type-string? '(a.d (melting.n pot.n))))
+  (assert-equal "{((D=>(S=>2))_N=>D)%LEX|((D=>(S=>2))_P=>D)%LEX}"
+                (ulf-type-string? 'a.d)))
+
