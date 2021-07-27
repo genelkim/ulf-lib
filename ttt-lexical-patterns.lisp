@@ -443,6 +443,10 @@
 ;; processing functions.
 ;; Makes an elided ulf token explicit (e.g. {he}.pro -> he.pro)
 (defun make-explicit! (intoken)
+  ;; When this isn't a symbol (e.g., a number) it can't be an elided ulf token.
+  (when (not (symbolp intoken))
+    (return-from make-explicit! intoken))
+  ;; Main body.
   (let ((pkg (symbol-package intoken)))
     (in-ulf-lib (intoken token)
       (multiple-value-bind (word suffix) (split-by-suffix token)
