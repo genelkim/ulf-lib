@@ -2,16 +2,16 @@
 
 (in-package :ulf-lib)
 
-(defun merge-suffixes (op arg)
-  "Compute the suffix for the result of running operator `op` on `arg`. Range
-  of `op` is the preferred. If unspecified, use the argument (or domain if that
+(defun merge-suffixes (opr arg)
+  "Compute the suffix for the result of running operator `opr` on `arg`. Range
+  of `opr` is the preferred. If unspecified, use the argument (or domain if that
   is unspecified) for >> connective. Use the whole operator suffix for =>
   connective."
   (let*
-    ((ran-suffix (suffix (range op)))
-     (dom-suffix (suffix (domain op)))
+    ((ran-suffix (suffix (range opr)))
+     (dom-suffix (suffix (domain opr)))
      (arg-suffix (suffix arg))
-     (opr-suffix (suffix op))
+     (opr-suffix (suffix opr))
 
      (ran-chars (if (null ran-suffix) nil (coerce (symbol-name ran-suffix) 'list)))
      (dom-chars (if (null dom-suffix) nil (coerce (symbol-name dom-suffix) 'list)))
@@ -24,11 +24,11 @@
        (cond
          ((intersection poses ran-chars)
           (find-if pos-find-fn ran-chars))
-         ((equal ">>" (symbol-name (connective op)))
+         ((equal ">>" (symbol-name (connective opr)))
           (if (intersection poses arg-chars)
             (find-if pos-find-fn arg-chars)
             (find-if pos-find-fn dom-chars)))
-         ((equal "=>" (symbol-name (connective op)))
+         ((equal "=>" (symbol-name (connective opr)))
           (find-if pos-find-fn opr-chars))))
 
      (filtered (remove-if #'null (list new-val))))
@@ -56,8 +56,8 @@
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
-;; suffixes are propagated from op.
-;; Synfeats are propagated from op if => and arg if >> with
+;; suffixes are propagated from opr.
+;; Synfeats are propagated from opr if => and arg if >> with
 ;; exceptions per synfeat.
 ;; type-params are propagated from both.
 (declaim (ftype (function (semtype) fixnum) ex))
@@ -96,7 +96,7 @@
             ;; recognize whether the sentence is grammatical (top-predicate is
             ;; a verb).
             (when (not (atomic-type-p result))
-              (set-suffix result (merge-suffixes op arg)))
+              (set-suffix result (merge-suffixes opr arg)))
             ;; Update syntactic features.
             (when (not ignore-synfeats)
               (set-synfeats result (compose-synfeats! opr arg)))
