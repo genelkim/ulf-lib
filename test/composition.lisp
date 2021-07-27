@@ -84,7 +84,7 @@
     (string-from-compose-types 'say.v '*qt :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "QT-ATTR1[{(S=>2)_V[*QT]|{(D=>(S=>2))_V[*QT]|{{(D=>(D=>(S=>2)))_V[*QT]|((D=>(S=>2))%!T,!PF,!PG,!PV,!X=>(D=>(S=>2)))_V[*QT]}|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V[*QT]}}}}}]"
+    "QT-ATTR1[{(S=>2)_V[*QT]|{(D=>(S=>2))_V[*QT]|{(D=>(D=>(S=>2)))_V[*QT]|{((D=>(S=>2))%!T,!PF,!PG,!PV,!X=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V[*QT]}}}}}}]"
     (string-from-compose-types 'qt-attr '(say.v *qt) :ext 'extended))
   ; 's
   (assert-equality
