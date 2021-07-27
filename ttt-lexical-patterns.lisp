@@ -40,7 +40,7 @@
           ("\\|{N}\\|" . "D%lex")  ; names
           ("\[\\d\|\\.\]\+" . "D%lex")  ; numbers
           ("{S}\\.P" . "(D=>(D=>(S=>2)))_p%lex")
-          ("{S}\\.PS" . "((S=>2)_v>>((S=>2)_v>>(S=>2)))%lex")
+          ("{S}\\.PS" . "((S=>2)_v>>((S=>2)_v>>(S=>2))_p)%lex")
           ;;; Either takes two tensed sentences to make a new tensed sentence or two
           ;;; untensed sentence and makes a new untensed sentence.
           ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
@@ -74,9 +74,11 @@
           ("NOT" . "((S=>2)_v>>(S=>2))%lex")
           ("=" . "{(D=>(D=>(S=>2)))_a|(D=>(D=>(S=>2)))_p}")
           ("{S}\\.CC" . "((S=>2)_v^n>>((S=>2)_v=>((S=>2)_v=>(S=>2))))%lex")
-          ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
+          ;; Modifies monadic adjective and prepositional predicates, as well as sentential prepositional phrases.
+          ;; TODO: introduce mod-p which operates on the prepositional phrases.
+          ("{S}\\.MOD-A" . "{((D=>(S=>2))_a>>(D=>(S=>2))_a)|{((D=>(S=>2))_p>>(D=>(S=>2))_p)|(((S=>2)_v>>(S=>2))_p=>((S=>2)_v>>(S=>2))_p)}}")
           ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
-          ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
+          ("MOD-A" . "((D=>(S=>2))=>{((D=>(S=>2))_a>>(D=>(S=>2))_a)|{((D=>(S=>2))_p>>(D=>(S=>2))_p)|(((S=>2)_v>>(S=>2))_p=>((S=>2)_v>>(S=>2))_p)}})")
           ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
           ("{S}\\.P-ARG" . "PARG%lex")
           ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")

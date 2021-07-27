@@ -216,15 +216,19 @@
     (string-from-compose-types '? '(i.pro ((past go.v) there.pro)) :ext 'extended)))
 
 (define-test comp-p-arg-mod
-  "Tests for adding mod-a modifiers to p-arg."
+  "Tests for adding mod-a modifiers to prepositional phrases."
   (:tag :comp-p-arg-mod)
   ; NB(gene): I'm not sure we want this. Instead we should just use
   ; right.adv-s. *.ps are very much not adjective-like. Perhaps we could use
   ; right.mod-p when we introduce it.
   (assert-equality
     #'semtype-equal?-str
-    "((S=>2)>>(S=>2))"
+    "((S=>2)_v>>(S=>2))_p"
     (string-from-compose-types 'right.mod-a '(before.ps (i.pro ((past move.v) it.pro)))))
+  (assert-equality
+    #'semtype-equal?-str
+    "((S=>2)_v>>(S=>2))_p"
+    (string-from-compose-types '(mod-a right.a) '(before.ps (i.pro ((past move.v) it.pro)))))
   (assert-equal nil
     (string-from-compose-types 'right.mod-n '(before.ps (i.pro ((past move.v) it.pro))))))
 
