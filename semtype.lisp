@@ -439,7 +439,7 @@
       (return-from semtype2str nil))
     (let ((type-params-str
             (format nil "[~a]"
-                    (str:join "," (mapcar #'semtype2str (type-params s)))))
+                    (str:join ";" (mapcar #'semtype2str (type-params s)))))
           ;; Synfeats without the macro dispatch symbol.
           (synfeat-str (str:concat
                          (if (suffix s)
@@ -520,8 +520,8 @@
 
 (defun split-type-param-str (tpstr)
   "Splits a type param list string into the individual type strings.
-   These are comma separated, but since the types are recursively defined, only
-   split on commas that are at the top-level square bracketing."
+   These are semi-colon separated, but since the types are recursively defined,
+   only split on semi-colons that are at the top-level square bracketing."
   (declare (type (or simple-string null) tpstr))
   (when (null tpstr)
     (return-from split-type-param-str nil))
@@ -532,8 +532,8 @@
              (type fixnum bracket-depth))
     (loop for c across tpstr do
           (cond
-            ; Comma at top-level, add word and reset cur-chars.
-            ((and (eql c #\,) (= bracket-depth 0))
+            ; Semi-colon at top-level, add word and reset cur-chars.
+            ((and (eql c #\;) (= bracket-depth 0))
              (push (coerce (reverse cur-chars) 'string) params)
              (setf cur-chars nil))
             ; Open bracket, add depth.
