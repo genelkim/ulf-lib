@@ -346,45 +346,82 @@
 (defun semtype-match? (raw-x raw-y &key ignore-exp)
   (declare (ftype (function (t) fixnum) ex))
   ;; Expand out one level of exponents if relevant.
-  (let ((x (if ignore-exp raw-x (unroll-exponent-step raw-x)))
-        (y (if ignore-exp raw-y (unroll-exponent-step raw-y)))
-        (rec-ignore-exp (when (equal ignore-exp 'r) 'r)))
-    ;; Now we can assume exponent = 1 for the domain and at the top-level.
-    (cond
-      ;; One is optional.
-      ;; Make option lists and see if any pair of options work.
-      ((or (optional-type-p x) (optional-type-p y))
-       (let ((x-options (if (optional-type-p x) (types x) (list x)))
-             (y-options (if (optional-type-p y) (types y) (list y))))
-         (loop for x-option in x-options
-               if (loop for y-option in y-options
-                        if (semtype-match? x-option
-                                           y-option
-                                           :ignore-exp rec-ignore-exp)
-                        return t)
-               return t)))
+  (labels
+    ((>>-synfeat-diff (st)
+       "Computes the synfeat difference between the domain and range for a
+        semtype with >> connective.
 
-      ;; No optionals
-      (t
-       (and
-         ;; Suffixes.
-         ;; If both are specified, must match.
-         (if (and (suffix x) (suffix y))
-             (equal (suffix x) (suffix y))
-             t)
-         ;; Syntactic features.
-         (syntactic-features-match? (synfeats x) (synfeats y))
-         (if (or (atomic-type-p x) (atomic-type-p y))
-             ;; If atomic, both must be and match domain values.
-             (and (atomic-type-p x)
-                  (atomic-type-p y)
-                  (equal (domain x) (domain y)))
-             ;; If not atomic, domain, range, and connective must match.
-             (and (semtype-match? (domain x) (domain y)
-                                  :ignore-exp ignore-exp)
-                  (semtype-match? (range x) (range y)
-                                  :ignore-exp ignore-exp)
-                  (equal (connective x) (connective y)))))))))
+       Returns a list of two syntactic-features class instances.
+        1. domain synfeats where the range value is specified and differs.
+        2. range synfeats where the domain value is specified and differs."
+       (let ((keys (union (get-feature-names (synfeats (domain st)))
+                          (get-feature-names (synfeats (range st)))))
+             (new-dom-sf (copy (synfeats (domain st))))
+             (new-ran-sf (copy (synfeats (range st)))))
+         (loop for key in keys
+               for dval = (feature-value new-dom-sf key)
+               for rval = (feature-value new-ran-sf key)
+               when (not (and dval rval (not (equal dval rval))))
+               do (del-feature-value new-dom-sf key)
+               and do (del-feature-value new-ran-sf key))
+         (list new-dom-sf new-ran-sf)))
+     (>>-synfeat-match? (xst yst)
+       "Computes whether the syntactic features of two synfeats match when they
+        have the >> connective.
+
+        If connective is >> but a synfeat switch is specified, it must be
+        specified in both since unspecified cases will never lead to the
+        switch due to the synfeat propagation of >>."
+       (let ((xdiff (>>-synfeat-diff xst))
+             (ydiff (>>-synfeat-diff yst)))
+         (and (syntactic-features-equal? (first xdiff) (first ydiff))
+              (syntactic-features-equal? (second xdiff) (second ydiff))))))
+
+    (let ((x (if ignore-exp raw-x (unroll-exponent-step raw-x)))
+          (y (if ignore-exp raw-y (unroll-exponent-step raw-y)))
+          (rec-ignore-exp (when (equal ignore-exp 'r) 'r)))
+      ;; Now we can assume exponent = 1 for the domain and at the top-level.
+      (cond
+        ;; One is optional.
+        ;; Make option lists and see if any pair of options work.
+        ((or (optional-type-p x) (optional-type-p y))
+         (let ((x-options (if (optional-type-p x) (types x) (list x)))
+               (y-options (if (optional-type-p y) (types y) (list y))))
+           (loop for x-option in x-options
+                 if (loop for y-option in y-options
+                          if (semtype-match? x-option
+                                             y-option
+                                             :ignore-exp rec-ignore-exp)
+                          return t)
+                 return t)))
+
+        ;; No optionals
+        (t
+         (and
+           ;; Suffixes.
+           ;; If both are specified, must match.
+           (if (and (suffix x) (suffix y))
+               (equal (suffix x) (suffix y))
+               t)
+           ;; Syntactic features.
+           (syntactic-features-match? (synfeats x) (synfeats y))
+           (if (or (atomic-type-p x) (atomic-type-p y))
+               ;; If atomic, both must be and match domain values.
+               (and (atomic-type-p x)
+                    (atomic-type-p y)
+                    (equal (domain x) (domain y)))
+               ;; If not atomic, domain, range, and connective must match.
+               (and (semtype-match? (domain x) (domain y)
+                                    :ignore-exp ignore-exp)
+                    (semtype-match? (range x) (range y)
+                                    :ignore-exp ignore-exp)
+                    (equal (connective x) (connective y))
+                    ;; If connective is >> but a synfeat switch is specified, it
+                    ;; must be specified in both since unspecified cases will
+                    ;; never lead to the switch.
+                    (if (equal '>> (connective x))
+                        (>>-synfeat-match? x y)
+                        t)))))))))
 
 ;; Make a new semtype identical to the given type
 ;; Key word options allow overwriting specific fields if appropriate.

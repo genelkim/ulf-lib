@@ -124,6 +124,16 @@
   ;; Return the modified object.
   obj)
 
+(defmethod add-feature-value ((obj syntactic-features) new-feature)
+  "Same as add-feature-values but with a single value."
+  (add-feature-values obj (list new-features)))
+
+(defmethod del-feature-value ((obj syntactic-features) key)
+  "Deletes the given feature value for the given key. Returns the object."
+  (setf (feature-map obj)
+        (remove-if #'(lambda (cell) (equal (car cell) key)) (feature-map obj)))
+  obj)
+
 (defmethod update-feature-map ((obj syntactic-features) (new-feature-map list))
   "Takes a new feature map and updates the old one to include all of the
   entries in the new one. Any feature names that are not specified in

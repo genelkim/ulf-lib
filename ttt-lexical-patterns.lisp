@@ -44,8 +44,8 @@
           ;;; Either takes two tensed sentences to make a new tensed sentence or two
           ;;; untensed sentence and makes a new untensed sentence.
           ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
-          ("{S}\\.N" . "(D=>(S=>2))_n%lex")
-          ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n%lex")
+          ("{S}\\.N" . "(D=>(S=>2))_n%lex,!pl")
+          ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n%lex,!pl")
           ("{S}\\.A" . "{(D=>(S=>2))_a%lex|(D=>(D=>(S=>2)))_a%lex}")
           ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
           ; Be careful while moving this around so that "be.v" is mapped correctly.
@@ -54,8 +54,8 @@
           ;   plurals: must be in a kind, (be.v (= (k (plur lawyer.n))))
           ;   perfect, progressive, auxiliary: aspectual operators operate over verbs
           ;   passive: 'be' is an empty auxiliary acting as part of the passive
-          ("BE\\.V" . "({(D=>(S=>2))_A|(D=>(S=>2))_P}=>(D=>(S=>2)))_v%lex")
-          ("{S}\\.V" . "({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_v%lex")
+          ("BE\\.V" . "({(D=>(S=>2))_A|(D=>(S=>2))_P}=>(D=>(S=>2)))_v%lex,!t")
+          ("{S}\\.V" . "({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_v%lex,!t")
           ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
           ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
           ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)_v>>(S=>2))%lex")
