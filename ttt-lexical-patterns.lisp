@@ -54,8 +54,8 @@
           ;   plurals: must be in a kind, (be.v (= (k (plur lawyer.n))))
           ;   perfect, progressive, auxiliary: aspectual operators operate over verbs
           ;   passive: 'be' is an empty auxiliary acting as part of the passive
-          ("BE\\.V" . "({(D=>(S=>2))_A|(D=>(S=>2))_P}=>(D=>(S=>2)))_v%lex,!t")
-          ("{S}\\.V" . "({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_v%lex,!t")
+          ("BE\\.V" . "({(D=>(S=>2))_A|(D=>(S=>2))_P}=>(D=>(S=>2)))_v%lex,!t,!pf,!pg,!pv,!x")
+          ("{S}\\.V" . "({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_v%lex,!t,!pf,!pg,!pv,!x")
           ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
           ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
           ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)_v>>(S=>2))%lex")
@@ -83,7 +83,8 @@
           ("{S}\\.P-ARG" . "PARG%lex")
           ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")
           ;; Only transitive or >arity verbs can be passivized.
-          ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(D=>(S=>2))))_V%!pv,lex%>pv,lex)"))
+          ;; TODO: instead of 2, this should be n-1, which we don't yet support.
+          ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^2=>(D=>(D=>(S=>2))))_V%!pv,!t,lex%>pv,lex)"))
 
         *auxiliaries-and-aspectual-operator-semtype-strs*))
       ;; AUX    == ((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)
