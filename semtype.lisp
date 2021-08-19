@@ -5,7 +5,8 @@
 ;; Maximum semtype exponent for variable values.
 ;; e.g. D^n=>2 can be generated as 2, (D=>2), (D=>(D=>2)), etc. until the
 ;; maximum number.
-(defparameter *semtype-max-exponent* 5)
+;; TODO: write functions to reload in parameters (e.g. *semtypes*, etc.) after setting this so that it gets propagated properly.
+(defparameter *semtype-max-exponent* 3)
 
 
 ;; A MORE COMPACT REPRESENTATIONS
@@ -132,12 +133,12 @@
     (t (setf (type-params semtype) (append (type-params semtype) type-params)))))
 
 (defmethod set-suffix ((obj semtype) suf)
-  "Adds suffix to a semtype. Recurses into optional-type since it doesn't
+  "Sets the suffix to a semtype. Recurses into optional-type since it doesn't
    directly carry suffixes. Ignored if called on an atomic type."
   (cond
     ((optional-type-p obj)
      (mapcar #'(lambda (child) (set-suffix child suf)) (types obj)))
-    ((atomic-type-p obj)
+    ((and (atomic-type-p obj) (not (null suf)))
      (warn "Atomic semtypes cannot take suffixes."))
     (t
      (setf (suffix obj) suf))))
