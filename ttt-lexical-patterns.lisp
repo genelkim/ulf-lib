@@ -286,7 +286,8 @@
   (in-intern (x s *package*)
     (let* ((sstr (if (not (stringp s)) (atom2str s) s))
            (chars (coerce sstr 'list)))
-      (and (> (length chars) 1)
+      (and (not (equal "|'S|" sstr))
+           (> (length chars) 1)
            (eql #\| (nth 0 chars))
            (eql #\| (nth (1- (length chars)) chars))))))
 
