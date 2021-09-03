@@ -47,7 +47,7 @@
   (assert-equal nil (string-from-compose-types 'the.d 'the.d))
   (assert-equality
     #'semtype-equal?-str
-    "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
+    "{(S=>2)_V|{(D=>(S=>2))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^4=>(D=>(S=>2)))_V}}}}}"
     (string-from-compose-types 'help.v 'me.pro))
   (assert-equal nil (string-from-compose-types 'be.v 'me.pro))
   (assert-equal "(D=>(S=>2))_V" (string-from-compose-types 'be.v 'happy.a)))
@@ -58,7 +58,7 @@
   ; tense
   (assert-equality
     #'semtype-equal?-str
-    "{(D=>(S=>2))_V%T|{{(D=>(D=>(S=>2)))_V%T|((D=>(S=>2))=>(D=>(S=>2)))_V%T}|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V%T|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V%T|{({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V%T|({D|(D=>(S=>2))}^5=>(D=>(S=>2)))_V%T}}}}}"
+    "{(D=>(S=>2))_V%T|{{(D=>(D=>(S=>2)))_V%T|((D=>(S=>2))%!T,!PF,!PG,!PV,!X=>(D=>(S=>2)))_V%T}|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V%T|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V%T|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V%T|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^5=>(D=>(S=>2)))_V%T}}}}}"
     (string-from-compose-types 'pres 'run.v :ext 'extended))
   (assert-equal nil (string-from-compose-types 'past 'happy.a :ext 'extended))
   (assert-equal nil (string-from-compose-types 'cf 'man.n :ext 'extended))
@@ -80,11 +80,11 @@
   (assert-equal nil (string-from-compose-types 'qt-attr 'her.pro :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "{(S=>2)[*QT]|{(D=>(S=>2))_V[*QT]|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V[*QT]}}}}}"
+    "{(S=>2)_V[*QT]|{(D=>(S=>2))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V[*QT]}}}}}"
     (string-from-compose-types 'say.v '*qt :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "QT-ATTR1[{(S=>2)[*QT]|{(D=>(S=>2))_V[*QT]|{{(D=>(D=>(S=>2)))_V[*QT]|((D=>(S=>2))=>(D=>(S=>2)))_V[*QT]}|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V[*QT]}}}}}]"
+    "QT-ATTR1[{(S=>2)_V[*QT]|{(D=>(S=>2))_V[*QT]|{(D=>(D=>(S=>2)))_V[*QT]|{((D=>(S=>2))%!T,!PF,!PG,!PV,!X=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V[*QT]|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V[*QT]|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V[*QT]}}}}}}]"
     (string-from-compose-types 'qt-attr '(say.v *qt) :ext 'extended))
   ; 's
   (assert-equality
@@ -120,14 +120,14 @@
   ;; (\" (yes! (qt-attr (say.v *qt))) \")   qt-attr2[T1[*qt]] + \" >> T1
   (assert-equal "\"" (ulf-type-string? '\"))
   (assert-equal "D[*QT]" (ulf-type-string? '*qt))
-  (assert-equal "(D=>(S=>2))[*QT]" (string-from-compose-types '= '*qt :ext 'extended))
-  (assert-equal "QT-ATTR1[(D=>(S=>2))[*QT]]"
+  (assert-equal "{(D=>(S=>2))_A[*QT]|(D=>(S=>2))_P[*QT]}" (string-from-compose-types '= '*qt :ext 'extended))
+  (assert-equal "QT-ATTR1[{(D=>(S=>2))_A[*QT]|(D=>(S=>2))_P[*QT]}]"
                 (string-from-compose-types 'qt-attr '(= *qt) :ext 'extended))
-  (assert-equal "D[QT-ATTR1[(D=>(S=>2))[*QT]]]"
+  (assert-equal "D[QT-ATTR1[{(D=>(S=>2))_A[*QT]|(D=>(S=>2))_P[*QT]}]]"
                 (string-from-compose-types '(qt-attr (= *qt)) 'it.pro :ext 'extended))
-  (assert-equal "QT-ATTR2[(D=>(S=>2))[*QT]]"
+  (assert-equal "QT-ATTR2[{(D=>(S=>2))_A[*QT]|(D=>(S=>2))_P[*QT]}]"
                 (string-from-compose-types '\" '((qt-attr (= *qt)) it.pro) :ext 'extended))
-  (assert-equal "(D=>(S=>2))"
+  (assert-equal "{(D=>(S=>2))_A|(D=>(S=>2))_P}"
                 (string-from-compose-types (list '|"| '((qt-attr (= *qt)) it.pro)) '|"|
                                            :ext 'extended)))
 
@@ -173,11 +173,11 @@
     (string-from-compose-types 'as.p-arg 'chicken.n :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
+    "{(S=>2)_V|{(D=>(S=>2))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V}}}}}"
     (string-from-compose-types 'sleep.v '(in.p-arg that.pro) :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}"
+    "{(D=>(S=>2))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V}}}}"
     (string-from-compose-types 'dress.v '(as.p-arg chicken.n) :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
@@ -196,35 +196,39 @@
 (define-test sentential-punctuation-compose
   "Tests for ! and ?."
   (:tag :sentential-punctuation-compose)
-  (assert-equal "((S=>2)>>(S=>2))%LEX" (ulf-type-string? '!))
-  (assert-equal "((S=>2)>>(S=>2))%LEX" (ulf-type-string? '?))
+  (assert-equal "((S=>2)_V>>(S=>2))%LEX" (ulf-type-string? '!))
+  (assert-equal "((S=>2)_V>>(S=>2))%LEX" (ulf-type-string? '?))
   (assert-equality
     #'semtype-equal?-str
-    "(S=>2)"
+    "(S=>2)_v"
     (string-from-compose-types '(i.pro (go.v there.pro)) '! :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "(S=>2)"
+    "(S=>2)_v"
     (string-from-compose-types '(i.pro (go.v there.pro)) '? :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "(S=>2)%T"
+    "(S=>2)_v%T"
     (string-from-compose-types '! '(i.pro ((past go.v) there.pro)) :ext 'extended))
   (assert-equality
     #'semtype-equal?-str
-    "(S=>2)%T"
+    "(S=>2)_v%T"
     (string-from-compose-types '? '(i.pro ((past go.v) there.pro)) :ext 'extended)))
 
 (define-test comp-p-arg-mod
-  "Tests for adding mod-a modifiers to p-arg."
+  "Tests for adding mod-a modifiers to prepositional phrases."
   (:tag :comp-p-arg-mod)
   ; NB(gene): I'm not sure we want this. Instead we should just use
   ; right.adv-s. *.ps are very much not adjective-like. Perhaps we could use
   ; right.mod-p when we introduce it.
   (assert-equality
     #'semtype-equal?-str
-    "((S=>2)>>(S=>2))"
+    "((S=>2)_v>>(S=>2))_p"
     (string-from-compose-types 'right.mod-a '(before.ps (i.pro ((past move.v) it.pro)))))
+  (assert-equality
+    #'semtype-equal?-str
+    "((S=>2)_v>>(S=>2))_p"
+    (string-from-compose-types '(mod-a right.a) '(before.ps (i.pro ((past move.v) it.pro)))))
   (assert-equal nil
     (string-from-compose-types 'right.mod-n '(before.ps (i.pro ((past move.v) it.pro))))))
 
@@ -239,7 +243,7 @@
                   (ulf-type-string? 'he.pro) (ulf-type-string? 'run))
     (assert-equality
       #'semtype-equal?-str
-      "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
+      "{(S=>2)_V|{(D=>(S=>2))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V}}}}}"
       typestr))
   (multiple-value-bind
     (typestr dir original)
@@ -249,7 +253,7 @@
                   (ulf-type-string? 'he.pro) (ulf-type-string? 'run))
     (assert-equality
       #'semtype-equal?-str
-      "{(S=>2)|{(D=>(S=>2))_V|{({D|(D=>(S=>2))}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))}^4=>(D=>(S=>2)))_V}}}}}"
+      "{(S=>2)_V|{(D=>(S=>2))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^2=>(D=>(S=>2)))_V|{({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^3=>(D=>(S=>2)))_V|({D|(D=>(S=>2))%!T,!PF,!PG,!PV,!X}^4=>(D=>(S=>2)))_V}}}}}"
       typestr))
   (multiple-value-bind
     (typestr dir original)
@@ -257,23 +261,23 @@
     (declare (ignore original))
     (assert-equal "right" dir
                   (ulf-type-string? 'it.pro) (ulf-type-string? '((pres do.aux-s) see.v)))
-    (assert-equality #'semtype-equal?-str "(S=>2)%T" typestr))
+    (assert-equality #'semtype-equal?-str "(S=>2)_V%T" typestr))
   (multiple-value-bind
     (typestr dir original)
     (string-from-compose-types 'it.pro '((pres do.aux-s) see.v) :ext 'extended)
     (declare (ignore original))
     (assert-equal "left" dir
                   (ulf-type-string? 'it.pro) (ulf-type-string? '((pres do.aux-s) see.v)))
-    (assert-equality #'semtype-equal?-str "(S=>2)%T" typestr)))
+    (assert-equality #'semtype-equal?-str "(S=>2)_V%T" typestr)))
 
 
 (define-test free-sent-mod
   (:tag :free-sent-mod :left-right)
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'not))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'not.adv-s))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'always.adv-f))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))%lex" (ulf-type-string? 'today.adv-e))
-  (assert-equality #'semtype-equal?-str "((S=>2)>>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
+  (assert-equality #'semtype-equal?-str "((S=>2)_v>>(S=>2))%lex" (ulf-type-string? 'not))
+  (assert-equality #'semtype-equal?-str "((S=>2)_v>>(S=>2))%lex" (ulf-type-string? 'not.adv-s))
+  (assert-equality #'semtype-equal?-str "((S=>2)_v>>(S=>2))%lex" (ulf-type-string? 'always.adv-f))
+  (assert-equality #'semtype-equal?-str "((S=>2)_v>>(S=>2))%lex" (ulf-type-string? 'today.adv-e))
+  (assert-equality #'semtype-match?-str "((S=>2)_v>>(S=>2))" (ulf-type-string? '(when.ps (i.pro (past sleep.v)))))
   (let ((ulf-segments
           '(he.pro
              run.v
@@ -317,14 +321,14 @@
   (:tag :itaux :left-right)
   (assert-equality
     #'semtype-equal?-str
-    "((D=>(S=>2))_V%!T,!X>>(S=>2)%T)"
+    "((D=>(S=>2))_V%!T,!X>>(S=>2)_v%T)"
     (string-from-compose-types '(past do.aux-s) 'him.pro))
   ; TODO(gene): write a generalization of ulf-type? for left-right type.
   ; for now, we will just bypass it under the assumption that the test above
   ; this one passed.
   (assert-equality
     #'semtype-equal?-str
-    "(S=>2)%T"
+    "(S=>2)_v%T"
     (string-from-compose-types '((past do.aux-s) he.pro) 'run.v))
   (assert-equal nil (string-from-compose-types
                       '(past do.aux-s) 'dog.n
@@ -353,4 +357,9 @@
   (assert-equal nil (ulf-type-string? '(a.d (melting.n pot.n))))
   (assert-equal "{((D=>(S=>2))_N=>D)%LEX|((D=>(S=>2))_P=>D)%LEX}"
                 (ulf-type-string? 'a.d)))
+
+(define-test ulf-type-string?-named-predicates
+  (:tag :ulf-type-string?)
+  (assert-equal "{(D=>(S=>2))_A%LEX|(D=>(D=>(S=>2)))_A%LEX}" (ulf-type-string? '19.a))
+  (assert-equal "(D=>(S=>2))_N%LEX" (ulf-type-string? '|Man|.n)))
 

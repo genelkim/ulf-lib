@@ -40,41 +40,51 @@
           ("\\|{N}\\|" . "D%lex")  ; names
           ("\[\\d\|\\.\]\+" . "D%lex")  ; numbers
           ("{S}\\.P" . "(D=>(D=>(S=>2)))_p%lex")
-          ("{S}\\.PS" . "((S=>2)>>((S=>2)>>(S=>2)))%lex")
+          ("{S}\\.PS" . "((S=>2)_v>>((S=>2)_v>>(S=>2))_p)%lex")
           ;;; Either takes two tensed sentences to make a new tensed sentence or two
           ;;; untensed sentence and makes a new untensed sentence.
           ;("{S}\\.PS" . "{((S=>2)_T=>((S=>2)_T=>(S=>2)_T))|((S=>2)_!T=>((S=>2)_!T=>(S=>2)_!T))}")
-          ("{S}\\.N" . "(D=>(S=>2))_n%lex")
-          ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n%lex")
-          ("{S}\\.A" . "{(D=>(S=>2))_a|(D=>(D=>(S=>2)))_a}%lex")
+          ("{S}\\.N" . "(D=>(S=>2))_n%lex,!pl")
+          ("{S}-OF\\.N" . "(D=>(D=>(S=>2)))_n%lex,!pl")
+          ("{S}\\.A" . "{(D=>(S=>2))_a%lex|(D=>(D=>(S=>2)))_a%lex}")
           ; Note: "be.v" is intentionally placed above "*.v" so that it gets mapped correctly.
           ; Be careful while moving this around so that "be.v" is mapped correctly.
-          ("BE\\.V" . "((D=>(S=>2))=>(D=>(S=>2)))_v%lex")
-          ("{S}\\.V" . "({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_v%lex")
+          ; "be.v" can't take plural, perfect, progressive, passive, or
+          ; auxiliary featuring predicates.
+          ;   plurals: must be in a kind, (be.v (= (k (plur lawyer.n))))
+          ;   perfect, progressive, auxiliary: aspectual operators operate over verbs
+          ;   passive: 'be' is an empty auxiliary acting as part of the passive
+          ("BE\\.V" . "({(D=>(S=>2))_A|(D=>(S=>2))_P}=>(D=>(S=>2)))_v%lex,!t,!pf,!pg,!pv,!x")
+          ("{S}\\.V" . "({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_v%lex,!t,!pf,!pg,!pv,!x")
           ("{S}\\.D" . "({(D=>(S=>2))_n|(D=>(S=>2))_p}=>D)%lex")
           ("{S}\\.ADV-A" . "((D=>(S=>2))_v>>(D=>(S=>2))_v)%lex")
-          ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)>>(S=>2))%lex")
+          ("{S}\\.(ADV-E|ADV-S|ADV-F)" . "((S=>2)_v>>(S=>2))%lex")
           ("PLUR" . "((D=>(S=>2))_n%!pl>>(D=>(S=>2))_n%pl)")
           ("K" . "((D=>(S=>2))_n=>D)")
-          ("TO|KA" . "((D=>(S=>2))_v%!t=>D)")
-          ("KE" . "((S=>2)%!t=>D)")
-          ("THAT" . "((S=>2)%t=>D)%lex")
-          ("WHETHER|ANS-TO" . "((S=>2)%t=>D)%lex")
+          ("TO|KA" . "((D=>(S=>2))_v%!t,!x=>D)")
+          ("KE" . "((S=>2)_v%!t=>D)")
+          ("THAT|THT" . "((S=>2)_v%t=>D)%lex")
+          ("WHETHER" . "((S=>2)_v%t=>D)%lex")
+          ;; TODO: add feature for wh-word count.
+          ("ANS-TO" . "((S=>2)_v%t=>D)%lex")
           ("ADV-A" . "((D=>(S=>2))=>((D=>(S=>2))_v>>(D=>(S=>2))_v))")
           ("ADV-E|ADV-S|ADV-F" . "((D=>(S=>2))=>((S=>2)>>(S=>2)))")
           ("FQUAN|NQUAN" . "((D=>(S=>2))_a=>((D=>(S=>2))_n=>D))")
           ("SET-OF" . "(D^n=>(D=>(D=>D)))")
-          ("NOT" . "((S=>2)>>(S=>2))%lex")
-          ("=" . "(D=>(D=>(S=>2)))")
-          ("{S}\\.CC" . "((S=>2)^n>>(S=>2))%lex")
-          ("{S}\\.MOD-A" . "((D=>(S=>2))_a>>(D=>(S=>2))_a)")
+          ("NOT" . "((S=>2)_v>>(S=>2))%lex")
+          ("=" . "{(D=>(D=>(S=>2)))_a|(D=>(D=>(S=>2)))_p}")
+          ("{S}\\.CC" . "((S=>2)_v^n>>((S=>2)_v=>((S=>2)_v=>(S=>2))))%lex")
+          ;; Modifies monadic adjective and prepositional predicates, as well as sentential prepositional phrases.
+          ;; TODO: introduce mod-p which operates on the prepositional phrases.
+          ("{S}\\.MOD-A" . "{((D=>(S=>2))_a>>(D=>(S=>2))_a)|{((D=>(S=>2))_p>>(D=>(S=>2))_p)|(((S=>2)_v>>(S=>2))_p=>((S=>2)_v>>(S=>2))_p)}}")
           ("{S}\\.MOD-N" . "((D=>(S=>2))_n>>(D=>(S=>2))_n)")
-          ("MOD-A" . "((D=>(S=>2))=>((D=>(S=>2))_a>>(D=>(S=>2))_a))")
+          ("MOD-A" . "((D=>(S=>2))=>{((D=>(S=>2))_a>>(D=>(S=>2))_a)|{((D=>(S=>2))_p>>(D=>(S=>2))_p)|(((S=>2)_v>>(S=>2))_p=>((S=>2)_v>>(S=>2))_p)}})")
           ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
           ("{S}\\.P-ARG" . "PARG%lex")
-          ("\\!|\\?" . "((S=>2)>>(S=>2))%lex")
+          ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")
           ;; Only transitive or >arity verbs can be passivized.
-          ("PASV" . "(({D|(D=>(S=>2))}^n=>(D=>(D=>(S=>2))))_V%!pv,lex%>pv,lex)"))
+          ;; TODO: instead of 2, this should be n-1, which we don't yet support.
+          ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^2=>(D=>(D=>(S=>2))))_V%!pv,!t,lex%>pv,lex)"))
 
         *auxiliaries-and-aspectual-operator-semtype-strs*))
       ;; AUX    == ((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)
@@ -90,7 +100,7 @@
                 (new-optional-semtype
                   (append
                     ;; verbs.
-                    (list (str2semtype "(({D|(D=>(S=>2))}^n=>(D=>(S=>2)))_V%!T%>T)"))
+                    (list (str2semtype "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_V%!T,LEX%>T)"))
                     ;; Auxiliaries and aspectual operators (prog/perf)
                     ;; Tense will take an aspectual operator and then
                     ;; return the same type except that the range is
@@ -119,7 +129,7 @@
                                     (new-semtype
                                       (str2semtype "D")
                                       (new-semtype (copy-semtype (domain orig-asp))
-                                                   (str2semtype "(S=>2)%T")
+                                                   (str2semtype "(S=>2)_v%T")
                                                    1 nil
                                                    :conn '>>)
                                       1 nil)
@@ -136,8 +146,10 @@
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (re:all-matches (concatenate 'string "^\\[?\\|? ?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\|?\\]?$")
-            (format nil "~s" x)))
+  (re:scan
+    (concatenate 'string "^\\[?\\|? ?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\|?\\]?$")
+    (format nil "~s" x)))
+(gute:memoize 'suffix-check)
 
 (defun in-ulf-lib-suffix-check (x suffix)
   (in-intern (x y :ulf-lib)
@@ -274,7 +286,8 @@
   (in-intern (x s *package*)
     (let* ((sstr (if (not (stringp s)) (atom2str s) s))
            (chars (coerce sstr 'list)))
-      (and (> (length chars) 1)
+      (and (not (equal "|'S|" sstr))
+           (> (length chars) 1)
            (eql #\| (nth 0 chars))
            (eql #\| (nth (1- (length chars)) chars))))))
 
@@ -419,13 +432,25 @@
 
 ;; Returns a string containing the semantic type of a given atomic ULF expression.
 (defun atom-semtype? (expr)
-  (cdr (assoc (atom2str expr) *semtypes*
-              :test (lambda (x y) (string-equal (scan-to-strings y x) x)))))
+  (let ((lookup-expr (cond
+                       ;; For named predicates, use placeholder since current
+                       ;; regex patterns can't handle them.
+                       ((lex-name-prep? expr) 'prep.p)
+                       ((lex-name-adj? expr) 'adj.a)
+                       ((lex-name-det? expr) 'det.d)
+                       ((lex-name-noun? expr) 'noun.n)
+                       (t expr))))
+    (cdr (assoc (atom2str lookup-expr) *semtypes*
+                :test (lambda (x y) (string-equal (scan-to-strings y x) x))))))
 
 ;; TODO: move this into a separate util.lisp file where we'll put other utility
 ;; processing functions.
 ;; Makes an elided ulf token explicit (e.g. {he}.pro -> he.pro)
 (defun make-explicit! (intoken)
+  ;; When this isn't a symbol (e.g., a number) it can't be an elided ulf token.
+  (when (not (symbolp intoken))
+    (return-from make-explicit! intoken))
+  ;; Main body.
   (let ((pkg (symbol-package intoken)))
     (in-ulf-lib (intoken token)
       (multiple-value-bind (word suffix) (split-by-suffix token)

@@ -124,6 +124,16 @@
   ;; Return the modified object.
   obj)
 
+(defmethod add-feature-value ((obj syntactic-features) new-feature)
+  "Same as add-feature-values but with a single value."
+  (add-feature-values obj (list new-features)))
+
+(defmethod del-feature-value ((obj syntactic-features) key)
+  "Deletes the given feature value for the given key. Returns the object."
+  (setf (feature-map obj)
+        (remove-if #'(lambda (cell) (equal (car cell) key)) (feature-map obj)))
+  obj)
+
 (defmethod update-feature-map ((obj syntactic-features) (new-feature-map list))
   "Takes a new feature map and updates the old one to include all of the
   entries in the new one. Any feature names that are not specified in
@@ -200,4 +210,31 @@
     (update-feature-map with-combs
                         (remove-if #'(lambda (pair) (null (cdr pair)))
                                    (feature-map csq-feats)))))
+
+(defmethod feature-map-difference ((base-feats syntactic-features)
+                                   (diff-feats syntactic-features))
+  "Creates a new syntactic-features object which is the same as base-feats but
+  all entries with the keys in diff-feats removed (set to null)."
+  (let ((result (copy base-feats)))
+    (loop for key in (mapcar #'car (feature-map diff-feats))
+          if (assoc key (feature-map result))
+          do (setf (cdr (assoc key (feature-map result))) nil))
+    result))
+
+(defmethod feature-map-union ((one-feats syntactic-features)
+                              (two-feats syntactic-features))
+  "Creates a new syntactic-features object which adds two-feats entries to
+  one-feats. Which of the two are selected in the case of both being present is
+  undefined."
+  (let ((result (copy one-feats)))
+    (loop for (key . value) in (feature-map two-feats)
+          if (and (assoc key (feature-map result))
+                  (not (assoc key (feature-map result))))
+          do (setf (cdr (assoc key (feature-map result)))
+                   value)
+          else if (not (assoc key (feature-map result)))
+          do (setf (feature-map result)
+                   (cons (cons key value)
+                         (feature-map result))))
+    result))
 

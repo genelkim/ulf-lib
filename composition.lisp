@@ -2,20 +2,35 @@
 
 (in-package :ulf-lib)
 
-(defun merge-suffixes (ss1 ss2)
-  "Merge the two suffixes, considering ss1 as the main suffix. If they are
-  contradictory, take the ss1 value."
+(defun merge-suffixes (opr arg)
+  "Compute the suffix for the result of running operator `opr` on `arg`. Range
+  of `opr` is the preferred. If unspecified, use the argument (or domain if that
+  is unspecified) for >> connective. Use the whole operator suffix for =>
+  connective."
   (let*
-    ((ss1chars (if (null ss1) nil (coerce (symbol-name ss1) 'list)))
-     (ss2chars (if (null ss2) nil (coerce (symbol-name ss2) 'list)))
+    ((ran-suffix (suffix (range opr)))
+     (dom-suffix (suffix (domain opr)))
+     (arg-suffix (suffix arg))
+     (opr-suffix (suffix opr))
+
+     (ran-chars (if (null ran-suffix) nil (coerce (symbol-name ran-suffix) 'list)))
+     (dom-chars (if (null dom-suffix) nil (coerce (symbol-name dom-suffix) 'list)))
+     (arg-chars (if (null arg-suffix) nil (coerce (symbol-name arg-suffix) 'list)))
+     (opr-chars (if (null opr-suffix) nil (coerce (symbol-name opr-suffix) 'list)))
+
      (poses (coerce "NAVP" 'list))
+     (pos-find-fn #'(lambda (x) (member (the character x) poses)))
      (new-val
        (cond
-         ((intersection poses ss1chars)
-          (find-if #'(lambda (x) (member (the character x) poses)) ss1chars))
-         ((intersection poses ss2chars)
-          (find-if #'(lambda (x) (member (the character x) poses)) ss2chars))
-         (t nil)))
+         ((intersection poses ran-chars)
+          (find-if pos-find-fn ran-chars))
+         ((equal ">>" (symbol-name (connective opr)))
+          (if (intersection poses arg-chars)
+            (find-if pos-find-fn arg-chars)
+            (find-if pos-find-fn dom-chars)))
+         ((equal "=>" (symbol-name (connective opr)))
+          (find-if pos-find-fn opr-chars))))
+
      (filtered (remove-if #'null (list new-val))))
     (if (null filtered)
       nil
@@ -41,8 +56,8 @@
 
 ;; Compose a given operator and argument if possible.
 ;; Assumption (for now): Arg has no exponent. If it does, it is ignored.
-;; suffixes are propagated from op.
-;; Synfeats are propagated from op if => and arg if >> with
+;; suffixes are propagated from opr.
+;; Synfeats are propagated from opr if => and arg if >> with
 ;; exceptions per synfeat.
 ;; type-params are propagated from both.
 (declaim (ftype (function (semtype) fixnum) ex))
@@ -77,10 +92,11 @@
          ;; Operator is a non-atomic type with domain exponent n=1
          ((and (semtype-p opr) (semtype-match? (domain opr) arg) (= (ex (domain opr)) 1))
           (let ((result (copy-semtype (range opr))))
-            ;; Only add suffix when not atomic or (S=>2)
-            (when (not (or (atomic-type-p result) (equal (semtype2str result) "(S=>2)")))
-              (set-suffix result
-                             (merge-suffixes (suffix (range opr)) (suffix opr))))
+            ;; Only add suffix when not atomic (retained for sentences to
+            ;; recognize whether the sentence is grammatical (top-predicate is
+            ;; a verb).
+            (when (not (atomic-type-p result))
+              (set-suffix result (merge-suffixes opr arg)))
             ;; Update syntactic features.
             (when (not ignore-synfeats)
               (set-synfeats result (compose-synfeats! opr arg)))
@@ -109,53 +125,43 @@
       (t
        (values nil "none" nil)))))
 
-;; Given two atomic ULFs, return the type formed after composing (if possible)
-(defun compose-atomic-ulfs! (a b)
-  (if (or (not (atom-semtype? a)) (not (atom-semtype? b)))
-    (or (atom-semtype? a) (atom-semtype? b))
-    (let ((comp (apply-operator! (atom-semtype? a) (atom-semtype? b))))
-      (if comp
-        (values comp (list a b))
-        (progn
-          (setf comp (apply-operator! (atom-semtype? b) (atom-semtype? a)))
-          (when comp (values comp (list b a))))))))
-
 ;; Given a ULF, evaluate and return the type if possible. Currently assumes
 ;; left associativity if there are more than 2 items scoped together. This is
 ;; not ideal, and needs to be changed.
 ;; Key argument 'lambda-vars' is used for internal recursion.
 ;; Note: Unknown ulf atoms are ignored.
 (defun ulf-type? (ulf &key lambda-vars)
-  (if (atom ulf)
-    ; atomic ULF
-    (progn
-      (let
-        ((semtype (cond
-                    ((eql ulf '\") (extended-str2semtype "\""))
-                    ((eql ulf '|'S|) (extended-str2semtype "POSTGEN1"))
-                    ((atom-semtype? ulf) (atom-semtype? ulf))
-                    ((member ulf lambda-vars) (str2semtype "D"))
-                    ((lex-macro?  ulf) (extended-str2semtype (symbol-name ulf)))
-                    ((eql ulf '*qt) (extended-str2semtype "D[*QT]"))
-                    ((lex-macro-hole? ulf) (extended-str2semtype (symbol-name ulf)))
-                    (t nil))))
-        semtype))
-    ; non-atomic ULF
-    (if (equal (car ulf) 'lambda)
-      ; ULF is of the form (lambda var (expr))
-      (when (= (length ulf) 3)
-        (new-semtype (str2semtype "D")
-                     (ulf-type? (third ulf)
-                                :lambda-vars (cons (cadr ulf) lambda-vars))
-                     1
-                     nil))
-      ; ULF is neither a lambda nor an atom
-      (if (= (length ulf) 1)
-        (ulf-type? (car ulf) :lambda-vars lambda-vars)
-        (extended-compose-types! (ulf-type? (reverse (cdr (reverse ulf)))
-                                            :lambda-vars lambda-vars)
-                                 (ulf-type? (car (last ulf))
-                                            :lambda-vars lambda-vars))))))
+  (cond
+    ;; atomic ULF
+    ((atom ulf)
+     (let
+       ((semtype (cond
+                   ((eql ulf '\") (extended-str2semtype "\""))
+                   ((eql ulf '|'S|) (extended-str2semtype "POSTGEN1"))
+                   ((atom-semtype? ulf) (atom-semtype? ulf))
+                   ((member ulf lambda-vars) (str2semtype "D"))
+                   ((lex-macro?  ulf) (extended-str2semtype (symbol-name ulf)))
+                   ((eql ulf '*qt) (extended-str2semtype "D[*QT]"))
+                   ((lex-macro-hole? ulf) (extended-str2semtype (symbol-name ulf)))
+                   (t nil))))
+       semtype))
+    ;; ULF is of the form (lambda var (expr))
+    ((equal (car ulf) 'lambda)
+     (when (= (length ulf) 3)
+       (new-semtype (str2semtype "D")
+                    (ulf-type? (third ulf)
+                               :lambda-vars (cons (cadr ulf) lambda-vars))
+                    1
+                    nil)))
+    ;; Single element non-atomic type.
+    ((= (length ulf) 1)
+     (ulf-type? (car ulf) :lambda-vars lambda-vars))
+    ;; ULF is non-atomic (x=>y)
+    (t
+     (extended-compose-types! (ulf-type? (reverse (cdr (reverse ulf)))
+                                         :lambda-vars lambda-vars)
+                              (ulf-type? (car (last ulf))
+                                         :lambda-vars lambda-vars)))))
 
 ;; Given a ULF, evaluate the type if possible and return a string representation
 ;; of the type.
@@ -206,7 +212,7 @@
   optional-types.
   "
   (apply #'append
-         (mapcar 
+         (mapcar
            #'(lambda (typ)
                (cond
                  ((optional-type-p typ)
@@ -502,4 +508,4 @@
   "List interface of left-right-compose-type-string!
   "
   (multiple-value-list (left-right-compose-type-string! type1 type2)))
-  
+

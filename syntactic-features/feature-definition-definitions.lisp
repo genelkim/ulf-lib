@@ -31,14 +31,20 @@
         (new-optional-semtype (list *sentence-semtype*
                                     *predicate-semtype*))))
 (setf (fdefinition 'auxiliary-combinator-fn)
-      (base-result-pattern-combinator-generator *predicate-semtype*))
+      (base-result-pattern-combinator-generator
+        (new-optional-semtype (list *sentence-semtype*
+                                    *predicate-semtype*))))
+(setf (fdefinition 'perfect-combinator-fn)
+      (base-result-pattern-combinator-generator
+        (new-optional-semtype (list *sentence-semtype*
+                                    *predicate-semtype*))))
+(setf (fdefinition 'progressive-combinator-fn)
+      (base-result-pattern-combinator-generator
+        (new-optional-semtype (list *sentence-semtype*
+                                    *predicate-semtype*))))
 (setf (fdefinition 'plurality-combinator-fn)
       (base-result-pattern-combinator-generator *predicate-semtype*))
-(setf (fdefinition 'perfect-combinator-fn)
-      (base-result-pattern-combinator-generator *predicate-semtype*))
 (setf (fdefinition 'passive-combinator-fn)
-      (base-result-pattern-combinator-generator *predicate-semtype*))
-(setf (fdefinition 'progressive-combinator-fn)
       (base-result-pattern-combinator-generator *predicate-semtype*))
 (defun lexical-combinator-fn (base opr arg csq &optional opr-semtype arg-semtype)
   "We always lose lexicality unless specified in the type."
