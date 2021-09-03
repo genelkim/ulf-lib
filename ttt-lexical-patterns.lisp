@@ -146,8 +146,10 @@
 ;; Check if *x* has the *suffix* extension.
 ;; Allows it to be square-bracketed from TTT operator hiding.
 (defun suffix-check (x suffix)
-  (re:all-matches (concatenate 'string "^\\[?\\|? ?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\|?\\]?$")
-            (format nil "~s" x)))
+  (re:scan
+    (concatenate 'string "^\\[?\\|? ?\\{?\(\\w\|\\d\|-\|\/\|:\|\\.\|\\*\|\\[\|\\]\)\+\\}?\\." suffix "\\|?\\]?$")
+    (format nil "~s" x)))
+(gute:memoize 'suffix-check)
 
 (defun in-ulf-lib-suffix-check (x suffix)
   (in-intern (x y :ulf-lib)
