@@ -233,13 +233,21 @@
 
 ; Auxiliaries.
 (defun lex-aux-s? (x)
-  (in-package-suffix-check x "AUX-S"))
+  (or (in-package-suffix-check x "AUX-S")
+      (when *support-lenulf-ambiguities*
+        (lex-lenulf-ambiguous-aux? x))))
 (defun lex-aux-v? (x)
-  (in-package-suffix-check x "AUX-V"))
+  (or (in-package-suffix-check x "AUX-V")
+      (when *support-lenulf-ambiguities*
+        (lex-lenulf-ambiguous-aux? x))))
+(defun lex-lenulf-ambiguous-aux? (x)
+  (in-package-suffix-check x "AUX"))
 (defun lex-aux? (x)
   (or
     (lex-aux-s? x)
-    (lex-aux-v? x)))
+    (lex-aux-v? x)
+    (when *support-lenulf-ambiguities*
+      (lex-lenulf-ambiguous-aux? x))))
 
 (defun lex-number? (x)
   (numberp x))
@@ -286,7 +294,7 @@
   (in-intern (x s *package*)
     (let* ((sstr (if (not (stringp s)) (atom2str s) s))
            (chars (coerce sstr 'list)))
-      (and (not (equal "|'S|" sstr))
+      (and (not (member sstr '("|'S|" "|\"|") :test #'equal))
            (> (length chars) 1)
            (eql #\| (nth 0 chars))
            (eql #\| (nth (1- (length chars)) chars))))))
@@ -308,14 +316,24 @@
 
 ; Adverbs
 (defun lex-adv-a? (x)
-  (in-package-suffix-check x "ADV-A"))
+  (or (in-package-suffix-check x "ADV-A")
+      (when *support-lenulf-ambiguities*
+        (lex-lenulf-ambiguous-adv? x))))
 (defun lex-adv-s? (x)
   (or (in-package-suffix-check x "ADV-S")
-      (in-ulf-lib (x y) (eql y 'not))))
+      (in-ulf-lib (x y) (eql y 'not))
+      (when *support-lenulf-ambiguities*
+        (lex-lenulf-ambiguous-adv? x))))
 (defun lex-adv-e? (x)
-  (in-package-suffix-check x "ADV-E"))
+  (or (in-package-suffix-check x "ADV-E")
+      (when *support-lenulf-ambiguities*
+        (lex-lenulf-ambiguous-adv? x))))
 (defun lex-adv-f? (x)
-  (in-package-suffix-check x "ADV-F"))
+  (or (in-package-suffix-check x "ADV-F")
+      (when *support-lenulf-ambiguities*
+        (lex-lenulf-ambiguous-adv? x))))
+(defun lex-lenulf-ambiguous-adv? (x)
+  (in-package-suffix-check x "ADV"))
 (defun lex-adv-formula? (x)
   (or
     (lex-adv-s? x)
@@ -326,7 +344,9 @@
     (lex-adv-a? x)
     (lex-adv-s? x)
     (lex-adv-e? x)
-    (lex-adv-f? x)))
+    (lex-adv-f? x)
+    (when *support-lenulf-ambiguities*
+      (lex-lenulf-ambiguous-adv? x))))
 
 ;; Expletives.
 (defun lex-x? (x)
@@ -346,7 +366,11 @@
 
 (defun lex-tense? (x)
   (declare (optimize (speed 1)))
-  (in-ulf-lib (x y) (member y *tense*)))
+  (in-ulf-lib (x y)
+    (let ((tenses (if *support-lenulf-ambiguities*
+                      (cons 'fin *tense*)
+                      *tense*)))
+      (member y tenses))))
 
 (defun lex-detformer? (x)
   (declare (optimize (speed 1)))

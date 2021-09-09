@@ -25,6 +25,13 @@
       ;; Already marked conjguated VP head.
       ((marked-conjugated-vp-head? vp)
        (values vp t (if sub sub vp)))
+      ;; TODO: make a version of the repo where this is the default.
+      ;; New aspectual operator handling
+      ;; Allows perf and prog to scope directly over the lexical verb.
+      ((and *support-lenulf-ambiguities*
+            (ttt:match-expr '(! perf-lex-verb? prog-lex-verb?) vp))
+       (values vp t (if sub sub vp)))
+      ;; Recursive case for new aspectual handling.
       ;; Simple tensed or not, lexical or passivized verb.
       ((ttt:match-expr '(!1 lex-verbaux? pasv-lex-verb?
                             (ulf:lex-tense? (! lex-verbaux? pasv-lex-verb?)))
@@ -32,7 +39,8 @@
        (values vp t (if sub sub vp)))
       ;; Starts with a verb or auxiliary -- recurse into it.
       ((and (listp vp)
-            (or (verb? (car vp)) (tensed-verb? (car vp)) (tensed-aux? (car vp))))
+            (or (verb? (car vp)) (tensed-verb? (car vp))
+                (aux? (car vp)) (tensed-aux? (car vp))))
        (multiple-value-bind (hv found new-carvp) (search-vp-head (car vp)
                                                                  :sub sub
                                                                  :callpkg callpkg)

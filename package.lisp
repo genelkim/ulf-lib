@@ -187,3 +187,13 @@
     pronoun2possdet
     ))
 
+(in-package :ulf-lib)
+
+;; Whether to recognize ambiguous categories from lenulf.
+;; AUX - ambiguous auxiliary
+;; FIN - ambiguous tense
+;; ADV - ambiguous adverb
+;; NB: This is only for the top-down type predicates. This is not supported in
+;; the semtype functionality.
+(defparameter *support-lenulf-ambiguities* nil)
+

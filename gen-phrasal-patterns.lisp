@@ -68,5 +68,22 @@
 ; True if arg is of the form (pasv <lexical verb>) and false otherwise.
   (in-intern (inarg arg :ulf-lib)
     (and (listp arg) (= (length arg) 2)
-         (eql 'pasv (first arg)) (lex-verb? (second arg)))))
+         (eql 'pasv (first arg))
+         (lex-verb? (second arg)))))
+
+(defun perf-lex-verb? (inarg)
+;````````````````````
+; True if arg is of the form (perf <lexical verb>) and false otherwise.
+  (in-intern (inarg arg :ulf-lib)
+    (and (listp arg) (= (length arg) 2)
+         (eql 'perf (first arg))
+         (lex-verb? (second arg)))))
+
+(defun prog-lex-verb? (inarg)
+;````````````````````
+; True if arg is of the form (prog <lexical verb>) and false otherwise.
+  (in-intern (inarg arg :ulf-lib)
+    (and (listp arg) (= (length arg) 2)
+         (eql 'prog (first arg))
+         (lex-verb? (second arg)))))
 

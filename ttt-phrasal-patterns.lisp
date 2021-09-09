@@ -204,9 +204,12 @@
 
 (defparameter *ttt-aux*
   '(! lex-aux? perf prog))
-
+(defparameter *ttt-lenulf-aux-extension*
+  '((prog aux?) (perf aux?)))
 (defparameter *ttt-tensed-aux*
   '(lex-tense? aux?))
+(defparameter *ttt-ambiguous-tensed-aux*
+  '(! (perf aux?)))
 
 (defparameter *ttt-tensed-verb*
   '(! (lex-tense? verb?)
@@ -327,7 +330,13 @@
 (defun verb? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-verb* y)))
 (defun pred? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-pred* y)))
 (defun det? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-det* y)))
-(defun aux? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-aux* y)))
+(defun aux? (x)
+  (in-ulf-lib (x y)
+    (hidden-maybe-sub-expr
+      (if *support-lenulf-ambiguities*
+          (append *ttt-aux* *ttt-lenulf-aux-extension*)
+          *ttt-aux*)
+      y)))
 (defun tensed-aux? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-tensed-aux* y)))
 (defun tensed-verb? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-tensed-verb* y)))
 (defun sent? (x) (in-ulf-lib (x y) (hidden-maybe-sub-expr *ttt-sent* y)))
