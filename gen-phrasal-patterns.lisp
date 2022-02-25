@@ -87,3 +87,11 @@
          (eql 'prog (first arg))
          (lex-verb? (second arg)))))
 
+(defun tensed-lex-verbaux? (inarg)
+;````````````````````
+; True if arg is of the form (<tense> <lexical verbaux>) and false otherwise.
+  (in-intern (inarg arg :ulf-lib)
+    (and (listp arg) (= (length arg) 2)
+         (lex-tense? (first arg))
+         (lex-verbaux? (second arg)))))
+
