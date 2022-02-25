@@ -132,6 +132,7 @@
     :plur-partitive?
     :plur-lex-noun?
     :pasv-lex-verb?
+    :tensed-lex-verbaux?
 
     ;; search.lisp
     :search-vp-head
