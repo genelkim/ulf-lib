@@ -183,6 +183,12 @@
     :unknown
     :types
 
+    ;; composition.lisp
+    :flatten-options
+    :optional-type-p
+    :flatten-options
+    :ulf-type?
+
     ;; lang-util
     term2possdet
     pronoun2possdet
