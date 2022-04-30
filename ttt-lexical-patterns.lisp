@@ -22,6 +22,11 @@
     ("PERF" . "((D=>(S=>2))_v%!t,!pf,!x>>(D=>(S=>2))_v%!t,pf)")
     ("{S}\\.AUX-S|{S}\\.AUX-V" . "((D=>(S=>2))_v%!t,!x>>(D=>(S=>2))_v%!t,x)")))
 
+;;; This parameter forms the basis for all the compositional semantic analysis
+;;; in the package. Modify this variable at your own risk. I would encourage
+;;; using thread-protected and temporary modifications to this variable in
+;;; well-defined scopes. underspecified-patterns.lisp shows an example of this
+;;; sort of modification to the variable.
 (defparameter *semtypes*
   (append
     (mapcar
