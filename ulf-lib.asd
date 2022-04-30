@@ -2,7 +2,7 @@
 (asdf:defsystem :ulf-lib
   :name "Episodic Logic-Unscoped Logical Form (ULF) Interface and Manipulation Library"
   :serial t
-  :version "1.0.0"
+  :version "1.0.1"
   :description "A library for basic interfacing and manipulations of Episodic logic, unscoped logical formulas (ULFs)."
   :author "Gene Louis Kim <gkim21@cs.rochester.edu>"
   :license "MIT"

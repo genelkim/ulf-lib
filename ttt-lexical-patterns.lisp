@@ -82,6 +82,8 @@
           ("MOD-N" . "((D=>(S=>2))=>((D=>(S=>2))_n>>(D=>(S=>2))_n))")
           ("{S}\\.P-ARG" . "PARG%lex")
           ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")
+          ;; Vocative macro has an easy type interpretation.
+          ("VOC|VOC-O" . "(D=>((S=>2)_v>>(S=>2)))")
           ;; Only transitive or >arity verbs can be passivized.
           ;; TODO: instead of 2, this should be n-1, which we don't yet support.
           ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^2=>(D=>(D=>(S=>2))))_V%!pv,!t,lex%>pv,lex)"))
