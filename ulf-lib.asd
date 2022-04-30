@@ -2,7 +2,7 @@
 (asdf:defsystem :ulf-lib
   :name "Episodic Logic-Unscoped Logical Form (ULF) Interface and Manipulation Library"
   :serial t
-  :version "1.0.1"
+  :version "1.0.2"
   :description "A library for basic interfacing and manipulations of Episodic logic, unscoped logical formulas (ULFs)."
   :author "Gene Louis Kim <gkim21@cs.rochester.edu>"
   :license "MIT"
@@ -18,6 +18,7 @@
                (:file "ttt-lexical-patterns")
                (:file "ttt-phrasal-patterns")
                (:file "gen-phrasal-patterns")
+               (:file "underspecified-patterns")
                (:file "search")
                (:file "macro")
                (:file "preprocess")

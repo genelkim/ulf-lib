@@ -134,6 +134,9 @@
     :pasv-lex-verb?
     :tensed-lex-verbaux?
 
+    ;; underspecified-patterns.lisp
+    :with-underspecified-types
+
     ;; search.lisp
     :search-vp-head
     :find-vp-head
