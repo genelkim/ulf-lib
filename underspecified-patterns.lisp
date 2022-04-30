@@ -37,7 +37,9 @@
     ;; Declarative shorthand
     '(("{S}\\.AUX" . (aux.aux-v aux.aux-s))
       ("{S}\\.ADV" . (adv.adv-a adv.adv-s adv.adv-e adv.adv-f))
+      ("ADV" . (adv-a adv-s adv-e adv-f))
       ("{S}\\.MOD" . (mod.mod-a mod.mod-n))
+      ("MOD" . (mod-a mod-n))
       ("FIN" . (pres past cf)))))
 
 (defmacro with-underspecified-types (&body body)
