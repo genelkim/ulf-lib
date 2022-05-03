@@ -363,3 +363,18 @@
   (assert-equal "{(D=>(S=>2))_A%LEX|(D=>(D=>(S=>2)))_A%LEX}" (ulf-type-string? '19.a))
   (assert-equal "(D=>(S=>2))_N%LEX" (ulf-type-string? '|Man|.n)))
 
+
+(define-test aspect+pasv
+  (:tag :pasv :perf)
+  ;; Match with monadic predicate forms of passive and tensed passive.
+  (assert-true (ulf::semtype-match? (ulf-type? '(pasv run.v))
+                            (ulf::str2semtype "(D=>(S=>2))_V%LEX,!T,PV")))
+  (assert-true (ulf::semtype-match? (ulf-type? '(pres (pasv run.v)))
+                            (ulf::str2semtype "(D=>(S=>2))_V%LEX,T,PV")))
+
+  ;; Mix with tensed and untensed perf.
+  (assert-true (ulf::semtype-match? (ulf-type? '(perf (pasv run.v)))
+                            (ulf::str2semtype "(D=>(S=>2))_V%!LEX,!T,PF,PV")))
+  (assert-true (ulf::semtype-match? (ulf-type? '((pres perf) (pasv run.v)))
+                            (ulf::str2semtype "(D=>(S=>2))_V%!LEX,T,PF,PV"))))
+
