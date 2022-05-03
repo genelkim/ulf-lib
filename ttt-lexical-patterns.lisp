@@ -89,9 +89,11 @@
           ("\\!|\\?" . "((S=>2)_v>>(S=>2))%lex")
           ;; Vocative macro has an easy type interpretation.
           ("VOC|VOC-O" . "(D=>((S=>2)_v>>(S=>2)))")
-          ;; Only transitive or >arity verbs can be passivized.
-          ;; TODO: instead of 2, this should be n-1, which we don't yet support.
-          ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^2=>(D=>(D=>(S=>2))))_V%!pv,!t,lex%>pv,lex)"))
+          ;; TODO: Only binary or > arity verbs can be passivized.
+          ;;       But the resulting predicate *can* take one less argument.
+          ;;       This is because passivized arguments take the original
+          ;;       subject with an optional argument marked by by.p-arg.
+          ("PASV" . "(({D|(D=>(S=>2))%!t,!pf,!pg,!pv,!x}^n=>(D=>(S=>2)))_V%!pv,!t,lex%>pv,lex)"))
 
         *auxiliaries-and-aspectual-operator-semtype-strs*))
       ;; AUX    == ((D=>(S=>2))_V%!T,!X>>(D=>(S=>2))_V%!T,X)
