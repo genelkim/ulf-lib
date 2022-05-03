@@ -66,7 +66,8 @@
   (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "(D=>(2=>(D=>S)))")
   (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "(D=>S)")
   (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "S")
-  (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "(D=>(D=>(D=>(D=>S))))"))
+  (let ((ulf::*semtype-max-exponent* 4))
+    (assert-equality #'semtype-match?-str "({D|2}^n=>S)" "(D=>(D=>(D=>(D=>S))))")))
 
 
 ;; TODO: more extensive semtype-equal? tests.

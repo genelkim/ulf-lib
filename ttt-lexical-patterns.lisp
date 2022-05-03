@@ -124,7 +124,7 @@
                     ;;   (((past do.aux-s) you.pro (know.v {ref}.pro)) ?)
                     ;;
                     ;; Inverted type:
-                    ;;   (D=>(ANT>>(S=>2)%T))
+                    ;;   (D=>(ANT>>(S=>2)%T,X))
                     ;;   where ANT is the antecedent of the original
                     ;;   auxiliary. Basically the subject argument
                     ;;   was moved out before the verb.
@@ -136,7 +136,7 @@
                                     (new-semtype
                                       (str2semtype "D")
                                       (new-semtype (copy-semtype (domain orig-asp))
-                                                   (str2semtype "(S=>2)_v%T")
+                                                   (str2semtype "(S=>2)_v%T,X")
                                                    1 nil
                                                    :conn '>>)
                                       1 nil)
