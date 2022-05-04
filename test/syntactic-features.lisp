@@ -28,8 +28,8 @@
     (str2str-compose-types "(D=>(D=>2))%T"
                            "D"))
 
-  ;; Auxiliary, plurality, perfect, passive, progressive only propagates to
-  ;; predicates.
+  ;; Plurality and passive, progressive only propagates to predicates.
+  ;; Auxiliary, perfect, and progressive propagates to sentences.
   (loop for feat in '(x pl pf pv pg)
         do (assert-equality
              #'semtype-equal?-str
@@ -37,35 +37,75 @@
              (str2str-compose-types
                (format nil "(D=>(D=>(S=>2)))%~s" feat)
                "D"))
+        if (member feat '(pl pv))
         do (assert-equality
              #'semtype-equal?-str
              "(S=>2)"
              (str2str-compose-types
                (format nil "(D=>(S=>2))%~s" feat)
-               "D"))))
+               "D"))
+        else do (assert-equality
+                  #'semtype-equal?-str
+                  (format nil "(S=>2)%~s" feat)
+                  (str2str-compose-types
+                    (format nil "(D=>(S=>2))%~s" feat)
+                    "D"))))
 
 (define-test multiple-synfeats-composition
   "Tests syntactic feature compositions with multiple features mixing."
   (:tag :synfeats :compose)
 
-  ;; Auxiliary, plurality, perfect, passive, progressive only propagates to
-  ;; predicates.
+  ;; Plurality and passive, progressive only propagates to predicates.
+  ;; Auxiliary, perfect, and progressive propagates to sentences.
   (loop for feat1 in '(x pl pf pv pg)
         do (loop for feat2 in '(x pl pf pv pg)
                  when (not (eql feat1 feat2))
-                 do (progn
-                      (assert-equality
-                        #'semtype-equal?-str
+                 do (assert-equality
+                      #'semtype-equal?-str
+                      (format nil "(D=>(S=>2))%~s,~s" feat1 feat2)
+                      (str2str-compose-types
+                        (format nil "(D=>(D=>(S=>2)))%~s,~s" feat1 feat2)
+                        "D"))
+                 ;; Both only propagate to predictes
+                 when (and (not (eql feat1 feat2))
+                           (member feat1 '(pl pv))
+                           (member feat2 '(pl pv)))
+                 do (assert-equality
+                      #'semtype-equal?-str
+                      "(S=>2)"
+                      (str2str-compose-types
                         (format nil "(D=>(S=>2))%~s,~s" feat1 feat2)
-                        (str2str-compose-types
-                          (format nil "(D=>(D=>(S=>2)))%~s,~s" feat1 feat2)
-                          "D"))
-                      (assert-equality
-                        #'semtype-equal?-str
-                        "(S=>2)"
-                        (str2str-compose-types
-                          (format nil "(D=>(S=>2))%~s,~s" feat1 feat2)
-                          "D"))))))
+                        "D"))
+                 ;; Both propagate to sentences
+                 when (and (not (eql feat1 feat2))
+                           (not (member feat1 '(pl pv)))
+                           (not (member feat2 '(pl pv))))
+                 do (assert-equality
+                      #'semtype-equal?-str
+                      (format nil "(S=>2)%~s,~s" feat1 feat2)
+                      (str2str-compose-types
+                        (format nil "(D=>(S=>2))%~s,~s" feat1 feat2)
+                        "D"))
+                 ;; Only feat1 propagate to sentences
+                 when (and (not (eql feat1 feat2))
+                           (not (member feat1 '(pl pv)))
+                           (member feat2 '(pl pv)))
+                 do (assert-equality
+                      #'semtype-equal?-str
+                      (format nil "(S=>2)%~s" feat1)
+                      (str2str-compose-types
+                        (format nil "(D=>(S=>2))%~s,~s" feat1 feat2)
+                        "D"))
+                 ;; Only feat2 propagate to sentences
+                 when (and (not (eql feat1 feat2))
+                           (member feat1 '(pl pv))
+                           (not (member feat2 '(pl pv))))
+                 do (assert-equality
+                      #'semtype-equal?-str
+                      (format nil "(S=>2)%~s" feat2)
+                      (str2str-compose-types
+                        (format nil "(D=>(S=>2))%~s,~s" feat1 feat2)
+                        "D")))))
 
 (define-test ulf-synfeats-composition
   "Tests syntactic feature compositions using ULF expressions."
